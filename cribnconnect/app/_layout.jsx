@@ -10,6 +10,22 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
+    // Sora font family for body text
+    'Sora-Light': require('../assets/fonts/Sora-Light.ttf'),
+    'Sora-Regular': require('../assets/fonts/Sora-Regular.ttf'),
+    'Sora-Medium': require('../assets/fonts/Sora-Medium.ttf'),
+    'Sora-SemiBold': require('../assets/fonts/Sora-SemiBold.ttf'),
+    'Sora-Bold': require('../assets/fonts/Sora-Bold.ttf'),
+    
+    // Urbanist font family for headers
+    'Urbanist-Light': require('../assets/fonts/Urbanist-Light.ttf'),
+    'Urbanist-Regular': require('../assets/fonts/Urbanist-Regular.ttf'),
+    'Urbanist-Medium': require('../assets/fonts/Urbanist-Medium.ttf'),
+    'Urbanist-SemiBold': require('../assets/fonts/Urbanist-SemiBold.ttf'),
+    'Urbanist-Bold': require('../assets/fonts/Urbanist-Bold.ttf'),
+    'Urbanist-ExtraBold': require('../assets/fonts/Urbanist-ExtraBold.ttf'),
+    
+    // Fallback
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 

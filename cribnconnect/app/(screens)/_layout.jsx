@@ -38,20 +38,7 @@ export default function ScreensLayout() {
           headerBackTitle: 'Back',
         }} 
       />
-      <Stack.Screen 
-        name="auth/login" 
-        options={{ 
-          title: 'Login',
-          headerBackTitle: 'Back',
-        }} 
-      />
-      <Stack.Screen 
-        name="auth/register" 
-        options={{ 
-          title: 'Register',
-          headerBackTitle: 'Back',
-        }} 
-      />
+
       <Stack.Screen 
         name="settings/index" 
         options={{ 
