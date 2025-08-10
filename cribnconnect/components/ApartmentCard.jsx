@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { View, Text, Image, Pressable } from "react-native"
+import { View, Text, Image, Pressable, StyleSheet } from "react-native"
 import { Heart, Users, MapPin, Calendar } from "lucide-react-native"
 
 export default function ApartmentCard({
@@ -62,21 +62,21 @@ export default function ApartmentCard({
       {/* Texts BELOW the image (transparent background) */}
       <View className="px-3 py-3">
         <Text 
-          className="text-black text-base font-semibold" 
+          style={styles.title}
           numberOfLines={1}
           ellipsizeMode="tail"
         >
           {title}
         </Text>
 
-        <Text className="mt-1 text-emerald-500 text-lg font-extrabold">
+        <Text style={styles.price}>
           {pricePerNight}
         </Text>
 
         <View className="mt-2 flex-row items-start">
-          <MapPin size={16} color="#111111" style={{ marginTop: 2 }} />
+          <MapPin size={14} color="#111111" style={{ marginTop: 2 }} />
           <Text 
-            className="ml-2 text-sm text-black flex-1" 
+            style={styles.location}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
@@ -85,9 +85,9 @@ export default function ApartmentCard({
         </View>
 
         <View className="mt-1 flex-row items-start">
-          <Calendar size={16} color="#111111" style={{ marginTop: 2 }} />
+          <Calendar size={14} color="#111111" style={{ marginTop: 2 }} />
           <Text 
-            className="ml-2 text-sm text-black flex-1"
+            style={styles.availability}
             numberOfLines={2}
             ellipsizeMode="tail"
           >
@@ -98,3 +98,31 @@ export default function ApartmentCard({
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: '#000000',
+  },
+  price: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: '#10b981',
+    marginTop: 4,
+  },
+  location: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: '#000000',
+    marginLeft: 4,
+    flex: 1,
+  },
+  availability: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: '#000000',
+    marginLeft: 4,
+    flex: 1,
+  },
+});
