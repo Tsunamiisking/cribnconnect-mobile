@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   carouselSection: {
-    marginVertical: 16,
+    marginVertical: 4,
   },
   sectionHeader: {
     paddingHorizontal: 16,
