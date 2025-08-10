@@ -6,14 +6,16 @@ import {
   StyleSheet,
   RefreshControl,
   FlatList,
+  Platform,
 } from "react-native";
 import { useState } from "react";
 import { Link, router } from "expo-router";
 import ApartmentCard from "@/components/ApartmentCard";
-// import { NormalHeader } from "@/components/NormalHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import NormalHeader from "@/components/NormalHeader";
 import BackHeader from "@/components/BackHeader";
+import { Colors } from "@/constants/Colors";
+import SearchBar from "@/components/SearchBar";
 
 // Mock data - TODO: Replace with API integration
 const FEATURED_APARTMENTS = [
@@ -55,8 +57,33 @@ const FEATURED_APARTMENTS = [
   },
 ];
 
+// Carousel sections data
+const CAROUSEL_SECTIONS = [
+  {
+    id: "hot",
+    title: "Hot apartments Near you! 🔥",
+    apartments: FEATURED_APARTMENTS,
+  },
+  {
+    id: "kuje",
+    title: "See more in Kuje, Abuja >",
+    apartments: FEATURED_APARTMENTS.slice(0, 2),
+  },
+  {
+    id: "central",
+    title: "Central Area Listings >",
+    apartments: FEATURED_APARTMENTS,
+  },
+  {
+    id: "luxury",
+    title: "Luxury Apartments >",
+    apartments: FEATURED_APARTMENTS.slice(1),
+  },
+];
+
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -64,39 +91,66 @@ export default function ApartmentsScreen() {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const renderApartmentCard = ({ item }) => (
-    <View style={styles.cardContainer}>
+  const handleSearch = (query) => {
+    console.log("Searching for:", query);
+    // TODO: Implement search functionality
+  };
+
+  const renderCarouselCard = ({ item }) => (
+    <View style={styles.carouselCardContainer}>
       <ApartmentCard
         imageUri={item.imageUri}
         title={item.title}
         pricePerNight={item.pricePerNight}
         location={item.location}
         availability={item.availability}
-        liked={false} // TODO: Replace with actual bookmark status from API
+        liked={false}
         onLikeToggle={(liked) => {
-          // TODO: Add API integration for bookmarking
           console.log("Bookmark toggled:", item.id, liked);
         }}
         onPress={() => {
           router.push(`/(screens)/apartment-details/${item.id}`);
         }}
-        className="w-full"
+      />
+    </View>
+  );
+
+  const renderCarouselSection = ({ item: section }) => (
+    <View style={styles.carouselSection}>
+      <TouchableOpacity style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{section.title}</Text>
+      </TouchableOpacity>
+      
+      <FlatList
+        data={section.apartments}
+        renderItem={renderCarouselCard}
+        keyExtractor={(item) => `${section.id}-${item.id}`}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.carouselContainer}
       />
     </View>
   );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <NormalHeader />
+      <NormalHeader title="Apartments" />
+      
+      <View style={styles.searchContainer}>
+        <SearchBar 
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSearch={handleSearch}
+          placeholder="Search by city, apartment etc"
+        />
+      </View>
+
       <FlatList
-        data={FEATURED_APARTMENTS}
-        // horizontal={true}
-        renderItem={renderApartmentCard}
+        data={CAROUSEL_SECTIONS}
+        renderItem={renderCarouselSection}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.mainContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -106,16 +160,41 @@ export default function ApartmentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 12,
-    paddingBottom: 100, // Extra space for tab bar
+  mainContainer: {
+    paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Match tab bar height
   },
-  row: {
-    justifyContent: "space-between",
-    marginBottom: 16,
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    zIndex: 1,
   },
-  cardContainer: {
-    flex: 1,
-    maxWidth: "48%", // Ensures 2 columns with some spacing
+  carouselSection: {
+    marginVertical: 16,
+  },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.black,
+  },
+  carouselContainer: {
+    paddingLeft: 16,
+    paddingRight: 8,
+  },
+  carouselCardContainer: {
+    width: 200,
+    marginRight: 16,
   },
 });

@@ -17,7 +17,11 @@ export default function TabLayout() {
           borderTopWidth: 1,
           borderTopColor: '#E5E7EB',
           paddingBottom: Platform.OS === 'ios' ? 20 : 5,
-          height: Platform.OS === 'ios' ? 95 : 70,
+          height: Platform.OS === 'ios' ? 85 : 60,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         animation: "fade"
       }}>
