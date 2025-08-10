@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   buttonText: {
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: 'Sora-Regular',
     fontSize: 16 ,
     color: '#ffffff',
   },

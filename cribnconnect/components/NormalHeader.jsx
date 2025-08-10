@@ -7,7 +7,7 @@ export default function NormalHeader({ title="Title" }) {
     <View style={styles.container} className='flex-row justify-between items-center px-4 py-3'>
       <Text style={styles.text} className='text-black'>{title}</Text>
       <Pressable>
-        <View style={styles.profileButton} className='h-12 w-12 rounded-full items-center justify-center'>
+        <View style={styles.profileButton} className='h-14 w-14 rounded-full items-center justify-center'>
           <Text style={styles.profileText}>GU</Text>
         </View>
       </Pressable>
@@ -33,6 +33,6 @@ const styles = StyleSheet.create({
   profileText: {
     color: 'white',
     fontFamily: 'Sora-SemiBold',
-    fontSize: 14,
+    fontSize: 18,
   }
 })
