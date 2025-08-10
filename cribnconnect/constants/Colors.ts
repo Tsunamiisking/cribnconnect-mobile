@@ -7,9 +7,7 @@ import { green } from "react-native-reanimated/lib/typescript/Colors";
 
 export const Colors = {
   primary: "#274046",
-  secondary: "#f0f0f0",
-  background: "#fff",
+  white: "#fff",
   green: "#38EF7D",
-  text: "#000000",
-  border: "#000000",
+  black: "#000",
 };
