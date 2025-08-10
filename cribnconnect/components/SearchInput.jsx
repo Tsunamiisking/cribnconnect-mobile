@@ -18,7 +18,7 @@ export default function SearchInput({
       onPress()
     } else {
       // Navigate to search page
-      router.push('/(screens)/Search')
+      router.push('/(screens)/search')
     }
   }
 

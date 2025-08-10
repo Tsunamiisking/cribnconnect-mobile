@@ -48,7 +48,7 @@ export default function ScreensLayout() {
       />
 
       <Stack.Screen 
-        name="Search/index" 
+        name="search/index" 
         options={{ 
           title: 'Search',
           headerBackTitle: 'Back',
