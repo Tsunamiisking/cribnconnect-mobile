@@ -88,7 +88,7 @@ export default function ApartmentsScreen() {
       
       <FlatList
         data={FEATURED_APARTMENTS}
-        horizontal={true}
+        // horizontal={true}
         renderItem={renderApartmentCard}
         keyExtractor={(item) => item.id}
         numColumns={2}

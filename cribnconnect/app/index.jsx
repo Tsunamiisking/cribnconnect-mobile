@@ -1,58 +1,30 @@
-import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
-import { Link } from 'expo-router';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Link } from "expo-router";
+import { Colors } from "@/constants/Colors";
 
 export default function WelcomeScreen() {
   return (
-    <View style={styles.container} className="flex-1 bg-blue-50">
-      {/* Hero Section */}
-      <View style={styles.hero} className="flex-1 justify-center items-center px-6">
-        <View style={styles.logoContainer} className="mb-8">
-          <Text style={styles.logo} className="text-6xl mb-2">🏠</Text>
-          <Text style={styles.appName} className="text-3xl font-bold text-blue-600 text-center">
-            Crib & Connect
-          </Text>
-          <Text style={styles.tagline} className="text-lg text-gray-600 text-center mt-2">
-            Discover. Connect. Experience.
-          </Text>
-        </View>
-
-        <View style={styles.features} className="mb-8">
-          <Text style={styles.featureText} className="text-base text-gray-700 text-center mb-2">
-            🏡 Find your perfect apartment
-          </Text>
-          <Text style={styles.featureText} className="text-base text-gray-700 text-center mb-2">
-            🎉 Attend amazing local events
-          </Text>
-          <Text style={styles.featureText} className="text-base text-gray-700 text-center mb-2">
-            🤝 Connect with like-minded people
-          </Text>
-        </View>
+    <View className="flex-1 bg-white" style={styles.screen}>
+      {/* Centered hero copy */}
+      <View className="flex-1 justify-center px-8">
+        <Text style={styles.title} className="text-center">
+          {"Welcome\nto your city\nin one app."}
+        </Text>
+        <Text style={styles.subtitle} className="text-center mt-6">
+          Explore, Have fun, Be you.
+        </Text>
       </View>
 
-      {/* Action Buttons */}
-      <View style={styles.actions} className="px-6 pb-8">
-        <Link href="/(auth)/register" asChild>
-          <TouchableOpacity style={styles.primaryButton} className="bg-blue-600 py-4 rounded-lg mb-4">
-            <Text style={styles.primaryButtonText} className="text-white text-center font-semibold text-lg">
-              Get Started
-            </Text>
-          </TouchableOpacity>
-        </Link>
-
-        <Link href="/(auth)/login" asChild>
-          <TouchableOpacity style={styles.secondaryButton} className="border-2 border-blue-600 py-4 rounded-lg">
-            <Text style={styles.secondaryButtonText} className="text-blue-600 text-center font-semibold text-lg">
-              Sign In
-            </Text>
-          </TouchableOpacity>
-        </Link>
-
-        {/* Quick Demo Access */}
+      {/* CTA button -> go to (tabs) */}
+      <View className="px-8 pb-28">
         <Link href="/(tabs)" asChild>
-          <TouchableOpacity style={styles.demoButton} className="mt-4">
-            <Text style={styles.demoButtonText} className="text-gray-500 text-center">
-              Continue as Guest
-            </Text>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.cta}
+            className="rounded-2xl"
+          >
+            <Text style={styles.ctaText}>LETS GO!</Text>
           </TouchableOpacity>
         </Link>
       </View>
@@ -61,77 +33,35 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  screen: {
+    // Rounded-screen look is usually device/chrome; keeping clean white background
+    // Add padding if you need extra spacing on devices without SafeArea
   },
-  hero: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
+  title: {
+    color: Colors.primary, // dark teal-like tone
+    fontSize: 70,
+    lineHeight: 70,
+    fontWeight: "700",
+    fontFamily: "Urbanist-Bold", // Applied Urbanist font for headers
+    textAlign: "right",
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
+  subtitle: {
+    color: Colors.primary, // muted teal-gray
+    fontSize: 14,
+    fontFamily: "Sora-SemiBold", // Applied Sora font for body text
+    fontWeight: "500",
+    textAlign: "right",
   },
-  logo: {
-    fontSize: 64,
-    marginBottom: 8,
+  cta: {
+    backgroundColor: Colors.primary, // dark teal button
+    paddingVertical: 22,
+    borderRadius: 14,
   },
-  appName: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2563eb',
-    textAlign: 'center',
-  },
-  tagline: {
-    fontSize: 18,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  features: {
-    marginBottom: 32,
-  },
-  featureText: {
-    fontSize: 16,
-    color: '#374151',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  actions: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-  },
-  primaryButton: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  primaryButtonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 18,
-  },
-  secondaryButton: {
-    borderWidth: 2,
-    borderColor: '#2563eb',
-    paddingVertical: 16,
-    borderRadius: 8,
-  },
-  secondaryButtonText: {
-    color: '#2563eb',
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 18,
-  },
-  demoButton: {
-    marginTop: 16,
-  },
-  demoButtonText: {
-    color: '#6b7280',
-    textAlign: 'center',
+  ctaText: {
+    color: Colors.white,
+    textAlign: "center",
+    fontFamily: "Sora-Bold", // Applied Sora font for body text
+    fontWeight: "700",
+    letterSpacing: 0.75,
   },
 });
