@@ -12,6 +12,8 @@ import { Link, router } from "expo-router";
 import ApartmentCard from "@/components/ApartmentCard";
 // import { NormalHeader } from "@/components/NormalHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
+import NormalHeader from "@/components/NormalHeader";
+import BackHeader from "@/components/BackHeader";
 
 // Mock data - TODO: Replace with API integration
 const FEATURED_APARTMENTS = [
@@ -85,7 +87,7 @@ export default function ApartmentsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      
+      <NormalHeader />
       <FlatList
         data={FEATURED_APARTMENTS}
         // horizontal={true}
@@ -105,15 +107,15 @@ export default function ApartmentsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 12,
     paddingBottom: 100, // Extra space for tab bar
   },
   row: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   cardContainer: {
     flex: 1,
-    maxWidth: '48%', // Ensures 2 columns with some spacing
+    maxWidth: "48%", // Ensures 2 columns with some spacing
   },
 });
