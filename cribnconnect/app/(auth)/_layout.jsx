@@ -1,0 +1,24 @@
+import { Stack } from 'expo-router';
+
+export default function AuthLayout() {
+  return (
+    <Stack>
+      <Stack.Screen 
+        name="login" 
+        options={{ 
+          title: 'Welcome Back',
+          headerShown: true,
+          headerBackTitleVisible: false,
+        }} 
+      />
+      <Stack.Screen 
+        name="register" 
+        options={{ 
+          title: 'Join Crib & Connect',
+          headerShown: true,
+          headerBackTitleVisible: false,
+        }} 
+      />
+    </Stack>
+  );
+}
