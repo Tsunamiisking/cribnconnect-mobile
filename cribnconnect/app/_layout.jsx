@@ -49,15 +49,6 @@ export default function RootLayout() {
         {/* Hosting Flows */}
         <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
         
-        {/* Modal Screens */}
-        <Stack.Screen 
-          name="(modal)" 
-          options={{ 
-            headerShown: false,
-            presentation: 'modal' 
-          }} 
-        />
-        
         {/* 404 Screen */}
         <Stack.Screen name="+not-found" />
       </Stack>
