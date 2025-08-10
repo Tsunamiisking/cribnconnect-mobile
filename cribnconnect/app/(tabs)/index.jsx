@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import NormalHeader from "@/components/NormalHeader";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
-import SearchBar from "@/components/SearchBar";
+import SearchInput from "@/components/SearchInput";
 
 // Mock data - TODO: Replace with API integration
 const FEATURED_APARTMENTS = [
@@ -83,17 +83,11 @@ const CAROUSEL_SECTIONS = [
 
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const onRefresh = () => {
     setRefreshing(true);
     // TODO: Refresh apartments data from API
     setTimeout(() => setRefreshing(false), 1000);
-  };
-
-  const handleSearch = (query) => {
-    console.log("Searching for:", query);
-    // TODO: Implement search functionality
   };
 
   const renderCarouselCard = ({ item }) => (
@@ -137,11 +131,8 @@ export default function ApartmentsScreen() {
       <NormalHeader title="Apartments" />
       
       <View style={styles.searchContainer}>
-        <SearchBar 
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSearch={handleSearch}
-          placeholder="Search by city, apartment etc"
+        <SearchInput 
+          placeholder="What are you looking for?"
         />
       </View>
 

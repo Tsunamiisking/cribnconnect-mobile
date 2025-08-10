@@ -46,6 +46,15 @@ export default function ScreensLayout() {
           headerBackTitle: 'Back',
         }} 
       />
+
+      <Stack.Screen 
+        name="Search/index" 
+        options={{ 
+          title: 'Search',
+          headerBackTitle: 'Back',
+          headerShown: false
+        }} 
+      />
     </Stack>
   );
 }

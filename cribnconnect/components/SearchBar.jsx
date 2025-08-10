@@ -1,6 +1,7 @@
 import React from "react"
 import { View, TextInput, Pressable, Text, StyleSheet } from "react-native"
 import { Search as SearchIcon } from "lucide-react-native"
+import { Colors } from "@/constants/Colors"
 
 /**
  * SearchBar
@@ -32,8 +33,8 @@ export default function SearchBar({
   return (
     <View className={`w-full flex-row items-center gap-3 ${className}`}>
       {/* Left: pill input */}
-      <View className={`flex-1 flex-row items-center h-12 px-4 rounded-full bg-neutral-300 ${inputClassName}`}>
-        <SearchIcon size={18} color="#2b3a40" />
+      <View className={`flex-1 flex-row items-center h-12 px-4 rounded-full ${inputClassName}`}>
+        <SearchIcon size={18} color={Colors.black} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -63,11 +64,11 @@ const styles = StyleSheet.create({
   textInput: {
     fontFamily: 'Sora-Regular',
     fontSize: 16,
-    color: '#000000',
+    color: Colors.black,
   },
   buttonText: {
     fontFamily: 'Sora-Regular',
     fontSize: 16 ,
-    color: '#ffffff',
+    color: Colors.white,
   },
 })
