@@ -184,13 +184,14 @@ export default function EventsScreen() {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    paddingHorizontal: 10, // Reduce side padding to give cards more space
+    paddingHorizontal: 10, 
+    paddingTop: 10,
     paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Match tab bar height
   },
   categoriesContainer: {
     paddingVertical: 20,
-    backgroundColor: 'white',
-    shadowColor: '#000',
+    backgroundColor: Colors.white,
+    shadowColor: Colors.black,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -218,10 +219,10 @@ const styles = StyleSheet.create({
   categoryText: {
     fontFamily: 'Sora-Medium',
     fontSize: 14,
-    color: '#6b7280',
+    color: Colors.gray,
   },
   activeCategoryText: {
-    color: 'white',
+    color: Colors.white,
   },
   row: {
     justifyContent: 'space-between',
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
   eventCardContainer: {
     // marginTop: 10,
     flex: 0.50, 
-    marginVertical: 12, 
+    marginVertical: 8, 
   },
   leftCard: {
     marginRight: 4, // Reduce gap between cards
