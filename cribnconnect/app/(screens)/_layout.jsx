@@ -55,6 +55,16 @@ export default function ScreensLayout() {
           headerShown: false
         }} 
       />
+
+      <Stack.Screen 
+        name="create-linkup/index" 
+        options={{ 
+          title: 'Create Linkup',
+          headerBackTitle: 'Back',
+          headerShown: false
+        }} 
+      />
+
     </Stack>
   );
 }
