@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   filterTitle: {
     fontFamily: 'Urbanist-Bold',
     fontSize: 20,
-    color: '#111827',
+    color: Colors.black,
     marginBottom: 4,
   },
   filterSubtitle: {
