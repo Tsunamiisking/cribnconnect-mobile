@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   filterSubtitle: {
     fontFamily: 'Sora-Regular',
     fontSize: 14,
-    color: '#6b7280',
+    color: Colors.darkgray,
     marginBottom: 16,
   },
   optionsGrid: {

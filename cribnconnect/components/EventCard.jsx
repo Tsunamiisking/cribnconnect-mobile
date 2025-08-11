@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { View, Text, Image, Pressable, StyleSheet } from "react-native"
 import { Heart, MapPin, Calendar, Sun, Moon } from "lucide-react-native"
+import { Colors } from "@/constants/Colors"
 
 export default function EventCard({
   imageUri = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop", // Default event image
@@ -25,13 +26,13 @@ export default function EventCard({
     onLikeToggle?.(next, e)
   }
 
-  const heartColor = liked ? "#10b981" : "#111827" // emerald-500 when liked; dark otherwise
-  const heartFill = liked ? "#10b981" : "transparent"
+  const heartColor = liked ? Colors.emerald : Colors.gray900 // emerald when liked; dark otherwise
+  const heartFill = liked ? Colors.emerald : "transparent"
 
   // Day/Night indicator
   const isDayTime = timeOfDay === "day"
   const TimeIcon = isDayTime ? Sun : Moon
-  const timeIconColor = isDayTime ? "#f59e0b" : "#6366f1" // amber for day, indigo for night
+  const timeIconColor = isDayTime ? Colors.amber : Colors.indigo // amber for day, indigo for night
 
   return (
     <Pressable
@@ -108,25 +109,25 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 16,
-    color: '#000000',
+    color: Colors.black,
   },
   price: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 16,
-    color: '#10b981',
+    color: Colors.emerald,
     marginTop: 4,
   },
   location: {
     fontFamily: 'Sora-Regular',
     fontSize: 14,
-    color: '#000000',
+    color: Colors.black,
     marginLeft: 4,
     flex: 1,
   },
   schedule: {
     fontFamily: 'Sora-Regular',
     fontSize: 14,
-    color: '#000000',
+    color: Colors.black,
     marginLeft: 4,
     flex: 1,
   },

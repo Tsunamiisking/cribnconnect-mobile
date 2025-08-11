@@ -29,7 +29,7 @@ export default function SearchInput({
       accessibilityRole="button"
       accessibilityLabel="Open search"
     >
-      <SearchIcon size={20} color="#6b7280" />
+      <SearchIcon size={20} color={Colors.gray500} />
       <Text style={styles.placeholderText}>
         {placeholder}
       </Text>
@@ -43,13 +43,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 48,
     paddingHorizontal: 16,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: Colors.lightBackground,
     borderRadius: 24,
   },
   placeholderText: {
     fontFamily: 'Sora-Regular',
     fontSize: 16,
-    color: '#6b7280',
+    color: Colors.gray500,
     marginLeft: 12,
   },
 })

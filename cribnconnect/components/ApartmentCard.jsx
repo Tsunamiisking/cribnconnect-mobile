@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { View, Text, Image, Pressable, StyleSheet } from "react-native"
 import { Heart, Users, MapPin, Calendar } from "lucide-react-native"
-
+import { Colors } from "@/constants/Colors"
 export default function ApartmentCard({
   imageUri = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Apartment%20Card-X38Nd9YDk0wnqQCxfseg3QANAdpaX5.png", // Provided Source URL
   title = "2 bedroom apartment",
@@ -24,8 +24,8 @@ export default function ApartmentCard({
     onLikeToggle?.(next, e)
   }
 
-  const heartColor = liked ? "#10b981" : "#111827" // emerald-500 when liked; dark otherwise
-  const heartFill = liked ? "#10b981" : "transparent"
+  const heartColor = liked ? Colors.emerald : Colors.gray900 // emerald when liked; dark otherwise
+  const heartFill = liked ? Colors.emerald : "transparent"
 
   return (
     <Pressable
@@ -54,7 +54,7 @@ export default function ApartmentCard({
             <Heart size={16} color={heartColor} fill={heartFill} />
           </Pressable>
           <View className="h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-white/80">
-            <Users size={16} color="#111827" />
+            <Users size={16} color={Colors.gray900} />
           </View>
         </View>
       </View>
@@ -74,7 +74,7 @@ export default function ApartmentCard({
         </Text>
 
         <View className="mt-2 flex-row items-start">
-          <MapPin size={14} color="#111111" style={{ marginTop: 2 }} />
+          <MapPin size={14} color={Colors.black} style={{ marginTop: 2 }} />
           <Text 
             style={styles.location}
             numberOfLines={1}
@@ -85,7 +85,7 @@ export default function ApartmentCard({
         </View>
 
         <View className="mt-1 flex-row items-start">
-          <Calendar size={14} color="#111111" style={{ marginTop: 2 }} />
+          <Calendar size={14} color={Colors.black} style={{ marginTop: 2 }} />
           <Text 
             style={styles.availability}
             numberOfLines={2}
@@ -103,25 +103,25 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 16,
-    color: '#000000',
+    color: Colors.black,
   },
   price: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 16,
-    color: '#10b981',
+    color: Colors.emerald,
     marginTop: 4,
   },
   location: {
     fontFamily: 'Sora-Regular',
     fontSize: 14,
-    color: '#000000',
+    color: Colors.black,
     marginLeft: 4,
     flex: 1,
   },
   availability: {
     fontFamily: 'Sora-Regular',
     fontSize: 14,
-    color: '#000000',
+    color: Colors.black,
     marginLeft: 4,
     flex: 1,
   },
