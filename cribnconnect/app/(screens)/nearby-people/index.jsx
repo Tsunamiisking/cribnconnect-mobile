@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
-import { MapPin, Search, Filter, Heart, MessageCircle } from "lucide-react-native";
+import { MapPin, Search, MessageCircle } from "lucide-react-native";
 
 // Extended mock data for people nearby - TODO: Replace with API integration
 const ALL_NEARBY_PEOPLE = [
@@ -23,6 +23,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "1",
     name: "Sarah Chen",
     age: 24,
+    gender: "female",
     location: "500m away",
     profileImage: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=400&h=400&fit=crop&crop=face",
     interests: ["Tech", "Coffee", "Reading"],
@@ -34,6 +35,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "2",
     name: "Mike Johnson",
     age: 28,
+    gender: "male",
     location: "1.2km away",
     profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
     interests: ["Fitness", "Music", "Hiking"],
@@ -45,6 +47,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "3",
     name: "Emma Wilson",
     age: 26,
+    gender: "female",
     location: "800m away",
     profileImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
     interests: ["Art", "Travel", "Photography"],
@@ -56,6 +59,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "4",
     name: "David Kim",
     age: 30,
+    gender: "male",
     location: "2.1km away",
     profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
     interests: ["Running", "Books", "Cooking"],
@@ -67,6 +71,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "5",
     name: "Lisa Rodriguez",
     age: 25,
+    gender: "female",
     location: "1.5km away",
     profileImage: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face",
     interests: ["Photography", "Nature", "Yoga"],
@@ -78,6 +83,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "6",
     name: "Alex Thompson",
     age: 27,
+    gender: "male",
     location: "900m away",
     profileImage: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face",
     interests: ["Gaming", "Tech", "Movies"],
@@ -89,6 +95,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "7",
     name: "Maria Garcia",
     age: 29,
+    gender: "female",
     location: "1.8km away",
     profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face",
     interests: ["Dance", "Music", "Food"],
@@ -100,6 +107,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "8",
     name: "James Wilson",
     age: 31,
+    gender: "male",
     location: "2.5km away",
     profileImage: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face",
     interests: ["Business", "Networking", "Travel"],
@@ -111,6 +119,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "9",
     name: "Sophie Brown",
     age: 23,
+    gender: "female",
     location: "1.1km away",
     profileImage: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=400&h=400&fit=crop&crop=face",
     interests: ["Art", "Design", "Coffee"],
@@ -122,6 +131,7 @@ const ALL_NEARBY_PEOPLE = [
     id: "10",
     name: "Ryan Lee",
     age: 26,
+    gender: "male",
     location: "1.7km away",
     profileImage: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&h=400&fit=crop&crop=face",
     interests: ["Sports", "Fitness", "Music"],
@@ -131,10 +141,10 @@ const ALL_NEARBY_PEOPLE = [
   },
 ];
 
-const STATUS_FILTERS = [
+const GENDER_FILTERS = [
   { id: 'all', name: 'All', count: ALL_NEARBY_PEOPLE.length },
-  { id: 'online', name: 'Online', count: ALL_NEARBY_PEOPLE.filter(p => p.status === 'online').length },
-  { id: 'nearby', name: 'Very Close', count: ALL_NEARBY_PEOPLE.filter(p => p.location.includes('m away')).length },
+  { id: 'male', name: 'Males', count: ALL_NEARBY_PEOPLE.filter(p => p.gender === 'male').length },
+  { id: 'female', name: 'Females', count: ALL_NEARBY_PEOPLE.filter(p => p.gender === 'female').length },
 ];
 
 export default function NearbyPeopleScreen() {
@@ -158,10 +168,10 @@ export default function NearbyPeopleScreen() {
       person.bio.toLowerCase().includes(searchQuery.toLowerCase());
     
     let matchesFilter = true;
-    if (selectedFilter === 'online') {
-      matchesFilter = person.status === 'online';
-    } else if (selectedFilter === 'nearby') {
-      matchesFilter = person.location.includes('m away');
+    if (selectedFilter === 'male') {
+      matchesFilter = person.gender === 'male';
+    } else if (selectedFilter === 'female') {
+      matchesFilter = person.gender === 'female';
     }
     
     return matchesSearch && matchesFilter;
@@ -236,15 +246,6 @@ export default function NearbyPeopleScreen() {
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
         <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => {
-            // TODO: Handle like/save action
-            console.log("Liked person:", item.id);
-          }}
-        >
-          <Heart size={20} color={Colors.gray500} />
-        </TouchableOpacity>
-        <TouchableOpacity 
           style={[styles.actionButton, styles.messageButton]}
           onPress={() => {
             router.push(`/(screens)/chat/${item.id}`);
@@ -307,7 +308,7 @@ export default function NearbyPeopleScreen() {
         {/* Filter Chips */}
         <View style={styles.filtersContainer}>
           <FlatList
-            data={STATUS_FILTERS}
+            data={GENDER_FILTERS}
             renderItem={renderFilterChip}
             keyExtractor={(item) => item.id}
             horizontal
@@ -563,7 +564,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightBackground,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
   },
   messageButton: {
     backgroundColor: Colors.primary,
