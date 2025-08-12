@@ -8,6 +8,8 @@ export default function ApartmentCard({
   pricePerNight = "₦70,000/night",
   location = "5th avenue, Femi Close, Ojo ...",
   availability = "Available from 1st Jan – 3rd Sept",
+  apartmentType = "full", // "shared", "full", "service" - determines if Users icon shows
+  isShared = false, // Alternative: boolean prop for shared apartments
   liked: likedProp,
   onLikeToggle,
   onPress,
@@ -26,6 +28,9 @@ export default function ApartmentCard({
 
   const heartColor = liked ? Colors.emerald : Colors.gray900 // emerald when liked; dark otherwise
   const heartFill = liked ? Colors.emerald : "transparent"
+
+  // Determine if apartment should show Users icon (for shared apartments)
+  const showUsersIcon = apartmentType === "shared" || isShared
 
   return (
     <Pressable
@@ -53,9 +58,11 @@ export default function ApartmentCard({
           >
             <Heart size={16} color={heartColor} fill={heartFill} />
           </Pressable>
-          <View className="h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-white/80">
-            <Users size={16} color={Colors.gray900} />
-          </View>
+          {showUsersIcon && (
+            <View className="h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-white/80">
+              <Users size={16} color={Colors.gray900} />
+            </View>
+          )}
         </View>
       </View>
 

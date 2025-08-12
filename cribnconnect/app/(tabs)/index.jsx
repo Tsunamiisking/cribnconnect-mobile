@@ -25,6 +25,7 @@ const FEATURED_APARTMENTS = [
     pricePerNight: "$1,200/month",
     location: "Downtown Manhattan, 5th Avenue",
     type: "Studio",
+    apartmentType: "full", // full apartment, no roommates
     amenities: ["Gym", "Rooftop", "Laundry"],
     imageUri:
       "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
@@ -37,6 +38,7 @@ const FEATURED_APARTMENTS = [
     pricePerNight: "$2,500/month",
     location: "Upper East Side, Park Avenue",
     type: "2 Bedroom",
+    apartmentType: "service", // service apartment (hotel-style)
     amenities: ["Doorman", "Pool", "Parking"],
     imageUri:
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
@@ -49,6 +51,7 @@ const FEATURED_APARTMENTS = [
     pricePerNight: "$1,800/month",
     location: "Brooklyn Heights, Promenade Street",
     type: "1 Bedroom",
+    apartmentType: "shared", // shared apartment with roommates
     amenities: ["Balcony", "Pet Friendly", "Garden"],
     imageUri:
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
@@ -98,6 +101,7 @@ export default function ApartmentsScreen() {
         pricePerNight={item.pricePerNight}
         location={item.location}
         availability={item.availability}
+        apartmentType={item.apartmentType}
         liked={false}
         onLikeToggle={(liked) => {
           console.log("Bookmark toggled:", item.id, liked);
