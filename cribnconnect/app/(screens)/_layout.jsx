@@ -65,6 +65,15 @@ export default function ScreensLayout() {
         }} 
       />
 
+      <Stack.Screen 
+        name="nearby-people/index" 
+        options={{ 
+          title: 'Nearby People',
+          headerBackTitle: 'Back',
+          headerShown: false
+        }} 
+      />
+
     </Stack>
   );
 }
