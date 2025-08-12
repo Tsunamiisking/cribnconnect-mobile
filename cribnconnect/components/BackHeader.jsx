@@ -1,10 +1,13 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { MoveLeft } from "lucide-react-native";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import ProfilePopup from "./ProfilePopup";
 
 export default function BackHeader({ title = "Title", onBack }) {
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -13,25 +16,36 @@ export default function BackHeader({ title = "Title", onBack }) {
     }
   };
 
+  const handleProfilePress = () => {
+    setShowProfilePopup(true);
+  };
+
   return (
-    <View style={styles.container} className="flex-row items-center justify-between px-4 py-3">
-      <Pressable onPress={handleBack} style={styles.backButton}>
-        <MoveLeft size={24} color={Colors.primary} />
-      </Pressable>
+    <>
+      <View style={styles.container} className="flex-row items-center justify-between px-4 py-3">
+        <Pressable onPress={handleBack} style={styles.backButton}>
+          <MoveLeft size={24} color={Colors.primary} />
+        </Pressable>
 
-      <Text style={styles.text}>
-        {title}
-      </Text>
+        <Text style={styles.text}>
+          {title}
+        </Text>
 
-      <Pressable>
-        <View
-          style={styles.profileButton}
-          className="h-12 w-12 rounded-full items-center justify-center"
-        >
-          <Text style={styles.profileText}>GU</Text>
-        </View>
-      </Pressable>
-    </View>
+        <Pressable onPress={handleProfilePress}>
+          <View
+            style={styles.profileButton}
+            className="h-12 w-12 rounded-full items-center justify-center"
+          >
+            <Text style={styles.profileText}>GU</Text>
+          </View>
+        </Pressable>
+      </View>
+
+      <ProfilePopup 
+        visible={showProfilePopup}
+        onClose={() => setShowProfilePopup(false)}
+      />
+    </>
   );
 }
 
