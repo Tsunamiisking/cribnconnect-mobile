@@ -19,45 +19,45 @@ import { Heart, Building, Calendar } from 'lucide-react-native';
 
 // Mock data - TODO: Replace with API integration for saved items
 const SAVED_APARTMENTS = [
-  // {
-  //   id: "1",
-  //   title: "Modern Studio Downtown",
-  //   pricePerNight: "$1,200/month",
-  //   location: "Downtown Manhattan, 5th Avenue",
-  //   type: "Studio",
-  //   apartmentType: "full", // full apartment
-  //   amenities: ["Gym", "Rooftop", "Laundry"],
-  //   imageUri: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-  //   rating: 4.8,
-  //   availability: "Available Now – Dec 31st",
-  //   savedDate: "2 days ago",
-  // },
-  // {
-  //   id: "2",
-  //   title: "Luxury 2BR Apartment",
-  //   pricePerNight: "$2,500/month",
-  //   location: "Upper East Side, Park Avenue",
-  //   type: "2 Bedroom",
-  //   apartmentType: "service", // service apartment
-  //   amenities: ["Doorman", "Pool", "Parking"],
-  //   imageUri: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-  //   rating: 4.9,
-  //   availability: "Available Dec 1st – March 15th",
-  //   savedDate: "1 week ago",
-  // },
-  // {
-  //   id: "3",
-  //   title: "Cozy 1BR with Balcony",
-  //   pricePerNight: "$1,800/month",
-  //   location: "Brooklyn Heights, Promenade Street",
-  //   type: "1 Bedroom",
-  //   apartmentType: "shared", // shared apartment - will show Users icon
-  //   amenities: ["Balcony", "Pet Friendly", "Garden"],
-  //   imageUri: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-  //   rating: 4.7,
-  //   availability: "Available Now – Feb 28th",
-  //   savedDate: "3 days ago",
-  // },
+  {
+    id: "1",
+    title: "Modern Studio Downtown",
+    pricePerNight: "$1,200/month",
+    location: "Downtown Manhattan, 5th Avenue",
+    type: "Studio",
+    apartmentType: "full", // full apartment
+    amenities: ["Gym", "Rooftop", "Laundry"],
+    imageUri: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
+    rating: 4.8,
+    availability: "Available Now – Dec 31st",
+    savedDate: "2 days ago",
+  },
+  {
+    id: "2",
+    title: "Luxury 2BR Apartment",
+    pricePerNight: "$2,500/month",
+    location: "Upper East Side, Park Avenue",
+    type: "2 Bedroom",
+    apartmentType: "service", // service apartment
+    amenities: ["Doorman", "Pool", "Parking"],
+    imageUri: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
+    rating: 4.9,
+    availability: "Available Dec 1st – March 15th",
+    savedDate: "1 week ago",
+  },
+  {
+    id: "3",
+    title: "Cozy 1BR with Balcony",
+    pricePerNight: "$1,800/month",
+    location: "Brooklyn Heights, Promenade Street",
+    type: "1 Bedroom",
+    apartmentType: "shared", // shared apartment - will show Users icon
+    amenities: ["Balcony", "Pet Friendly", "Garden"],
+    imageUri: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
+    rating: 4.7,
+    availability: "Available Now – Feb 28th",
+    savedDate: "3 days ago",
+  },
 ];
 
 const SAVED_EVENTS = [
@@ -237,9 +237,9 @@ export default function Bookmarkscreen() {
                 style={styles.exploreButton}
                 onPress={() => {
                   if (selectedTab === 'apartments') {
-                    router.push('/(tabs)/index'); // Navigate to apartments tab
+                    router.push('/(tabs)'); // Navigate to home/apartments tab
                   } else {
-                    router.push('/(tabs)/events'); // Navigate to events tab - Fixed route name
+                    router.push('/(tabs)/events'); // Navigate to events tab
                   }
                 }}
               >
