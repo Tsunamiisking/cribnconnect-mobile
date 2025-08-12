@@ -1,15 +1,30 @@
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import {
+  ScrollView,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+  FlatList,
+  Platform,
+  Image,
+} from 'react-native';
 import { useState } from 'react';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import NormalHeader from '@/components/NormalHeader';
+import UserLinkupsCarousel from '@/components/UserLinkupsCarousel';
+import { Colors } from '@/constants/Colors';
+import { MessageCircle, Users, Calendar, MapPin } from 'lucide-react-native';
 
 // Mock data - TODO: Replace with API integration
-const CONVERSATIONS = [
+const APARTMENT_CONVERSATIONS = [
   {
     id: '1',
     type: 'direct',
     participant: {
       name: 'Sarah Chen',
-      avatar: '👩‍💼',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=400&h=400&fit=crop&crop=face',
       status: 'online',
     },
     lastMessage: {
@@ -20,24 +35,27 @@ const CONVERSATIONS = [
     context: 'Apartment Inquiry',
   },
   {
-    id: '2',
+    id: '4',
     type: 'group',
-    name: 'Coffee & Code Buddies',
-    avatar: '☕',
-    participants: 12,
+    name: 'Downtown Apartment Hunters',
+    avatar: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
+    participants: 8,
     lastMessage: {
-      text: 'Emma: Who\'s joining us for tomorrow\'s session?',
-      timestamp: '15 min ago',
-      unread: true,
+      text: 'Alex: Found a great 1BR for $1800, sharing details...',
+      timestamp: '3 hours ago',
+      unread: false,
     },
-    context: 'Linkup Group',
+    context: 'Apartment Group',
   },
+];
+
+const EVENT_CONVERSATIONS = [
   {
     id: '3',
     type: 'direct',
     participant: {
       name: 'Mike Johnson',
-      avatar: '👨‍🎨',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
       status: 'offline',
     },
     lastMessage: {
@@ -48,24 +66,40 @@ const CONVERSATIONS = [
     context: 'Event Follow-up',
   },
   {
-    id: '4',
+    id: '7',
     type: 'group',
-    name: 'Downtown Apartment Hunters',
-    avatar: '🏢',
-    participants: 8,
+    name: 'Photography Meetup',
+    avatar: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&h=300&fit=crop',
+    participants: 15,
     lastMessage: {
-      text: 'Alex: Found a great 1BR for $1800, sharing details...',
-      timestamp: '3 hours ago',
-      unread: false,
+      text: 'Emma: Next shoot is this Saturday at sunrise!',
+      timestamp: '2 hours ago',
+      unread: true,
     },
-    context: 'Apartment Group',
+    context: 'Event Group',
+  },
+];
+
+const LINKUP_CONVERSATIONS = [
+  {
+    id: '2',
+    type: 'group',
+    name: 'Coffee & Code Buddies',
+    avatar: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
+    participants: 12,
+    lastMessage: {
+      text: 'Emma: Who\'s joining us for tomorrow\'s session?',
+      timestamp: '15 min ago',
+      unread: true,
+    },
+    context: 'Linkup Group',
   },
   {
     id: '5',
     type: 'direct',
     participant: {
       name: 'Lisa Rodriguez',
-      avatar: '👩‍🎯',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face',
       status: 'away',
     },
     lastMessage: {
@@ -77,10 +111,14 @@ const CONVERSATIONS = [
   },
 ];
 
-const MESSAGE_CATEGORIES = ['All', 'Apartments', 'Events', 'Linkups', 'Direct Messages'];
+const MESSAGE_TABS = [
+  { id: 'apartments', title: 'Apartments', icon: 'building' },
+  { id: 'events', title: 'Events', icon: 'calendar' },
+  { id: 'linkups', title: 'Linkups', icon: 'users' },
+];
 
 export default function MessagesScreen() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedTab, setSelectedTab] = useState('apartments');
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = () => {
@@ -91,321 +129,245 @@ export default function MessagesScreen() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'online': return '#10b981';
-      case 'away': return '#f59e0b';
-      case 'offline': return '#6b7280';
-      default: return '#6b7280';
+      case 'online': return Colors.emerald;
+      case 'away': return Colors.amber;
+      case 'offline': return Colors.gray500;
+      default: return Colors.gray500;
     }
   };
 
-  return (
-    <View style={styles.container} className="flex-1 bg-white">
-      {/* Header */}
-      <View style={styles.header} className="px-6 pt-12 pb-4 bg-indigo-600">
-        <View style={styles.headerTop} className="flex-row justify-between items-center mb-4">
-          <View>
-            <Text style={styles.greeting} className="text-white text-lg">
-              Stay Connected 💬
-            </Text>
-            <Text style={styles.headerTitle} className="text-white text-2xl font-bold">
-              Messages
-            </Text>
-          </View>
-          
-          <TouchableOpacity style={styles.composeButton} className="bg-white bg-opacity-20 p-3 rounded-full">
-            <Text style={styles.composeButtonText} className="text-white text-lg">✏️</Text>
-          </TouchableOpacity>
-        </View>
+  const getCurrentConversations = () => {
+    switch (selectedTab) {
+      case 'apartments': return APARTMENT_CONVERSATIONS;
+      case 'events': return EVENT_CONVERSATIONS;
+      case 'linkups': return LINKUP_CONVERSATIONS;
+      default: return [];
+    }
+  };
 
-        {/* Search Bar */}
-        <TouchableOpacity style={styles.searchBar} className="bg-white rounded-lg p-4 flex-row items-center">
-          <Text style={styles.searchPlaceholder} className="text-gray-500 flex-1">
-            🔍 Search conversations...
-          </Text>
-        </TouchableOpacity>
+  const renderTabButton = (tab) => (
+    <TouchableOpacity
+      key={tab.id}
+      style={[
+        styles.tabButton,
+        selectedTab === tab.id && styles.activeTabButton
+      ]}
+      onPress={() => setSelectedTab(tab.id)}
+    >
+      <Text style={[
+        styles.tabText,
+        selectedTab === tab.id && styles.activeTabText
+      ]}>
+        {tab.title}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderConversationCard = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.conversationCard}
+      onPress={() => router.push(`/(screens)/chat/${item.id}`)}
+    >
+      <View style={styles.avatarContainer}>
+        {item.type === 'direct' ? (
+          <View style={styles.profileImageContainer}>
+            <Image
+              source={{ uri: item.participant.avatar }}
+              style={styles.profileImage}
+              resizeMode="cover"
+            />
+            <View style={[
+              styles.statusIndicator, 
+              { backgroundColor: getStatusColor(item.participant.status) }
+            ]} />
+          </View>
+        ) : (
+          <View style={styles.groupAvatarContainer}>
+            <Image
+              source={{ uri: item.avatar }}
+              style={styles.groupAvatar}
+              resizeMode="cover"
+            />
+            <View style={styles.groupIndicator}>
+              <Users size={12} color={Colors.white} />
+            </View>
+          </View>
+        )}
       </View>
 
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        {/* Category Filters */}
-        <View style={styles.filtersContainer} className="px-6 py-4">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.filters} className="flex-row space-x-3">
-              {MESSAGE_CATEGORIES.map((category) => (
-                <TouchableOpacity
-                  key={category}
-                  style={[
-                    styles.filterChip,
-                    selectedCategory === category && styles.activeFilterChip
-                  ]}
-                  className={`px-4 py-2 rounded-full ${
-                    selectedCategory === category ? 'bg-indigo-600' : 'bg-gray-100'
-                  }`}
-                  onPress={() => setSelectedCategory(category)}
-                >
-                  <Text style={[
-                    styles.filterText,
-                    selectedCategory === category && styles.activeFilterText
-                  ]} className={selectedCategory === category ? 'text-white' : 'text-gray-700'}>
-                    {category}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
+      <View style={styles.conversationContent}>
+        <View style={styles.conversationHeader}>
+          <Text style={styles.conversationName} numberOfLines={1}>
+            {item.type === 'direct' ? item.participant.name : item.name}
+          </Text>
+          <Text style={styles.timestamp}>
+            {item.lastMessage.timestamp}
+          </Text>
         </View>
 
-        {/* Conversations List */}
-        <View style={styles.section} className="px-6 mb-6">
-          <View style={styles.sectionHeader} className="flex-row justify-between items-center mb-4">
-            <Text style={styles.sectionTitle} className="text-xl font-bold text-gray-900">
-              Recent Conversations
-            </Text>
-            <TouchableOpacity>
-              <Text style={styles.markAllRead} className="text-indigo-600 font-medium">
-                Mark All Read
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <Text style={styles.context}>
+          {item.context}
+        </Text>
 
-          {CONVERSATIONS.map((conversation) => (
-            <Link
-              key={conversation.id}
-              href={`/(screens)/chat/${conversation.id}`}
-              asChild
-            >
-              <TouchableOpacity style={styles.conversationCard} className="bg-white rounded-lg mb-3 border border-gray-100">
-                <View style={styles.cardContent} className="p-4">
-                  <View style={styles.conversationHeader} className="flex-row items-center justify-between mb-2">
-                    <View style={styles.conversationInfo} className="flex-row items-center flex-1">
-                      <View style={styles.avatarContainer} className="mr-3 relative">
-                        <Text style={styles.avatar} className="text-3xl">
-                          {conversation.type === 'direct' ? conversation.participant.avatar : conversation.avatar}
-                        </Text>
-                        {conversation.type === 'direct' && (
-                          <View 
-                            style={[styles.statusIndicator, { backgroundColor: getStatusColor(conversation.participant.status) }]} 
-                            className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
-                          />
-                        )}
-                        {conversation.type === 'group' && (
-                          <View style={styles.groupIndicator} className="absolute -bottom-1 -right-1 bg-indigo-600 w-5 h-5 rounded-full items-center justify-center">
-                            <Text style={styles.groupCount} className="text-white text-xs font-bold">
-                              {conversation.participants}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                      
-                      <View style={styles.nameContainer} className="flex-1">
-                        <View style={styles.nameRow} className="flex-row items-center justify-between">
-                          <Text style={styles.conversationName} className="text-lg font-semibold text-gray-900">
-                            {conversation.type === 'direct' ? conversation.participant.name : conversation.name}
-                          </Text>
-                          <Text style={styles.timestamp} className="text-gray-500 text-sm">
-                            {conversation.lastMessage.timestamp}
-                          </Text>
-                        </View>
-                        
-                        <Text style={styles.context} className="text-indigo-600 text-sm mb-1">
-                          {conversation.context}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={styles.messagePreview} className="flex-row items-center justify-between">
-                    <Text 
-                      style={[styles.lastMessage, conversation.lastMessage.unread && styles.unreadMessage]} 
-                      className={`flex-1 ${conversation.lastMessage.unread ? 'text-gray-900 font-medium' : 'text-gray-600'} mr-3`}
-                      numberOfLines={2}
-                    >
-                      {conversation.lastMessage.text}
-                    </Text>
-                    
-                    {conversation.lastMessage.unread && (
-                      <View style={styles.unreadBadge} className="bg-indigo-600 w-3 h-3 rounded-full" />
-                    )}
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </Link>
-          ))}
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.section} className="px-6 mb-6">
-          <Text style={styles.sectionTitle} className="text-xl font-bold text-gray-900 mb-4">
-            Quick Actions
+        <View style={styles.messagePreview}>
+          <Text 
+            style={[
+              styles.lastMessage,
+              item.lastMessage.unread && styles.unreadMessage
+            ]}
+            numberOfLines={2}
+          >
+            {item.lastMessage.text}
           </Text>
           
-          <View style={styles.actionsGrid} className="flex-row flex-wrap">
-            <TouchableOpacity style={styles.actionCard} className="bg-indigo-50 p-4 rounded-lg mr-3 mb-3 flex-1">
-              <Text style={styles.actionIcon} className="text-2xl mb-2">💬</Text>
-              <Text style={styles.actionTitle} className="font-medium text-gray-900">
-                Start New Chat
-              </Text>
-              <Text style={styles.actionSubtitle} className="text-gray-600 text-sm">
-                Message someone new
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionCard} className="bg-green-50 p-4 rounded-lg mr-3 mb-3 flex-1">
-              <Text style={styles.actionIcon} className="text-2xl mb-2">👥</Text>
-              <Text style={styles.actionTitle} className="font-medium text-gray-900">
-                Create Group
-              </Text>
-              <Text style={styles.actionSubtitle} className="text-gray-600 text-sm">
-                Start a group chat
-              </Text>
-            </TouchableOpacity>
+          {item.lastMessage.unread && (
+            <View style={styles.unreadBadge} />
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <NormalHeader title="Messages" />
+      
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Tab Navigation */}
+        <View style={styles.tabsContainer}>
+          <View style={styles.tabsContent}>
+            {MESSAGE_TABS.map(renderTabButton)}
           </View>
         </View>
 
-        {/* Empty State for New Users */}
-        {CONVERSATIONS.length === 0 && (
-          <View style={styles.emptyState} className="px-6 py-12 items-center">
-            <Text style={styles.emptyIcon} className="text-6xl mb-4">💬</Text>
-            <Text style={styles.emptyTitle} className="text-xl font-bold text-gray-900 mb-2">
-              No conversations yet
+        {/* Tab Content */}
+        {selectedTab === 'linkups' ? (
+          // Special content for Linkups tab - show active linkups
+          <View>
+            <UserLinkupsCarousel />
+            
+            {/* Linkup Conversations */}
+            <View style={styles.conversationsSection}>
+              <Text style={styles.sectionTitle}>Linkup Conversations</Text>
+              <FlatList
+                data={getCurrentConversations()}
+                renderItem={renderConversationCard}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+              />
+            </View>
+          </View>
+        ) : (
+          // Regular conversations for Apartments and Events tabs
+          <View style={styles.conversationsSection}>
+            <Text style={styles.sectionTitle}>
+              {selectedTab === 'apartments' ? 'Apartment Conversations' : 'Event Conversations'}
             </Text>
-            <Text style={styles.emptySubtitle} className="text-gray-600 text-center mb-6">
-              Start connecting with people through apartments, events, and linkups!
-            </Text>
-            <TouchableOpacity style={styles.startChattingButton} className="bg-indigo-600 px-6 py-3 rounded-lg">
-              <Text style={styles.startChattingText} className="text-white font-medium">
-                Start Chatting
-              </Text>
-            </TouchableOpacity>
+            
+            {getCurrentConversations().length > 0 ? (
+              <FlatList
+                data={getCurrentConversations()}
+                renderItem={renderConversationCard}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <MessageCircle size={48} color={Colors.gray400} />
+                <Text style={styles.emptyTitle}>No conversations yet</Text>
+                <Text style={styles.emptySubtitle}>
+                  {selectedTab === 'apartments' 
+                    ? "Start connecting with apartment hunters and landlords!"
+                    : "Join events to start conversations with other attendees!"
+                  }
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
-        {/* Bottom Spacing */}
+        {/* Bottom spacing for tab bar */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  tabsContainer: {
+    paddingVertical: 16,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 16,
-    backgroundColor: '#4f46e5',
-  },
-  headerTop: {
+  tabsContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 16,
   },
-  greeting: {
-    color: 'white',
-    fontSize: 18,
-  },
-  headerTitle: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  composeButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 12,
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.lightBackground,
     borderRadius: 20,
-  },
-  composeButtonText: {
-    color: 'white',
-    fontSize: 18,
-  },
-  searchBar: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    flexDirection: 'row',
+    marginHorizontal: 4,
     alignItems: 'center',
   },
-  searchPlaceholder: {
-    color: '#6b7280',
-    flex: 1,
+  activeTabButton: {
+    backgroundColor: Colors.primary,
   },
-  content: {
-    flex: 1,
+  tabText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 14,
+    color: Colors.gray500,
   },
-  filtersContainer: {
-    paddingHorizontal: 24,
+  activeTabText: {
+    color: Colors.white,
+  },
+  conversationsSection: {
+    paddingHorizontal: 16,
     paddingVertical: 16,
   },
-  filters: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  activeFilterChip: {
-    backgroundColor: '#4f46e5',
-  },
-  filterText: {
-    color: '#374151',
-  },
-  activeFilterText: {
-    color: 'white',
-  },
-  section: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  sectionTitle: {
+    fontFamily: 'Urbanist-Bold',
+    fontSize: 20,
+    color: Colors.gray900,
     marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  markAllRead: {
-    color: '#4f46e5',
-    fontWeight: '500',
-  },
   conversationCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#f3f4f6',
-  },
-  cardContent: {
-    padding: 16,
-  },
-  conversationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  conversationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    elevation: 1,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   avatarContainer: {
     marginRight: 12,
+  },
+  profileImageContainer: {
     position: 'relative',
   },
-  avatar: {
-    fontSize: 32,
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   statusIndicator: {
     position: 'absolute',
@@ -415,45 +377,52 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: Colors.white,
+  },
+  groupAvatarContainer: {
+    position: 'relative',
+  },
+  groupAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   groupIndicator: {
     position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: '#4f46e5',
+    bottom: -2,
+    right: -2,
+    backgroundColor: Colors.primary,
     width: 20,
     height: 20,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  groupCount: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  nameContainer: {
+  conversationContent: {
     flex: 1,
   },
-  nameRow: {
+  conversationHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   conversationName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: Colors.gray900,
+    flex: 1,
   },
   timestamp: {
-    color: '#6b7280',
-    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    fontSize: 12,
+    color: Colors.gray500,
   },
   context: {
-    color: '#4f46e5',
+    fontFamily: 'Sora-Medium',
     fontSize: 14,
-    marginBottom: 4,
+    color: Colors.primary,
+    marginBottom: 6,
   },
   messagePreview: {
     flexDirection: 'row',
@@ -461,76 +430,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   lastMessage: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray500,
     flex: 1,
-    color: '#6b7280',
-    marginRight: 12,
+    marginRight: 8,
   },
   unreadMessage: {
-    color: '#111827',
-    fontWeight: '500',
+    fontFamily: 'Sora-Medium',
+    color: Colors.gray900,
   },
   unreadBadge: {
-    backgroundColor: '#4f46e5',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  actionCard: {
-    backgroundColor: '#eef2ff',
-    padding: 16,
-    borderRadius: 8,
-    marginRight: 12,
-    marginBottom: 12,
-    flex: 1,
-    minWidth: 150,
-  },
-  actionIcon: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  actionTitle: {
-    fontWeight: '500',
-    color: '#111827',
-  },
-  actionSubtitle: {
-    color: '#6b7280',
-    fontSize: 14,
+    backgroundColor: Colors.primary,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   emptyState: {
-    paddingHorizontal: 24,
-    paddingVertical: 48,
+    paddingVertical: 40,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontFamily: 'Urbanist-Bold',
+    fontSize: 18,
+    color: Colors.gray900,
+    marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
-    color: '#6b7280',
+    fontFamily: 'Sora-Regular',
+    fontSize: 16,
+    color: Colors.gray500,
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  startChattingButton: {
-    backgroundColor: '#4f46e5',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  startChattingText: {
-    color: 'white',
-    fontWeight: '500',
+    lineHeight: 24,
   },
   bottomSpacing: {
-    height: 100,
+    height: Platform.OS === 'ios' ? 85 : 60,
   },
 });

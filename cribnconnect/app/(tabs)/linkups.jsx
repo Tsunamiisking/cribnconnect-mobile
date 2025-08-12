@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 import { router } from "expo-router";
 import LinkupCard from "@/components/LinkupCard";
-import UserLinkupsCarousel from "@/components/UserLinkupsCarousel";
+import PeopleCarousel from "@/components/PeopleCarousel";
 import { SafeAreaView } from "react-native-safe-area-context";
 import NormalHeader from "@/components/NormalHeader";
 import { Colors } from "@/constants/Colors";
@@ -162,8 +162,8 @@ export default function LinkupsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* User's Active Linkups Carousel */}
-        <UserLinkupsCarousel />
+        {/* People Close to You Carousel */}
+        <PeopleCarousel />
 
         {/* Create Linkup Button */}
         <View style={styles.createSection}>
