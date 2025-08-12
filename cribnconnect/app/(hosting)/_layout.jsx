@@ -19,14 +19,6 @@ export default function HostingLayout() {
           headerBackTitleVisible: false,
         }} 
       />
-      <Stack.Screen 
-        name="add-linkup" 
-        options={{ 
-          title: 'Start Linkup',
-          headerShown: true,
-          headerBackTitleVisible: false,
-        }} 
-      />
     </Stack>
   );
 }
