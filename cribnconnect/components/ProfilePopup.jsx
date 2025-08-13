@@ -17,18 +17,27 @@ import {
   Home, 
   UserPlus, 
   LogIn,
+  LogOut,
   Mail,
   X
 } from 'lucide-react-native';
+// Uncomment when you implement the AuthContext
+// import { useAuth } from '@/contexts/AuthContext';
+// import { logoutUser } from '@/services/authService';
 
 const { width } = Dimensions.get('window');
 
 export default function ProfilePopup({ visible, onClose, user = null }) {
-  // Mock user data - TODO: Replace with actual user data from context/state
+  // Uncomment these lines when you implement the AuthContext:
+  // const { user: authUser, isAuthenticated } = useAuth();
+  // const currentUser = authUser || user;
+  
+  // For now, using mock data - TODO: Replace with actual user data from Firebase
+  const isAuthenticated = false; // Change this based on your auth state
   const currentUser = user || {
     name: "Guest User",
     email: null, // null if not logged in
-    isLoggedIn: false,
+    isLoggedIn: isAuthenticated,
   };
 
   const handleNavigation = (route) => {
@@ -38,13 +47,30 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
     }, 100); // Small delay to ensure smooth animation
   };
 
+  const handleLogout = async () => {
+    try {
+      // Uncomment when implementing Firebase auth:
+      // const result = await logoutUser();
+      // if (result.success) {
+      //   onClose();
+      //   router.push('/(auth)/login');
+      // }
+      
+      // For now, just log and close
+      console.log('Logout clicked');
+      onClose();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   const menuItems = [
     {
       id: 'host',
       title: 'Host',
       subtitle: 'List your apartment or create events',
       icon: Home,
-      route: '/(hosting)/add-apartment', // You can adjust this route
+      route: '/(hosting)/add-apartment',
       showAlways: true,
     },
     {
@@ -79,13 +105,21 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
       route: '/(auth)/login',
       showWhenLoggedOut: true,
     },
+    {
+      id: 'logout',
+      title: 'Logout',
+      subtitle: 'Sign out of your account',
+      icon: LogOut,
+      action: handleLogout,
+      showWhenLoggedIn: true,
+    },
   ];
 
   // Filter menu items based on login status
   const visibleMenuItems = menuItems.filter(item => {
     if (item.showAlways) return true;
-    if (item.showWhenLoggedIn && currentUser.isLoggedIn) return true;
-    if (item.showWhenLoggedOut && !currentUser.isLoggedIn) return true;
+    if (item.showWhenLoggedIn && isAuthenticated) return true;
+    if (item.showWhenLoggedOut && !isAuthenticated) return true;
     return false;
   });
 
@@ -117,8 +151,10 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
             </View>
             
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{currentUser.name}</Text>
-              {currentUser.email ? (
+              <Text style={styles.userName}>
+                {currentUser?.displayName || currentUser?.name || "Guest User"}
+              </Text>
+              {currentUser?.email ? (
                 <View style={styles.emailContainer}>
                   <Mail size={14} color={Colors.gray500} />
                   <Text style={styles.userEmail}>{currentUser.email}</Text>
@@ -140,7 +176,7 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
                 <TouchableOpacity
                   key={item.id}
                   style={styles.menuItem}
-                  onPress={() => handleNavigation(item.route)}
+                  onPress={() => item.action ? item.action() : handleNavigation(item.route)}
                   activeOpacity={0.7}
                 >
                   <View style={styles.menuIconContainer}>
