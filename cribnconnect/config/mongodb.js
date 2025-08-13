@@ -1,30 +1,44 @@
-// MongoDB Configuration for Backend API
-// This will be used in your backend/web platform
-
 const mongoose = require('mongoose');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 
-// MongoDB Configuration
+// MongoDB Atlas connection string
+const uri = "mongodb+srv://ttdotdev:5iUfMFmx4yJS0GjA@cribandconnect.jtdysfc.mongodb.net/?retryWrites=true&w=majority&appName=cribandconnect";
+
 const mongoConfig = {
-  // TODO: Replace with your MongoDB connection string
-  connectionString: process.env.MONGODB_URI || "mongodb://localhost:27017/cribnconnect",
+  connectionString: process.env.MONGODB_URI || uri,
   options: {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    maxPoolSize: 10, // Maintain up to 10 socket connections
-    serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-    socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-    bufferMaxEntries: 0, // Disable mongoose buffering
-    bufferCommands: false, // Disable mongoose buffering
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    bufferMaxEntries: 0,
+    bufferCommands: false,
+    // MongoDB Stable API configuration
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true,
+    }
   }
 };
 
-// Connection function
 const connectMongoDB = async () => {
   try {
-    await mongoose.connect(mongoConfig.connectionString, mongoConfig.options);
-    console.log('✅ Connected to MongoDB successfully');
+    // Test connection first with native MongoDB client
+    const client = new MongoClient(mongoConfig.connectionString, {
+      serverApi: mongoConfig.options.serverApi
+    });
     
-    // Connection events
+    await client.connect();
+    await client.db("admin").command({ ping: 1 });
+    console.log("✅ Pinged MongoDB deployment successfully!");
+    await client.close();
+    
+    // Now connect with Mongoose for schema management
+    await mongoose.connect(mongoConfig.connectionString, mongoConfig.options);
+    console.log('✅ Connected to MongoDB with Mongoose successfully');
+    
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB connection error:', err);
     });
@@ -33,7 +47,6 @@ const connectMongoDB = async () => {
       console.log('🔌 MongoDB disconnected');
     });
     
-    // Handle app termination
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
       console.log('🛑 MongoDB connection closed through app termination');
@@ -46,7 +59,6 @@ const connectMongoDB = async () => {
   }
 };
 
-// Disconnect function
 const disconnectMongoDB = async () => {
   try {
     await mongoose.connection.close();
@@ -59,5 +71,7 @@ const disconnectMongoDB = async () => {
 module.exports = {
   connectMongoDB,
   disconnectMongoDB,
-  mongoose
+  mongoose,
+  MongoClient, // Export for direct MongoDB operations if needed
+  uri // Export the connection string
 };
