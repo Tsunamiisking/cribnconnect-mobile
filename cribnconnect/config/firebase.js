@@ -8,7 +8,7 @@ import { getFunctions } from 'firebase/functions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Your web app's Firebase configuration
-// TODO: Replace with your actual Firebase configuration
+
 const firebaseConfig = {
   apiKey: "AIzaSyB90dWTnnbAwqhs3QNnWncmnRi1PBsQaOs",
   authDomain: "cribandconnect.firebaseapp.com",
