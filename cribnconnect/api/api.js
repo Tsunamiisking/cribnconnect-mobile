@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 
 // Base URL of your backend API
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+  baseURL: process.env.EXPO_PUBLIC_API_URL || "https://cribnconnect-api.onrender.com",
 });
 
 // Add Firebase token to requests
