@@ -7,24 +7,24 @@ export default function HostingLayout() {
         name="index"
         options={{ 
           title: 'Host Type',
-          headerShown: true,
-          headerBackTitleVisible: false,
+          headerShown: false,
+          // headerBackTitleVisible: false,
         }}
       />
       <Stack.Screen 
         name="add-apartment" 
         options={{ 
           title: 'Add Apartment',
-          headerShown: true,
-          headerBackTitleVisible: false,
+          headerShown: false,
+          // headerBackTitleVisible: false,
         }} 
       />
       <Stack.Screen 
         name="add-event" 
         options={{ 
           title: 'Create Event',
-          headerShown: true,
-          headerBackTitleVisible: false,
+          headerShown: false,
+          // headerBackTitleVisible: false,
         }} 
       />
     </Stack>

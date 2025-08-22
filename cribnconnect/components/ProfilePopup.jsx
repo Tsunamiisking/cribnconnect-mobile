@@ -70,7 +70,7 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
       title: 'Host',
       subtitle: 'List your apartment or create events',
       icon: Home,
-      route: '/(hosting)/add-apartment',
+      route: '/(hosting)',
       showAlways: true,
     },
     {

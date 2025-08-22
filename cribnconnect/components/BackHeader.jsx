@@ -34,7 +34,7 @@ export default function BackHeader({ title = "Title", onBack }) {
         <Pressable onPress={handleProfilePress}>
           <View
             style={styles.profileButton}
-            className="h-12 w-12 rounded-full items-center justify-center"
+            className="h-14 w-14 rounded-full items-center justify-center"
           >
             <Text style={styles.profileText}>GU</Text>
           </View>
@@ -53,21 +53,19 @@ const styles = StyleSheet.create({
   container: {
     height: 64,
     backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    // borderBottomWidth: 1,
+    // borderBottomColor: "#f3f4f6",
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-    // borderRadius: 20,
   },
   text: {
     fontSize: 28,
-    fontFamily: "Urbanist-SemiBold",
+    fontFamily: "Urbanist-Bold",
     color: Colors.primary,
-    // textAlign: 'center',
     flex: 1,
   },
     profileButton: {
@@ -76,6 +74,6 @@ const styles = StyleSheet.create({
   profileText: {
     color: 'white',
     fontFamily: 'Sora-SemiBold',
-    fontSize: 14,
+    fontSize: 18,
   }
 });
