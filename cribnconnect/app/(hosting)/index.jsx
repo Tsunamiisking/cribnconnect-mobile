@@ -1,6 +1,11 @@
-
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
 import { router } from "expo-router";
@@ -8,7 +13,7 @@ import { Colors } from "@/constants/Colors";
 
 export default function HostTypeScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       <BackHeader title="Host" />
       <View style={styles.headerSection}>
@@ -17,10 +22,13 @@ export default function HostTypeScreen() {
       </View>
 
       <View style={styles.optionsContainer}>
+        <View className="items-end mr-6 mb-2 ">
+          <Text className="text-[#007AFF] text-xl">Go to drafts?</Text>
+        </View>
         <TouchableOpacity
-          style={[styles.optionCard, styles.apartmentCard]}
+          style={[styles.optionCard]}
           activeOpacity={0.85}
-          onPress={() => router.push('/(hosting)/add-apartment')}
+          onPress={() => router.push("/(hosting)/add-apartment")}
         >
           <Text style={styles.optionIcon}>🏠</Text>
           <View style={styles.optionContent}>
@@ -30,14 +38,16 @@ export default function HostTypeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.optionCard, styles.eventCard]}
+          style={[styles.optionCard]}
           activeOpacity={0.85}
-          onPress={() => router.push('/(hosting)/add-event')}
+          onPress={() => router.push("/(hosting)/add-event")}
         >
           <Text style={styles.optionIcon}>🎉</Text>
           <View style={styles.optionContent}>
             <Text style={styles.optionTitle}>Event</Text>
-            <Text style={styles.optionDesc}>Host a party, meetup, or gathering</Text>
+            <Text style={styles.optionDesc}>
+              Host a party, meetup, or gathering
+            </Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -53,6 +63,7 @@ const styles = StyleSheet.create({
   headerSection: {
     marginTop: 24,
     marginBottom: 16,
+    marginLeft: 16,
   },
   title: {
     color: Colors.primary,
@@ -70,8 +81,11 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   optionsContainer: {
-    marginTop: 32,
+    flex: 1,
+    justifyContent: "center",
+    // marginTop: 60,
     gap: 18,
+    marginHorizontal: 12,
   },
   optionCard: {
     flexDirection: "row",

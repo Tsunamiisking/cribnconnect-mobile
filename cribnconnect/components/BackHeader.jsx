@@ -24,7 +24,7 @@ export default function BackHeader({ title = "Title", onBack }) {
     <>
       <View style={styles.container} className="flex-row items-center justify-between px-4 py-3">
         <Pressable onPress={handleBack} style={styles.backButton}>
-          <MoveLeft size={24} color={Colors.primary} />
+          <MoveLeft size={26} color={Colors.primary} />
         </Pressable>
 
         <Text style={styles.text}>
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: "center",
-    alignItems: "center",
+    // alignItems: "center",
   },
   text: {
     fontSize: 28,
