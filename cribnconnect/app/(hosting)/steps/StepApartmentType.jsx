@@ -22,7 +22,6 @@ const apartmentTypeOptions = [
   { type: "Container", icon: Container },
   { type: "Cabin", icon: Trees },
   { type: "Tent", icon: Tent },
-  { type: "Other", icon: Sparkle },
 ];
 
 export default function StepApartmentType({ value, onSelect, styles }) {
