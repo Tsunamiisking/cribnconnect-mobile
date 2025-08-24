@@ -85,26 +85,15 @@ export default function AddApartmentScreen() {
                 return (
                   <TouchableOpacity
                     key={type}
-                    style={[
-                      styles.typeOption,
-                      selected && styles.selectedTypeOption,
-                    ]}
+                    style={[styles.typeOption, selected && styles.selectedTypeOption]}
                     activeOpacity={0.85}
-                    onPress={() => {
-                      updateField("apartmentType", type);
-                      setTimeout(() => nextStep(), 150); // slight delay for UI feedback
-                    }}
+                    onPress={() => updateField("apartmentType", type)}
                   >
                     <View style={styles.typeOptionRow}>
                       <View style={styles.typeIcon}>
                         <Icon size={28} color={Colors.black} />
                       </View>
-                      <Text
-                        style={[
-                          styles.typeOptionText,
-                          selected && styles.selectedTypeOptionText,
-                        ]}
-                      >
+                      <Text style={[styles.typeOptionText, selected && styles.selectedTypeOptionText]}>
                         {type}
                       </Text>
                     </View>
@@ -198,7 +187,12 @@ export default function AddApartmentScreen() {
 
       <ScrollView style={styles.content}>
         {renderStepContent()}
-        <HostingButtonNav />
+        <HostingButtonNav
+          onNext={nextStep}
+          onBack={previousStep}
+          currentStep={currentStep}
+          totalSteps={10}
+        />
       </ScrollView>
       {/* Navigation buttons removed. User is redirected to next step on option select. */}
     </SafeAreaView>
