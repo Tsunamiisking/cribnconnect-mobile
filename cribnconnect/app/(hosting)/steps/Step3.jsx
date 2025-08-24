@@ -1,6 +1,7 @@
 import { View, Text, TextInput } from "react-native";
+import { ChevronsUpDown } from "lucide-react-native";
 
-export default function Step3({ styles }) {
+export default function Step3({ value = {}, onChange, styles }) {
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>How many rooms are available?</Text>
@@ -8,44 +9,91 @@ export default function Step3({ styles }) {
         Select the number of rooms and bathrooms available
       </Text>
       <View>
-        <View className="flex-row items-center justify-between">
+        {/* Beds input with ChevronsUpDown aligned horizontally */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
           <Text style={styles.label}>Beds:</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            onChangeText={(text) => updateField("step3Beds", text)}
+            value={value.beds || ""}
+            onChangeText={(text) => onChange({ ...value, beds: text })}
           />
         </View>
-        <View className="flex-row items-center justify-between">
+        {/* Rooms input */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
           <Text style={styles.label}>Rooms:</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            onChangeText={(text) => updateField("step3Rooms", text)}
+            value={value.rooms || ""}
+            onChangeText={(text) => onChange({ ...value, rooms: text })}
           />
         </View>
-        <View className="flex-row items-center justify-between">
+        {/* Private bathroom inside room */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
           <Text style={styles.label}>Private bathroom inside room:</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            onChangeText={(text) => updateField("step3Bathrooms", text)}
+            value={value.privateBathIn || ""}
+            onChangeText={(text) => onChange({ ...value, privateBathIn: text })}
           />
         </View>
-        <View className="flex-row items-center justify-between">
+        {/* Private bathroom outside room */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
           <Text style={styles.label}>Private bathroom outside room:</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            onChangeText={(text) => updateField("step3Bathrooms", text)}
+            value={value.privateBathOut || ""}
+            onChangeText={(text) =>
+              onChange({ ...value, privateBathOut: text })
+            }
           />
         </View>
-        <View className="flex-row items-center justify-between">
-          <Text style={styles.label}>Shared bathrooms:</Text>
+        {/* Shared bathrooms */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
+          <Text style={styles.label}>Shared bathroom (s):</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            onChangeText={(text) => updateField("step3Bathrooms", text)}
+            value={value.sharedBath || ""}
+            onChangeText={(text) => onChange({ ...value, sharedBath: text })}
           />
         </View>
       </View>

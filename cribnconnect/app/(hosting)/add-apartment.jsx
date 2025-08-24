@@ -28,6 +28,13 @@ export default function AddApartmentScreen() {
   const [formData, setFormData] = useState({
     apartmentType: "", // Step 1
     step2Space: "", // Step 2
+    step3Value: {
+      beds: "",
+      rooms: "",
+      privateBathIn: "",
+      privateBathOut: "",
+      sharedBath: "",
+    }, // Step 3
     // ...existing fields for future steps
   });
 
@@ -74,7 +81,13 @@ export default function AddApartmentScreen() {
           />
         );
       case 3:
-        return <Step3 styles={styles} />;
+        return (
+          <Step3
+            value={formData.step3Value}
+            onChange={val => updateField('step3Value', val)}
+            styles={styles}
+          />
+        );
       case 4:
         return <Step4 styles={styles} />;
       case 5:
@@ -200,17 +213,21 @@ const styles = StyleSheet.create({
   selectedTypeOptionText: {
     color: Colors.primary,
   },
-  input: {
-    borderWidth: 1,
-    width: 70,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 12,
+  inputView: {
+    display: "flex",
+    flexDirection: "row",
     fontSize: 16,
-    color: "#111827",
-    fontFamily: "Sora-Regular",
+    fontFamily: "Sora-SemiBold",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 8,
+    borderWidth: 1,
+    width: 80,
+    height: 50,
+    borderColor: Colors.borderColor,
+    borderRadius: 12,
+    marginBottom: 12,
   },
   label: {
     fontSize: 18,
