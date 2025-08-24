@@ -241,6 +241,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
+    flex: 1,
     height: 60,
     borderWidth: 1,
     borderColor: Colors.borderColor,

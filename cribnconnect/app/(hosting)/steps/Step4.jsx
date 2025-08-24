@@ -24,24 +24,24 @@ export default function Step4({ styles }) {
           />
           <View className="flex-row">
             <TextInput
-              style={styles.inputShare}
+              style={styles.input}
               placeholder="State"
               placeholderTextColor="#B0B0B0"
             />
             <TextInput
-              style={styles.inputShare}
+              style={styles.input}
               placeholder="City"
               placeholderTextColor="#B0B0B0"
             />
           </View>
           <View className="flex-row">
             <TextInput
-              style={styles.inputShare}
+              style={styles.input}
               placeholder="Zip Code"
               placeholderTextColor="#B0B0B0"
             />
             <TextInput
-              style={styles.inputShare}
+              style={styles.input}
               placeholder="Country"
               placeholderTextColor="#B0B0B0"
             />
@@ -62,24 +62,24 @@ export default function Step4({ styles }) {
         />
         <View className="flex-row">
           <TextInput
-            style={styles.inputShare}
+            style={styles.input}
             placeholder="State"
             placeholderTextColor="#B0B0B0"
           />
           <TextInput
-            style={styles.inputShare}
+            style={styles.input}
             placeholder="City"
             placeholderTextColor="#B0B0B0"
           />
         </View>
         <View className="flex-row">
           <TextInput
-            style={styles.inputShare}
+            style={styles.input}
             placeholder="Zip Code"
             placeholderTextColor="#B0B0B0"
           />
           <TextInput
-            style={styles.inputShare}
+            style={styles.input}
             placeholder="Country"
             placeholderTextColor="#B0B0B0"
           />
