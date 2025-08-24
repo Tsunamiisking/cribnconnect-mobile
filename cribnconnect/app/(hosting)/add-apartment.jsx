@@ -18,6 +18,7 @@ import {
   Tent,
   Sparkle,
 } from "lucide-react-native";
+import HostingButtonNav from "@/components/HostingButtonNav";
 import BackHeader from "@/components/BackHeader";
 import { useState } from "react";
 import { router } from "expo-router";
@@ -88,12 +89,15 @@ export default function AddApartmentScreen() {
                       selected && styles.selectedTypeOption,
                     ]}
                     activeOpacity={0.85}
-                    onPress={() => updateField("apartmentType", type)}
+                    onPress={() => {
+                      updateField("apartmentType", type);
+                      setTimeout(() => nextStep(), 150); // slight delay for UI feedback
+                    }}
                   >
                     <View style={styles.typeOptionRow}>
-                      <View style={styles.typeIcon}>
+                      {/* <View style={styles.typeIcon}>
                         <Icon size={28} color={Colors.black} />
-                      </View>
+                      </View> */}
                       <Text
                         style={[
                           styles.typeOptionText,
@@ -181,7 +185,6 @@ export default function AddApartmentScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <BackHeader title="Add Apartment" />
       <View style={styles.progressContainer}>
-        <Text style={styles.stepCounter}>Step {currentStep} of 10</Text>
         <View style={styles.progressBar}>
           <View
             style={[
@@ -192,42 +195,19 @@ export default function AddApartmentScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.content}>{renderStepContent()}</ScrollView>
-
-      <View style={styles.navigationContainer}>
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.navButton, styles.backButton]}
-            onPress={previousStep}
-            disabled={currentStep === 1}
-          >
-            <Text style={styles.backButtonText}>
-              {currentStep === 1 ? "Cancel" : "Back"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.navButton, styles.nextButton]}
-            onPress={currentStep === 10 ? submitListing : nextStep}
-          >
-            <Text style={styles.nextButtonText}>
-              {currentStep === 10 ? "Submit Listing" : "Next"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ScrollView style={styles.content}>
+        {renderStepContent()}
+        <HostingButtonNav />
+      </ScrollView>
+      {/* Navigation buttons removed. User is redirected to next step on option select. */}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  // container: {
-  //   flex: 1,
-  // },
   progressContainer: {
     paddingHorizontal: 24,
-    // paddingVertical: ,
-    backgroundColor: "#f9fafb",
+    backgroundColor: Colors.white,
   },
   stepCounter: {
     textAlign: "center",
@@ -235,7 +215,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressBar: {
-    // backgroundColor: '#e5e7eb',
     height: 8,
     borderRadius: 4,
   },
@@ -253,41 +232,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepTitle: {
-    fontSize: 24,
-    fontFamily: "Sora-Bold",
-    color: "#111827",
-    marginBottom: 14,
+    fontSize: 28,
+    fontFamily: "Urbanist-Bold",
+    color: Colors.primary,
+    marginVertical: 12,
   },
   sectionSubtitle: {
     color: "#6b7280",
-    marginBottom: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputRow: {
-    flexDirection: "row",
-    gap: 16,
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#374151",
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: "#f9fafb",
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
+    fontFamily: "Sora-regular",
+    marginBottom: 12,
   },
   verticalOptions: {
     marginTop: 16,
@@ -322,68 +275,5 @@ const styles = StyleSheet.create({
   },
   selectedTypeOptionText: {
     color: Colors.primary,
-  },
-  amenitiesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  amenityButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  selectedAmenityButton: {
-    backgroundColor: "#2563eb",
-  },
-  amenityButtonText: {
-    color: "#374151",
-  },
-  selectedAmenityButtonText: {
-    color: "white",
-  },
-  disclaimer: {
-    backgroundColor: "#eff6ff",
-    padding: 16,
-    borderRadius: 8,
-  },
-  disclaimerText: {
-    color: "#1d4ed8",
-    fontSize: 14,
-  },
-  navigationContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  navButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  backButton: {
-    backgroundColor: "#f3f4f6",
-    marginRight: 12,
-  },
-  nextButton: {
-    backgroundColor: "#2563eb",
-    marginLeft: 12,
-  },
-  backButtonText: {
-    textAlign: "center",
-    color: "#374151",
-    fontWeight: "500",
-  },
-  nextButtonText: {
-    textAlign: "center",
-    color: "white",
-    fontWeight: "500",
   },
 });
