@@ -200,4 +200,21 @@ const styles = StyleSheet.create({
   selectedTypeOptionText: {
     color: Colors.primary,
   },
+  input: {
+    borderWidth: 1,
+    width: 70,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    fontSize: 16,
+    color: "#111827",
+    fontFamily: "Sora-Regular",
+  },
+  label: {
+    fontSize: 18,
+    color: Colors.primary,
+    fontFamily: "Sora-Regular",
+  },
 });
