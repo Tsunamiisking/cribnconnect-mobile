@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   },
     typeOptionDescription: {
     fontSize: 14,
-    marginTop: 4,
+    marginTop: 6,
     color: Colors.gray600,
     fontFamily: "Sora-Regular",
   },
@@ -233,5 +233,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.primary,
     fontFamily: "Sora-Regular",
+  },
+  input: {
+    width: "100%",
+    height: 60,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+    borderRadius: 12,
+    // marginBottom: 12,
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: "Sora-Regular",
+    marginTop: 12,
+    paddingHorizontal: 16,
   },
 });
