@@ -37,6 +37,19 @@ export default function AddApartmentScreen() {
       privateBathOut: "",
       sharedBath: "",
     }, // Step 3
+    step4Value: {
+      complexType: "", // 'yes' or 'no'
+      complexName: "",
+      address: "",
+      state: "",
+      city: "",
+      zip: "",
+      country: "",
+    }, // Step 4
+    step5Value: {
+      title: "",
+      description: "",
+    }, // Step 5
     // ...existing fields for future steps
   });
 
@@ -91,9 +104,21 @@ export default function AddApartmentScreen() {
           />
         );
       case 4:
-        return <Step4 styles={styles} />;
+        return (
+          <Step4
+            value={formData.step4Value}
+            onChange={val => updateField('step4Value', val)}
+            styles={styles}
+          />
+        );
       case 5:
-        return <Step5 styles={styles} />;
+        return (
+          <Step5
+            value={formData.step5Value}
+            onChange={val => updateField('step5Value', val)}
+            styles={styles}
+          />
+        );
       case 6:
         return <Step6 styles={styles} />;
       case 7:
