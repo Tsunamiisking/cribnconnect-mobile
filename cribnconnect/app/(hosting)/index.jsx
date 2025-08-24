@@ -6,6 +6,7 @@ import {
   StyleSheet,
   StatusBar,
 } from "react-native";
+import { Tickets, Building2 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
 import { router } from "expo-router";
@@ -23,14 +24,16 @@ export default function HostTypeScreen() {
 
       <View style={styles.optionsContainer}>
         <View className="items-end mr-6 mb-2 ">
-          <Text className="text-[#007AFF] text-xl">Go to drafts?</Text>
+          <Text className="text-[#007AFF] text-lg">Go to drafts?</Text>
         </View>
         <TouchableOpacity
           style={[styles.optionCard]}
           activeOpacity={0.85}
           onPress={() => router.push("/(hosting)/add-apartment")}
         >
-          <Text style={styles.optionIcon}>🏠</Text>
+          <View className="mr-4">
+            <Building2 />
+          </View>
           <View style={styles.optionContent}>
             <Text style={styles.optionTitle}>Apartment</Text>
             <Text style={styles.optionDesc}>List a place for rent or stay</Text>
@@ -42,7 +45,9 @@ export default function HostTypeScreen() {
           activeOpacity={0.85}
           onPress={() => router.push("/(hosting)/add-event")}
         >
-          <Text style={styles.optionIcon}>🎉</Text>
+          <View className="mr-4">
+            <Tickets />
+          </View>
           <View style={styles.optionContent}>
             <Text style={styles.optionTitle}>Event</Text>
             <Text style={styles.optionDesc}>
