@@ -253,9 +253,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 16,
   },
-  inputShare: {
+  inputArea: {
     flex: 1,
-    height: 60,
+    minHeight: 140,
     borderWidth: 1,
     borderColor: Colors.borderColor,
     borderRadius: 12,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontFamily: "Sora-Regular",
     marginTop: 12,
-    paddingHorizontal: 16,
-    // gap: 10,
+    paddingLeft: 16,
+    paddingTop: 16,
   },
 });
