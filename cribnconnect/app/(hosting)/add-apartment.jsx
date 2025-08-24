@@ -10,7 +10,7 @@ import { useState } from "react";
 import HostingButtonNav from "@/components/HostingButtonNav";
 import BackHeader from "@/components/BackHeader";
 import StepApartmentType from "./steps/StepApartmentType";
-import Step2 from "./steps/Step2";
+import StepSpace from "./steps/Step2";
 import Step3 from "./steps/Step3";
 import Step4 from "./steps/Step4";
 import Step5 from "./steps/Step5";
@@ -27,6 +27,7 @@ export default function AddApartmentScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     apartmentType: "", // Step 1
+    step2Space: "", // Step 2
     // ...existing fields for future steps
   });
 
@@ -65,7 +66,13 @@ export default function AddApartmentScreen() {
           />
         );
       case 2:
-        return <Step2 styles={styles} />;
+        return (
+          <StepSpace
+            value={formData.step2Space}
+            onSelect={space => updateField('step2Space', space)}
+            styles={styles}
+          />
+        );
       case 3:
         return <Step3 styles={styles} />;
       case 4:
@@ -155,7 +162,7 @@ const styles = StyleSheet.create({
   },
   verticalOptions: {
     marginTop: 16,
-    gap: 12,
+    gap: 10,
   },
   typeOption: {
     backgroundColor: "#f9fafb",
@@ -182,6 +189,12 @@ const styles = StyleSheet.create({
   typeOptionText: {
     fontSize: 18,
     color: "#111827",
+    fontFamily: "Sora-Regular",
+  },
+    typeOptionDescription: {
+    fontSize: 14,
+    marginTop: 4,
+    color: Colors.gray600,
     fontFamily: "Sora-Regular",
   },
   selectedTypeOptionText: {

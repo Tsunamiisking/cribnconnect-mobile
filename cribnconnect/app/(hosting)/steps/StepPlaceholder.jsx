@@ -6,6 +6,8 @@ export default function StepPlaceholder({ step, styles }) {
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Step {step}</Text>
       <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
+
+      <View>{}</View>
     </View>
   );
 }
