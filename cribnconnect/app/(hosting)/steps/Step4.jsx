@@ -3,8 +3,7 @@ import { useState } from "react";
 // import { KeyboardAvoidingView } from "react-native";
 
 export default function Step4({ styles }) {
-  const [selectedYes, setSelectedYes] = useState(false);
-  const [selectedNo, setSelectedNo] = useState(false);
+  const [selected, setSelected] = useState(null); // 'yes' | 'no' | null
 
   const renderComplexAddress = () => {
     return (
@@ -47,29 +46,29 @@ export default function Step4({ styles }) {
       <Text style={styles.sectionSubtitle}>Fill your location details</Text>
       <View className="mt-6">
         <Text style={styles.label}>
-          Is this apartment part of a larger serviced apartment building or
-          complex?
+          Is this apartment part of a larger serviced apartment building or complex?
         </Text>
       </View>
       <View>
         <View className="flex-row items-center">
           <TouchableOpacity
-            onPress={() => setSelectedYes(!selectedYes)}
-            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selectedYes ? "bg-[#274046]" : "bg-white"}`}
+            onPress={() => setSelected('yes')}
+            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === 'yes' ? "bg-[#274046]" : "bg-white"}`}
           />
-
           <Text style={styles.typeOptionText}>Yes</Text>
         </View>
-
         <View className="flex-row items-center">
           <TouchableOpacity
-            onPress={() => setSelectedNo(!selectedNo)}
-            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selectedNo ? "bg-[#274046]" : "bg-white"}`}
+            onPress={() => setSelected('no')}
+            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === 'no' ? "bg-[#274046]" : "bg-white"}`}
           />
           <Text style={styles.typeOptionText}>No</Text>
         </View>
       </View>
-      <View>{selectedYes ? renderComplexAddress() : renderAddress()}</View>
+      <View>
+        {selected === 'yes' && renderComplexAddress()}
+        {selected === 'no' && renderAddress()}
+      </View>
     </View>
   );
 }
