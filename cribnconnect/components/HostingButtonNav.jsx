@@ -4,7 +4,7 @@ import React from "react";
 
 const HostingButtonNav = () => {
   return (
-    <View className="flex-row justify-between items-center p-4 my-10 bg-white">
+    <View style={styles.container}>
       <TouchableOpacity>
         <Text>Back</Text>
       </TouchableOpacity>
@@ -20,6 +20,14 @@ const HostingButtonNav = () => {
 
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 10,
+    marginVertical: 12,
+    backgroundColor: Colors.white,
+  },
   nextButton: {
     backgroundColor: Colors.primary,
   },

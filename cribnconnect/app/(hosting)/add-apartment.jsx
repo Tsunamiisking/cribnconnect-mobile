@@ -9,7 +9,6 @@ import {
 import {
   House,
   Building,
-  Boat,
   Hotel,
   Caravan,
   Container,
@@ -17,6 +16,8 @@ import {
   Barn,
   Tent,
   Sparkle,
+  Ship,
+  Building2,
 } from "lucide-react-native";
 import HostingButtonNav from "@/components/HostingButtonNav";
 import BackHeader from "@/components/BackHeader";
@@ -56,13 +57,13 @@ export default function AddApartmentScreen() {
 
   const apartmentTypeOptions = [
     { type: "House", icon: House },
-    { type: "Apartment", icon: Building },
-    { type: "Boat", icon: Boat },
+    { type: "Apartment", icon: Building2 },
+    { type: "Boat", icon: Ship },
     { type: "Hotel", icon: Hotel },
     { type: "Camper", icon: Caravan },
     { type: "Container", icon: Container },
     { type: "Cabin", icon: Trees },
-    { type: "Farmhouse", icon: Barn },
+    // { type: "Farmhouse", icon: Barn },
     { type: "Tent", icon: Tent },
     { type: "Other", icon: Sparkle },
   ];
@@ -95,9 +96,9 @@ export default function AddApartmentScreen() {
                     }}
                   >
                     <View style={styles.typeOptionRow}>
-                      {/* <View style={styles.typeIcon}>
+                      <View style={styles.typeIcon}>
                         <Icon size={28} color={Colors.black} />
-                      </View> */}
+                      </View>
                       <Text
                         style={[
                           styles.typeOptionText,
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
   typeOptionText: {
     fontSize: 18,
     color: "#111827",
-    fontFamily: "Sora-SemiBold",
+    fontFamily: "Sora-Regular",
   },
   selectedTypeOptionText: {
     color: Colors.primary,
