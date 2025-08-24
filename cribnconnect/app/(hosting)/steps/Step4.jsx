@@ -1,8 +1,11 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, } from "react-native";
 import { useState } from "react";
+// import { KeyboardAvoidingView } from "react-native";
 
 export default function Step4({ styles }) {
-    const [selectedOption, setSelectedOption] = useState(false)
+  const [selectedYes, setSelectedYes] = useState(false);
+  const [selectedNo, setSelectedNo] = useState(false);
+
   const renderComplexAddress = () => {
     return (
       <View className="mt-7">
@@ -13,10 +16,17 @@ export default function Step4({ styles }) {
           Surulere, Golden tulip Festac)
         </Text>
 
-        <View>
-          <Text style={styles.label}>
-            Provide house address
-          </Text>
+        <View className="mt-6">
+          <Text style={styles.label}>Provide house address</Text>
+          <TextInput style={styles.input} placeholder="Enter address" placeholderTextColor="#B0B0B0"/>
+          <View className="flex-row"> 
+            <TextInput style={styles.inputShare} placeholder="State" placeholderTextColor="#B0B0B0"/>
+            <TextInput style={styles.inputShare} placeholder="City" placeholderTextColor="#B0B0B0"/>
+          </View>
+          <View className="flex-row">
+            <TextInput style={styles.inputShare} placeholder="Zip Code" placeholderTextColor="#B0B0B0"/>
+            <TextInput style={styles.inputShare} placeholder="Country" placeholderTextColor="#B0B0B0"/>
+          </View>
         </View>
       </View>
     );
@@ -43,22 +53,23 @@ export default function Step4({ styles }) {
       </View>
       <View>
         <View className="flex-row items-center">
-            <TouchableOpacity className="w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4"/>
+          <TouchableOpacity
+            onPress={() => setSelectedYes(!selectedYes)}
+            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selectedYes ? "bg-[#274046]" : "bg-white"}`}
+          />
 
-            <Text style={styles.typeOptionText}>
-                Yes
-            </Text>
+          <Text style={styles.typeOptionText}>Yes</Text>
         </View>
 
-          <View className="flex-row items-center">
-            <TouchableOpacity className="w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4"/>
-            <Text style={styles.typeOptionText}>
-                No
-            </Text>
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => setSelectedNo(!selectedNo)}
+            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selectedNo ? "bg-[#274046]" : "bg-white"}`}
+          />
+          <Text style={styles.typeOptionText}>No</Text>
         </View>
-        
       </View>
-      <View>{renderComplexAddress()}</View>
+      <View>{selectedYes ? renderComplexAddress() : renderAddress()}</View>
     </View>
   );
 }

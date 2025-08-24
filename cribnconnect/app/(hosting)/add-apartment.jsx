@@ -5,6 +5,8 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useState } from "react";
 import HostingButtonNav from "@/components/HostingButtonNav";
@@ -113,23 +115,26 @@ export default function AddApartmentScreen() {
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View
-            style={[
-              styles.progressFill,
-              { width: `${(currentStep / 10) * 100}%` },
-            ]}
+            style={[styles.progressFill, { width: `${(currentStep / 10) * 100}%` }]}
           />
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
-        {renderStepContent()}
-        <HostingButtonNav
-          onNext={nextStep}
-          onBack={previousStep}
-          currentStep={currentStep}
-          totalSteps={10}
-        />
-      </ScrollView>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        // keyboardVerticalOffset={80}
+      >
+        <ScrollView style={styles.content}>
+          {renderStepContent()}
+          <HostingButtonNav
+            onNext={nextStep}
+            onBack={previousStep}
+            currentStep={currentStep}
+            totalSteps={10}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
       {/* Navigation buttons removed. User is redirected to next step on option select. */}
     </SafeAreaView>
   );
@@ -246,5 +251,18 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
     marginTop: 12,
     paddingHorizontal: 16,
+  },
+  inputShare: {
+    flex: 1,
+    height: 60,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+    borderRadius: 12,
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: "Sora-Regular",
+    marginTop: 12,
+    paddingHorizontal: 16,
+    // gap: 10,
   },
 });
