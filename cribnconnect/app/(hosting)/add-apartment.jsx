@@ -6,22 +6,19 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import {
-  House,
-  Building,
-  Hotel,
-  Caravan,
-  Container,
-  Trees,
-  Barn,
-  Tent,
-  Sparkle,
-  Ship,
-  Building2,
-} from "lucide-react-native";
+import { useState } from "react";
 import HostingButtonNav from "@/components/HostingButtonNav";
 import BackHeader from "@/components/BackHeader";
-import { useState } from "react";
+import StepApartmentType from "./steps/StepApartmentType";
+import Step2 from "./steps/Step2";
+import Step3 from "./steps/Step3";
+import Step4 from "./steps/Step4";
+import Step5 from "./steps/Step5";
+import Step6 from "./steps/Step6";
+import Step7 from "./steps/Step7";
+import Step8 from "./steps/Step8";
+import Step9 from "./steps/Step9";
+import Step10 from "./steps/Step10";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -55,117 +52,36 @@ export default function AddApartmentScreen() {
     router.push("/(tabs)");
   };
 
-  const apartmentTypeOptions = [
-    { type: "House", icon: House },
-    { type: "Apartment", icon: Building2 },
-    { type: "Boat", icon: Ship },
-    { type: "Hotel", icon: Hotel },
-    { type: "Camper", icon: Caravan },
-    { type: "Container", icon: Container },
-    { type: "Cabin", icon: Trees },
-    // { type: "Farmhouse", icon: Barn },
-    { type: "Tent", icon: Tent },
-    { type: "Other", icon: Sparkle },
-  ];
+  // Apartment type options moved to StepApartmentType.jsx
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>
-              How would you describe your space?
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              Select the type of place you want to list
-            </Text>
-            <View style={styles.verticalOptions}>
-              {apartmentTypeOptions.map(({ type, icon: Icon }) => {
-                const selected = formData.apartmentType === type;
-                return (
-                  <TouchableOpacity
-                    key={type}
-                    style={[styles.typeOption, selected && styles.selectedTypeOption]}
-                    activeOpacity={0.85}
-                    onPress={() => updateField("apartmentType", type)}
-                  >
-                    <View style={styles.typeOptionRow}>
-                      <View style={styles.typeIcon}>
-                        <Icon size={28} color={Colors.black} />
-                      </View>
-                      <Text style={[styles.typeOptionText, selected && styles.selectedTypeOptionText]}>
-                        {type}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
+          <StepApartmentType
+            value={formData.apartmentType}
+            onSelect={type => updateField('apartmentType', type)}
+            styles={styles}
+          />
         );
       case 2:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 2</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step2 styles={styles} />;
       case 3:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 3</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step3 styles={styles} />;
       case 4:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 4</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step4 styles={styles} />;
       case 5:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 5</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step5 styles={styles} />;
       case 6:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 6</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step6 styles={styles} />;
       case 7:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 7</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step7 styles={styles} />;
       case 8:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 8</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step8 styles={styles} />;
       case 9:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 9</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step9 styles={styles} />;
       case 10:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Step 10</Text>
-            <Text style={styles.sectionSubtitle}>Content coming soon...</Text>
-          </View>
-        );
+        return <Step10 styles={styles} />;
       default:
         return null;
     }
