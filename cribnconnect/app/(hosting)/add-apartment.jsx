@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     color: Colors.primary,
-    fontFamily: "Sora-Regular",
+    fontFamily: "Sora-SemiBold",
   },
   input: {
     width: "100%",
@@ -291,4 +291,9 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingTop: 16,
   },
+  labelText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: "Sora-Regular",
+  }
 });
