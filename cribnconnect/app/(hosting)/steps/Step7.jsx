@@ -9,6 +9,13 @@ export default function Step7({ value, onChange, styles }) {
     onChange({ ...value, perWeek: text });
   };
 
+  // Helper to format price with naira sign, commas, and .00
+  const formatNaira = (amount) => {
+    if (!amount || isNaN(amount)) return "";
+    const num = parseFloat(amount.replace(/,/g, ""));
+    return `₦${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>How much does your space cost</Text>
@@ -24,7 +31,7 @@ export default function Step7({ value, onChange, styles }) {
           value={value?.perNight || ""}
           onChangeText={handleNightChange}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{value?.perNight || ""}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(value?.perNight)}</Text>
       </View>
       <View style={{ marginVertical: 24, position: 'relative', justifyContent: 'center', alignItems: 'center', height: 24 }}>
         <View style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, backgroundColor: '#B0B0B0' }} />
@@ -43,7 +50,7 @@ export default function Step7({ value, onChange, styles }) {
           value={value?.perWeek || ""}
           onChangeText={handleWeekChange}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{value?.perWeek || ""}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(value?.perWeek)}</Text>
       </View>
     </View>
   );

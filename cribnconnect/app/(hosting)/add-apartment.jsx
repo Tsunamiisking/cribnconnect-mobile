@@ -54,6 +54,10 @@ export default function AddApartmentScreen() {
       amenities: [],
       otherAmenities: "",
     }, // Step 6
+    step7Value: {
+      perNight: "",
+      perWeek: "",
+    }, // Step 7
     // ...existing fields for future steps
   });
 
@@ -132,7 +136,13 @@ export default function AddApartmentScreen() {
           />
         );
       case 7:
-        return <Step7 styles={styles} />;
+        return (
+          <Step7
+            value={formData.step7Value}
+            onChange={val => updateField('step7Value', val)}
+            styles={styles}
+          />
+        );
       case 8:
         return <Step8 styles={styles} />;
       case 9:
