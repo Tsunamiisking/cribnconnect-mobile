@@ -21,6 +21,7 @@ export default function Step6({ styles }) {
     {name: "Fireplace", icon: Fireplace},
     {name: "Hot Tub", icon: HotTub},
     {name: "Gym Access", icon: Gym},
+    {name: "Private Pool", icon: Pool},
     {name: "Private Parking", icon: Parking},
     {name: "BBQ Grill", icon: Grill},
     {name: "Home Voice Control", icon: HomeVoiceControl},
