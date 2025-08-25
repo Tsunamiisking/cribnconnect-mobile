@@ -13,6 +13,20 @@ export default function Step6({ styles }) {
     {name: "Indoor Dining", icon: IndoorDining}
   ];
 
+    const luxuryAmenities = [
+    {name: "Workspace", icon: Work},
+    {name: "Beach/Lake Access", icon: Waves},
+    {name: "Pool Ball", icon: Pool},
+    {name: "Outdoor Dining", icon: Dining},
+    {name: "Fireplace", icon: Fireplace},
+    {name: "Hot Tub", icon: HotTub},
+    {name: "Gym Access", icon: Gym},
+    {name: "Private Parking", icon: Parking},
+    {name: "BBQ Grill", icon: Grill},
+    {name: "Home Voice Control", icon: HomeVoiceControl},
+    {name: "Indoor Piano", icon: IndoorPiano},
+  ];
+
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Select essentials available in your space.</Text>
