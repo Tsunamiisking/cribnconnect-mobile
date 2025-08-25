@@ -50,6 +50,10 @@ export default function AddApartmentScreen() {
       title: "",
       description: "",
     }, // Step 5
+    step6Value: {
+      amenities: [],
+      otherAmenities: "",
+    }, // Step 6
     // ...existing fields for future steps
   });
 
@@ -120,7 +124,13 @@ export default function AddApartmentScreen() {
           />
         );
       case 6:
-        return <Step6 styles={styles} />;
+        return (
+          <Step6
+            value={formData.step6Value}
+            onChange={val => updateField('step6Value', val)}
+            styles={styles}
+          />
+        );
       case 7:
         return <Step7 styles={styles} />;
       case 8:
