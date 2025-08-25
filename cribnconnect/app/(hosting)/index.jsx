@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function HostTypeScreen() {
   return (

@@ -325,5 +325,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.primary,
     fontFamily: "Sora-Regular",
-  }
+  },
+  uploadContainer: {
+    borderWidth: 1,
+    height: 200,
+    borderColor: Colors.borderColor,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 24,
+    backgroundColor: "#f9fafb",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  uploadButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    display: "flex",
+    flexDirection: "row",
+    width: 160,
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    padding: 12,
+  },
 });
