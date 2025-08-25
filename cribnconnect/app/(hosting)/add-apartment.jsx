@@ -207,11 +207,15 @@ const styles = StyleSheet.create({
     fontFamily: "Urbanist-Bold",
     color: Colors.primary,
     marginVertical: 12,
+    flexWrap: 'wrap',
+    width: '100%',
   },
   sectionSubtitle: {
     color: "#6b7280",
     fontFamily: "Sora-regular",
     marginBottom: 12,
+    flexWrap: 'wrap',
+    width: '100%',
   },
   verticalOptions: {
     marginTop: 16,
@@ -243,15 +247,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#111827",
     fontFamily: "Sora-Regular",
+    flexWrap: 'wrap',
+    width: '100%',
   },
-    typeOptionDescription: {
+  typeOptionDescription: {
     fontSize: 14,
     marginTop: 6,
     color: Colors.gray600,
     fontFamily: "Sora-Regular",
+    flexWrap: 'wrap',
+    width: '100%',
   },
   selectedTypeOptionText: {
     color: Colors.primary,
+    flexWrap: 'wrap',
+    width: '100%',
   },
   inputView: {
     display: "flex",
