@@ -7,12 +7,13 @@ export default function Step7({ styles }) {
       <Text style={styles.sectionSubtitle}>Specify your price range</Text>
 
       <View>
-        <Text>Amount Per Night </Text>
+        <Text style={styles.label}>Amount Per Night </Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter your price range"
+          placeholder="Enter Price Per Night"
           placeholderTextColor="#B0B0B0"
         />
+        <Text>{}</Text>
       </View>
     </View>
   );
