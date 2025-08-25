@@ -1,8 +1,13 @@
 import { View, Text, TextInput } from "react-native";
-import { useState } from "react";
 
-export default function Step7({ styles }) {
-  const [price, setPrice] = useState();
+export default function Step7({ value, onChange, styles }) {
+  // value: { perNight: string, perWeek: string }
+  const handleNightChange = (text) => {
+    onChange({ ...value, perNight: text });
+  };
+  const handleWeekChange = (text) => {
+    onChange({ ...value, perWeek: text });
+  };
 
   return (
     <View style={styles.stepContent}>
@@ -16,10 +21,10 @@ export default function Step7({ styles }) {
           placeholder="Enter Price Per Night"
           placeholderTextColor="#B0B0B0"
           keyboardType="numeric"
-          value={price}
-          onChangeText={setPrice}
+          value={value?.perNight || ""}
+          onChangeText={handleNightChange}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{price}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{value?.perNight || ""}</Text>
       </View>
       <View style={{ marginVertical: 24, position: 'relative', justifyContent: 'center', alignItems: 'center', height: 24 }}>
         <View style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, backgroundColor: '#B0B0B0' }} />
@@ -35,10 +40,10 @@ export default function Step7({ styles }) {
           placeholder="Enter Price Per Week"
           placeholderTextColor="#B0B0B0"
           keyboardType="numeric"
-          value={price}
-          onChangeText={setPrice}
+          value={value?.perWeek || ""}
+          onChangeText={handleWeekChange}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{price}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{value?.perWeek || ""}</Text>
       </View>
     </View>
   );
