@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity,TextInput } from "react-native";
+import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { useState } from "react";
 import Wifi from "@/components/svgs/wifi";
 import Tv from "@/components/svgs/tv";
@@ -76,28 +76,39 @@ export default function Step6({ styles }) {
 
   const handleSelect = (name) => {
     setSelectedAmenities((prev) =>
-      prev.includes(name)
-        ? prev.filter((n) => n !== name)
-        : [...prev, name]
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
     );
   };
 
   return (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Select essentials available in your space.</Text>
-      <Text style={styles.sectionSubtitle}>Choose all amenities that apply</Text>
+      <Text style={styles.stepTitle}>
+        Select essentials available in your space.
+      </Text>
+      <Text style={styles.sectionSubtitle}>
+        Choose all amenities that apply
+      </Text>
 
       {/* Basic Amenities */}
-      <Text style={[styles.label, { marginTop: 24, marginBottom: 8 }]}>Basic Amenities</Text>
+      <Text style={[styles.label, { marginTop: 24, marginBottom: 8 }]}>
+        Basic Amenities
+      </Text>
       <View style={{ marginBottom: 8 }}>
         {toRows(basicAmenities).map((row, idx) => (
-          <View key={idx} style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+          <View
+            key={idx}
+            style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
+          >
             {row.map((amenity) => {
               const selected = selectedAmenities.includes(amenity.name);
               return (
                 <TouchableOpacity
                   key={amenity.name}
-                  style={[styles.typeOption, selected && styles.selectedTypeOption, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
+                  style={[
+                    styles.typeOption,
+                    selected && styles.selectedTypeOption,
+                    { flex: 1, alignItems: "center", justifyContent: "center" },
+                  ]}
                   activeOpacity={0.85}
                   onPress={() => handleSelect(amenity.name)}
                 >
@@ -113,16 +124,25 @@ export default function Step6({ styles }) {
       </View>
 
       {/* Luxury Amenities */}
-      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>Luxury Amenities</Text>
+      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>
+        Luxury Amenities
+      </Text>
       <View style={{ marginBottom: 8 }}>
         {toRows(luxuryAmenities).map((row, idx) => (
-          <View key={idx} style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+          <View
+            key={idx}
+            style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
+          >
             {row.map((amenity) => {
               const selected = selectedAmenities.includes(amenity.name);
               return (
                 <TouchableOpacity
                   key={amenity.name}
-                  style={[styles.typeOption, selected && styles.selectedTypeOption, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
+                  style={[
+                    styles.typeOption,
+                    selected && styles.selectedTypeOption,
+                    { flex: 1, alignItems: "center", justifyContent: "center" },
+                  ]}
                   activeOpacity={0.85}
                   onPress={() => handleSelect(amenity.name)}
                 >
@@ -138,16 +158,25 @@ export default function Step6({ styles }) {
       </View>
 
       {/* Shared Amenities */}
-      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>Shared Amenities</Text>
+      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>
+        Shared Amenities
+      </Text>
       <View style={{ marginBottom: 8 }}>
         {toRows(sharedAmenities).map((row, idx) => (
-          <View key={idx} style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+          <View
+            key={idx}
+            style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
+          >
             {row.map((amenity) => {
               const selected = selectedAmenities.includes(amenity.name);
               return (
                 <TouchableOpacity
                   key={amenity.name}
-                  style={[styles.typeOption, selected && styles.selectedTypeOption, { flex: 1, alignItems: 'center', justifyContent: 'center' }]}
+                  style={[
+                    styles.typeOption,
+                    selected && styles.selectedTypeOption,
+                    { flex: 1, alignItems: "center", justifyContent: "center" },
+                  ]}
                   activeOpacity={0.85}
                   onPress={() => handleSelect(amenity.name)}
                 >
@@ -162,11 +191,17 @@ export default function Step6({ styles }) {
         ))}
       </View>
 
-        <View>
-          <Text style={styles.label}>Enter Other Amenities</Text>
-          <TextInput style={styles.input} placeholder="Other Amenities" />
-          <Text style={styles.typeOptionDescription}>Additional amenities can help your listing stand out! separate them with commas.(Example: Pool, Gym, Parking)</Text>
-        </View>
+      <View>
+        <Text style={styles.label}>Enter Other Amenities (Optional)</Text>
+        <Text style={styles.typeOptionDescription}>
+          Add any special features your space offers that are not listed above.
+        </Text>
+        <TextInput style={styles.input} placeholder="Other Amenities" />
+        <Text style={styles.typeOptionDescription}>
+          Have something unique in your space? Add it here (e.g., solar panels,
+          inverter, pet-friendly area), Make sure to separate each item with a comma.
+        </Text>
+      </View>
     </View>
   );
 }
