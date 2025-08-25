@@ -27,6 +27,14 @@ export default function Step6({ styles }) {
     {name: "Indoor Piano", icon: IndoorPiano},
   ];
 
+  const sharedFeatures = [
+    {name: "Shared Pool", icon: Pool},
+    {name: "Shared Gym", icon: Gym},
+    {name: "Shared Workspace", icon: Work},
+    {name: "Security", icon: Security},
+    {name: "Shared Parking", icon: Parking},
+    {name: "Generator", icon: Generator}   
+  ]
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Select essentials available in your space.</Text>
