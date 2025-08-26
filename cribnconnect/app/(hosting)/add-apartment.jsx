@@ -91,7 +91,7 @@ export default function AddApartmentScreen() {
         return (
           <StepApartmentType
             value={formData.apartmentType}
-            onSelect={type => updateField('apartmentType', type)}
+            onSelect={(type) => updateField("apartmentType", type)}
             styles={styles}
           />
         );
@@ -99,7 +99,7 @@ export default function AddApartmentScreen() {
         return (
           <StepSpace
             value={formData.step2Space}
-            onSelect={space => updateField('step2Space', space)}
+            onSelect={(space) => updateField("step2Space", space)}
             styles={styles}
           />
         );
@@ -107,7 +107,7 @@ export default function AddApartmentScreen() {
         return (
           <Step3
             value={formData.step3Value}
-            onChange={val => updateField('step3Value', val)}
+            onChange={(val) => updateField("step3Value", val)}
             styles={styles}
           />
         );
@@ -115,7 +115,7 @@ export default function AddApartmentScreen() {
         return (
           <Step4
             value={formData.step4Value}
-            onChange={val => updateField('step4Value', val)}
+            onChange={(val) => updateField("step4Value", val)}
             styles={styles}
           />
         );
@@ -123,7 +123,7 @@ export default function AddApartmentScreen() {
         return (
           <Step5
             value={formData.step5Value}
-            onChange={val => updateField('step5Value', val)}
+            onChange={(val) => updateField("step5Value", val)}
             styles={styles}
           />
         );
@@ -131,7 +131,7 @@ export default function AddApartmentScreen() {
         return (
           <Step6
             value={formData.step6Value}
-            onChange={val => updateField('step6Value', val)}
+            onChange={(val) => updateField("step6Value", val)}
             styles={styles}
           />
         );
@@ -139,7 +139,7 @@ export default function AddApartmentScreen() {
         return (
           <Step7
             value={formData.step7Value}
-            onChange={val => updateField('step7Value', val)}
+            onChange={(val) => updateField("step7Value", val)}
             styles={styles}
           />
         );
@@ -160,7 +160,10 @@ export default function AddApartmentScreen() {
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View
-            style={[styles.progressFill, { width: `${(currentStep / 10) * 100}%` }]}
+            style={[
+              styles.progressFill,
+              { width: `${(currentStep / 10) * 100}%` },
+            ]}
           />
         </View>
       </View>
@@ -217,15 +220,15 @@ const styles = StyleSheet.create({
     fontFamily: "Urbanist-Bold",
     color: Colors.primary,
     marginVertical: 12,
-    flexWrap: 'wrap',
-    width: '100%',
+    flexWrap: "wrap",
+    width: "100%",
   },
   sectionSubtitle: {
     color: "#6b7280",
     fontFamily: "Sora-regular",
     marginBottom: 12,
-    flexWrap: 'wrap',
-    width: '100%',
+    flexWrap: "wrap",
+    width: "100%",
   },
   verticalOptions: {
     marginTop: 16,
@@ -257,21 +260,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#111827",
     fontFamily: "Sora-Regular",
-    flexWrap: 'wrap',
-    width: '100%',
+    flexWrap: "wrap",
+    width: "100%",
   },
   typeOptionDescription: {
     fontSize: 14,
     marginTop: 6,
     color: Colors.gray600,
     fontFamily: "Sora-Regular",
-    flexWrap: 'wrap',
-    width: '100%',
+    flexWrap: "wrap",
+    width: "100%",
   },
   selectedTypeOptionText: {
     color: Colors.primary,
-    flexWrap: 'wrap',
-    width: '100%',
+    flexWrap: "wrap",
+    width: "100%",
   },
   inputView: {
     display: "flex",
@@ -290,9 +293,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
+    color: "#111827",
     fontSize: 18,
     color: Colors.primary,
-    fontFamily: "Sora-SemiBold",
+    fontFamily: "Sora-Regular",
   },
   input: {
     width: "100%",

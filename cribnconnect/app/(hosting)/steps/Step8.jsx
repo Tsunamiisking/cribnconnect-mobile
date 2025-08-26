@@ -162,7 +162,9 @@ const renderMediaItem = ({ item, index }) => (
             </Text>
           </TouchableOpacity>
         </View>
-
+        <View>
+          <Text style={styles.labelText}>Upload One Video and as many images as possible, Your video would be the cover display of your Apartment Listing</Text>
+        </View>
         <View
           style={{
             marginVertical: 24,
