@@ -352,4 +352,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
+  warning: {
+    color: Colors.warning,
+    fontFamily: "Sora-Regular",
+    fontSize: 14,
+    marginTop: 6,
+    flexWrap: "wrap",
+    width: "100%",
+  },
 });

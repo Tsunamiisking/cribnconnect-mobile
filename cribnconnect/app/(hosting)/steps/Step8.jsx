@@ -10,6 +10,7 @@ import { useState } from "react";
 import { CloudUpload, X, Play } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
+import Colors from "../../../constants/Colors";
 
 export default function Step8({ styles }) {
   const [mediaFiles, setMediaFiles] = useState([]);
@@ -163,7 +164,7 @@ const renderMediaItem = ({ item, index }) => (
           </TouchableOpacity>
         </View>
         <View>
-          <Text style={styles.labelText}>Upload One Video and as many images as possible, Your video would be the cover display of your Apartment Listing</Text>
+          <Text style={styles.warning}>*Upload One video and as many images as possible, Your video would be the cover display of your Apartment Listing.</Text>
         </View>
         <View
           style={{

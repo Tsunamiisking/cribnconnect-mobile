@@ -32,7 +32,8 @@ export const Colors = {
   
   // Blue variations for selected states
   blue50: "#eff6ff",
-  
+  warning: "#f59e0b",
+
   // Background colors
   lightBackground: "#f3f4f6",
   cardBackground: "#f9fafb",

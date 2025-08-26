@@ -101,16 +101,16 @@ export default function Step4({ styles }) {
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => setSelected("yes")}
-            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === "yes" ? "bg-[#274046]" : "bg-white"}`}
+            className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === "yes" ? "bg-[#274046]" : "bg-white"}`}
           />
-          <Text style={styles.typeOptionText}>Yes</Text>
+          <Text style={[styles.typeOptionText, { marginTop: 14}]}>Yes</Text>
         </View>
-        <View className="flex-row items-center">
+        <View className="flex-row items-center ">
           <TouchableOpacity
             onPress={() => setSelected("no")}
-            className={`w-10 h-10 border-[#274046] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === "no" ? "bg-[#274046]" : "bg-white"}`}
+            className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === "no" ? "bg-[#274046]" : "bg-white"}`}
           />
-          <Text style={styles.typeOptionText}>No</Text>
+          <Text style={[styles.typeOptionText, { marginTop: 14}]}>No</Text>
         </View>
       </View>
       <View>
