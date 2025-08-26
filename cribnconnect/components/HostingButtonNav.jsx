@@ -13,11 +13,11 @@ const HostingButtonNav = ({ onNext, onBack, currentStep, totalSteps }) => {
         <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.nextButton, styles.navButton, currentStep === totalSteps && { opacity: 0.5 }]}
+        style={[styles.nextButton, styles.navButton]}
         onPress={onNext}
-        disabled={currentStep === totalSteps}
+        // disabled={currentStep === totalSteps}
       >
-        <Text style={styles.nextText}>Next</Text>
+        <Text style={styles.nextText}>{currentStep === totalSteps ? "Finish" : "Next"}</Text>
       </TouchableOpacity>
     </View>
   );

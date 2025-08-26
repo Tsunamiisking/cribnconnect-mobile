@@ -66,7 +66,7 @@ export default function AddApartmentScreen() {
   };
 
   const nextStep = () => {
-    if (currentStep < 10) {
+    if (currentStep < 9) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -147,8 +147,6 @@ export default function AddApartmentScreen() {
         return <Step8 styles={styles} />;
       case 9:
         return <Step9 styles={styles} />;
-      case 10:
-        return <Step10 styles={styles} />;
       default:
         return null;
     }
@@ -162,7 +160,7 @@ export default function AddApartmentScreen() {
           <View
             style={[
               styles.progressFill,
-              { width: `${(currentStep / 10) * 100}%` },
+              { width: `${(currentStep / 9) * 100}%` },
             ]}
           />
         </View>
@@ -179,7 +177,7 @@ export default function AddApartmentScreen() {
             onNext={nextStep}
             onBack={previousStep}
             currentStep={currentStep}
-            totalSteps={10}
+            totalSteps={9}
           />
         </ScrollView>
       </KeyboardAvoidingView>

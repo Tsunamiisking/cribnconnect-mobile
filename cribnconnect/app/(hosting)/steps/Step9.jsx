@@ -26,8 +26,37 @@ export default function Step9({ styles }) {
           onPress={() => setSelected(!selected)}
           className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === true ? "bg-[#274046]" : "bg-white"}`}
         />
-        <Text style={[styles.typeOptionText, { marginTop: 14 }]}>
+        <Text style={[styles.labelText, { marginTop: 14 }]}>
           Are parties allowed in your space?
+        </Text>
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
+        <Text style={styles.labelText}>Max Guests Allowed:</Text>
+        <TextInput
+          style={[styles.inputView, { width: 70 }]}
+          keyboardType="numeric"
+          // value={value.beds || ""}
+          // onChangeText={(text) => onChange({ ...value, beds: text })}
+        />
+      </View>
+      <View style={{ marginVertical: 12 }}>
+        <Text style={styles.label}>Safety Tips</Text>
+        <Text style={styles.warning}>
+          * Provide a fire extinguisher and first aid kit in a visible location.
+        </Text>
+        <Text style={styles.warning}>
+          * Install a working smoke detector and door locks.
+        </Text>
+        <Text style={styles.warning}>
+          * If possible, have external cameras (not inside the apartment) for
+          entrance monitoring.
         </Text>
       </View>
     </View>
