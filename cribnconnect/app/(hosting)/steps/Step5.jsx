@@ -26,7 +26,7 @@ export default function Step5({ styles }) {
           placeholder="Enter description"
           placeholderTextColor="#B0B0B0"
           multiline
-          numberOfLines={10}
+          numberOfLines={6}
           textAlignVertical="top"
         />
       </View>
