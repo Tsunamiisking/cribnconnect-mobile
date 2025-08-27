@@ -14,6 +14,7 @@ import { Colors } from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
 import HostingButtonNav from "@/components/HostingButtonNav";
+import EventType from "./eventSteps/EventType";
 
 export default function AddEventScreen() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -85,9 +86,7 @@ export default function AddEventScreen() {
     switch (currentStep) {
       case 1:
         return (
-          <View>
-            <Text>Event Information</Text>
-          </View>
+          <EventType styles={styles} />
         );
 
       case 2:
