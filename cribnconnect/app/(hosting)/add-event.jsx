@@ -4,6 +4,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
 } from "react-native";
 import { useState } from "react";
@@ -11,6 +13,7 @@ import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
+import HostingButtonNav from "@/components/HostingButtonNav";
 
 export default function AddEventScreen() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -123,6 +126,32 @@ export default function AddEventScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <BackHeader title="Add Event" />
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${(currentStep / 5) * 100}%` },
+            ]}
+          />
+        </View>
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        // keyboardVerticalOffset={80}
+      >
+        <ScrollView style={styles.content}>
+          {renderStepContent()}
+          <HostingButtonNav
+            onNext={nextStep}
+            onBack={previousStep}
+            currentStep={currentStep}
+            totalSteps={9}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
