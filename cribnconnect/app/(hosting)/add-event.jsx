@@ -1,43 +1,53 @@
-import { ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState } from 'react';
-import { router } from 'expo-router';
+import {
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { useState } from "react";
+import { router } from "expo-router";
+import { Colors } from "@/constants/Colors";
+import { SafeAreaView } from "react-native-safe-area-context";
+import BackHeader from "@/components/BackHeader";
 
 export default function AddEventScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Basic Info
-    title: '',
-    description: '',
-    category: '',
-    
+    title: "",
+    description: "",
+    category: "",
+
     // Date & Time
-    date: '',
-    startTime: '',
-    endTime: '',
-    
+    date: "",
+    startTime: "",
+    endTime: "",
+
     // Location
-    venue: '',
-    address: '',
-    city: '',
-    state: '',
-    
+    venue: "",
+    address: "",
+    city: "",
+    state: "",
+
     // Details
-    ticketPrice: '',
-    capacity: '',
-    ageRestriction: '',
-    dressCode: '',
-    
+    ticketPrice: "",
+    capacity: "",
+    ageRestriction: "",
+    dressCode: "",
+
     // Requirements
     requirements: [],
-    
+
     // Contact
-    organizer: '',
-    contactEmail: '',
-    contactPhone: '',
+    organizer: "",
+    contactEmail: "",
+    contactPhone: "",
   });
 
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const nextStep = () => {
@@ -63,9 +73,9 @@ export default function AddEventScreen() {
     // } catch (error) {
     //   // Handle error
     // }
-    
-    console.log('Submitting event:', formData);
-    router.push('/(tabs)/events');
+
+    console.log("Submitting event:", formData);
+    router.push("/(tabs)/events");
   };
 
   const renderStepContent = () => {
@@ -111,9 +121,9 @@ export default function AddEventScreen() {
   };
 
   return (
-          <View>
-            <Text>Event Information</Text>
-          </View>
+    <SafeAreaView className="flex-1 bg-white">
+      <BackHeader title="Add Event" />
+    </SafeAreaView>
   );
 }
 
