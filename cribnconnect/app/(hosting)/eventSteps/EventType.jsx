@@ -1,6 +1,9 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useState } from "react";
 
 export default function EventType({ styles }) {
+  const [selected, setSelected] = useState([]); // store selected subtypes in an array
+
   const eventCategories = {
     "Entertainment & Nightlife": [
       "Concerts & Live Music",
@@ -52,10 +55,43 @@ export default function EventType({ styles }) {
     ],
   };
 
+  // toggle selection
+  const toggleSelect = (subtype) => {
+    setSelected((prev) =>
+      prev.includes(subtype)
+        ? prev.filter((item) => item !== subtype)
+        : [...prev, subtype]
+    );
+  };
+
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>What type of event are you hosting?</Text>
       <Text style={styles.sectionSubtitle}>Select the type of event</Text>
+
+      <View className="mt-6">
+        {Object.entries(eventCategories).map(([category, subtypes]) => (
+          <View key={category} style={{ marginBottom: 24 }}>
+            <Text style={[styles.label, { marginBottom: 12 }]}>{category}</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+              {subtypes.map((subtype) => {
+                const isSelected = selected.includes(subtype);
+                return (
+                  <View className="flex-row items-center w-full" key={subtype}>
+                    <TouchableOpacity
+                      onPress={() => toggleSelect(subtype)}
+                      className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${isSelected ? "bg-[#274046]" : "bg-white"}`}
+                    />
+                    <Text style={[styles.labelText, { marginTop: 14 }]}>
+                      {subtype}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
