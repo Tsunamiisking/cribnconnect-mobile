@@ -17,7 +17,8 @@ import HostingButtonNav from "@/components/HostingButtonNav";
 import EventType from "./eventSteps/EventType";
 import EventTitle from "./eventSteps/EventTitle";
 import EventAddress from "./eventSteps/EventAddress";
-import EventTicket from "./eventSteps/EventTicket"
+import EventTicket from "./eventSteps/EventTicket";
+import EventSafetyTips from "./eventSteps/EventSafetyTips";
 
 export default function AddEventScreen() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -89,26 +90,14 @@ export default function AddEventScreen() {
     switch (currentStep) {
       case 1:
         return <EventType styles={styles} />;
-
       case 2:
         return <EventTitle styles={styles} />;
       case 3:
-        return (
-          <EventAddress styles={styles} />
-        );
-
+        return <EventAddress styles={styles} />;
       case 4:
-        return (
-          <EventTicket styles={styles} />
-        );
-
+        return <EventTicket styles={styles} />;
       case 5:
-        return (
-          <View>
-            <Text>Event Information</Text>
-          </View>
-        );
-
+        return <EventSafetyTips styles={styles} />;
       default:
         return null;
     }
