@@ -5,8 +5,6 @@ export default function EventTicket({ styles }) {
   const [selected, setSelected] = useState([]); // multiple selections
   const [ticketData, setTicketData] = useState({}); // store form data for each ticket type
 
-  const ticketTypes = ["Student", "Regular", "VIP", "VVIP"];
-
   const formatNaira = (amount) => {
     if (!amount || isNaN(amount)) return "";
     const num = parseFloat(amount.replace(/,/g, ""));
@@ -94,9 +92,21 @@ export default function EventTicket({ styles }) {
   ];
 
   const toggleSelection = (key) => {
-    setSelected((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
+    setSelected((prev) => {
+      if (key === "free") {
+        // Selecting free clears all others
+        return prev.includes("free") ? [] : ["free"];
+      } else {
+        // If free is already selected, clear it before adding others
+        if (prev.includes("free")) {
+          return [key];
+        }
+        // Toggle other tickets normally
+        return prev.includes(key)
+          ? prev.filter((k) => k !== key)
+          : [...prev, key];
+      }
+    });
   };
 
   return (
@@ -120,7 +130,7 @@ export default function EventTicket({ styles }) {
         ))}
       </View>
 
-      {/* Render multiple ticket forms */}
+      {/* Render multiple ticket forms (skip free) */}
       {selected
         .filter((s) => s !== "free")
         .map((type) =>
