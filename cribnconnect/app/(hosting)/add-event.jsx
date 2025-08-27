@@ -17,6 +17,7 @@ import HostingButtonNav from "@/components/HostingButtonNav";
 import EventType from "./eventSteps/EventType";
 import EventTitle from "./eventSteps/EventTitle";
 import EventAddress from "./eventSteps/EventAddress";
+import EventTicket from "./eventSteps/EventTicket"
 
 export default function AddEventScreen() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -98,9 +99,7 @@ export default function AddEventScreen() {
 
       case 4:
         return (
-          <View>
-            <Text>Event Information</Text>
-          </View>
+          <EventTicket styles={styles} />
         );
 
       case 5:
