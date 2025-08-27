@@ -20,7 +20,6 @@ import Step6 from "./apartmentSteps/Step6";
 import Step7 from "./apartmentSteps/Step7";
 import Step8 from "./apartmentSteps/Step8";
 import Step9 from "./apartmentSteps/Step9";
-import Step10 from "./apartmentSteps/Step10";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
