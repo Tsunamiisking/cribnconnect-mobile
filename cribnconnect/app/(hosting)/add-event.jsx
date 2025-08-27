@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
 import HostingButtonNav from "@/components/HostingButtonNav";
 import EventType from "./eventSteps/EventType";
+import EventTitle from "./eventSteps/EventTitle";
 
 export default function AddEventScreen() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -85,17 +86,10 @@ export default function AddEventScreen() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <EventType styles={styles} />
-        );
+        return <EventType styles={styles} />;
 
       case 2:
-        return (
-          <View>
-            <Text>Event Information</Text>
-          </View>
-        );
-
+        return <EventTitle styles={styles} />;
       case 3:
         return (
           <View>

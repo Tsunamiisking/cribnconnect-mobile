@@ -1,10 +1,10 @@
 import { View, Text, TextInput } from "react-native";
 
-export default function Step5({ styles }) {
+export default function EventTitle({ styles }) {
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>
-        Give a title and description of your space
+        Give your event a proper title and description
       </Text>
       <Text style={styles.sectionSubtitle}>
         Write a suitable title and description for your space
@@ -20,7 +20,7 @@ export default function Step5({ styles }) {
       </View>
 
       <View className="mt-6">
-        <Text style={styles.label}>Description</Text>
+        <Text style={styles.label}>Description ( Optional )</Text>
         <TextInput
           style={styles.inputArea}
           placeholder="Enter description"
