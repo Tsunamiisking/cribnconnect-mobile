@@ -16,6 +16,7 @@ import BackHeader from "@/components/BackHeader";
 import HostingButtonNav from "@/components/HostingButtonNav";
 import EventType from "./eventSteps/EventType";
 import EventTitle from "./eventSteps/EventTitle";
+import EventAddress from "./eventSteps/EventAddress";
 
 export default function AddEventScreen() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -92,9 +93,7 @@ export default function AddEventScreen() {
         return <EventTitle styles={styles} />;
       case 3:
         return (
-          <View>
-            <Text>Event Information</Text>
-          </View>
+          <EventAddress styles={styles} />
         );
 
       case 4:
