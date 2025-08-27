@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     fontSize: 16,
-    fontFamily: "Sora-SemiBold",
+    fontFamily: "Sora-Regular",
     alignItems: "center",
     paddingVertical: 12,
     paddingLeft: 12,

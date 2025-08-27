@@ -2,7 +2,8 @@ import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useState } from "react";
 
 export default function Step9({ styles }) {
-  const [selected, setSelected] = useState(false); // 'yes' | 'no' | null
+  const [selected, setSelected] = useState(false); 
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   return (
     <View style={styles.stepContent}>
@@ -57,6 +58,16 @@ export default function Step9({ styles }) {
         <Text style={styles.warning}>
           * If possible, have external cameras (not inside the apartment) for
           entrance monitoring.
+        </Text>
+      </View>
+
+      <View className="flex-row items-center ">
+        <TouchableOpacity
+          onPress={() => setTermsAccepted(!termsAccepted)}
+          className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${termsAccepted === true ? "bg-[#274046]" : "bg-white"}`}
+        />
+        <Text style={[styles.typeOptionDescription, { marginTop: 14 }]}>
+          I agree to the Cribnconnect safety terms and conditions
         </Text>
       </View>
     </View>

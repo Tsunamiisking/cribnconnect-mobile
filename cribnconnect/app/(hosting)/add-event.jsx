@@ -277,6 +277,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.primary,
     fontFamily: "Sora-Regular",
+    width: "100%",
+    flexWrap: "wrap",
   },
   uploadContainer: {
     borderWidth: 1,
