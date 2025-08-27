@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import ProfilePopup from "./ProfilePopup";
 
-export default function BackHeader({ title = "Title", onBack }) {
+export default function BackHeader({ title = "Title", onBack, showUser }) {
   const [showProfilePopup, setShowProfilePopup] = useState(false);
 
   const handleBack = () => {
@@ -31,14 +31,16 @@ export default function BackHeader({ title = "Title", onBack }) {
           {title}
         </Text>
 
-        <Pressable onPress={handleProfilePress}>
-          <View
-            style={styles.profileButton}
-            className="h-14 w-14 rounded-full items-center justify-center"
-          >
-            <Text style={styles.profileText}>GU</Text>
-          </View>
-        </Pressable>
+        {showUser && (
+          <Pressable onPress={handleProfilePress}>
+            <View
+              style={styles.profileButton}
+              className="h-14 w-14 rounded-full items-center justify-center"
+            >
+              <Text style={styles.profileText}>GU</Text>
+            </View>
+          </Pressable>
+        )}
       </View>
 
       <ProfilePopup 

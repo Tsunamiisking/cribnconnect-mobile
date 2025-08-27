@@ -44,7 +44,7 @@ export default function SearchScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       
-      <BackHeader title="Search Apartments" />
+      <BackHeader title="Search Apartments"  showUser={true}/>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Location Filter */}

@@ -153,7 +153,7 @@ export default function AddApartmentScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <BackHeader title="Add Apartment" />
+      <BackHeader title="Add Apartment" showUser={true} />
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View

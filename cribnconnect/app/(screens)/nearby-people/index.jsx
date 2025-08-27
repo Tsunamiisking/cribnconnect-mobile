@@ -276,7 +276,7 @@ export default function NearbyPeopleScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <BackHeader title="People Nearby" />
+      <BackHeader title="People Nearby" showUser={true} />
       
       <ScrollView 
         style={styles.content}

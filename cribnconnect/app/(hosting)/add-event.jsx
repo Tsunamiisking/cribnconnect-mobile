@@ -105,7 +105,7 @@ export default function AddEventScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <BackHeader title="Add Event" />
+      <BackHeader title="Add Event" showUser={true} />
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View

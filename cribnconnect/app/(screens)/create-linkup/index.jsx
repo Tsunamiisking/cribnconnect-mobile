@@ -48,7 +48,7 @@ export default function CreateLinkupScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       
-      <BackHeader title="Create Linkup" />
+      <BackHeader title="Create Linkup" showUser={true} />
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Title */}

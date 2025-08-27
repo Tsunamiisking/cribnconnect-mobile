@@ -17,7 +17,7 @@ export default function HostTypeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      <BackHeader title="Host" />
+      <BackHeader title="Host" showUser={true} />
       <View style={styles.headerSection}>
         <Text style={styles.title}>Host on CribnConnect</Text>
         <Text style={styles.subtitle}>Choose what you want to host</Text>
