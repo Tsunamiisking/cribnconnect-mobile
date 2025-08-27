@@ -1,7 +1,7 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useState } from "react";
+import { View, Text, TextInput } from "react-native";
 
-export default function Step9({ styles }) {
+export default function EventSafetyTips({ styles }) {
   const [selected, setSelected] = useState(false); // 'yes' | 'no' | null
 
   return (
@@ -10,6 +10,7 @@ export default function Step9({ styles }) {
       <Text style={styles.sectionSubtitle}>
         Finish your Listing Upload with this final step 🎉
       </Text>
+
       <View className="mt-6">
         <Text style={styles.label}>Set House rules</Text>
         <TextInput
