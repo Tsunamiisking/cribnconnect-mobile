@@ -53,7 +53,7 @@ export default function Step4({ styles }) {
 
   const renderAddress = () => {
     return (
-      <View className="mt-7">
+      <View className="mt-6">
         <Text style={styles.label}>Provide house address</Text>
         <TextInput
           style={styles.input}
