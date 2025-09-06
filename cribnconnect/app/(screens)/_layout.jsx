@@ -74,6 +74,15 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="edit-profile/index"
+        options={{
+          title: "Edit Profile",
+          headerBackTitle: "Back",
+          headerShown: false,
+        }}
+      />  
     </Stack>
   );
 }

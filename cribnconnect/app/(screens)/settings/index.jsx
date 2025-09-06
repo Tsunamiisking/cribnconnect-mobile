@@ -3,14 +3,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React from "react";
 import BackHeader from "@/components/BackHeader";
 import { ChevronRight } from "lucide-react-native";
+import { router } from "expo-router";
 
 const SettingsScreen = () => {
   const options = [
-    { name: "Host", route: "/(hosting)/index" },
-    { name: "Profile", route: "/(profile)/index" },
+    { name: "Host", route: "/(hosting)" },
+    { name: "Profile", route: "/edit-profile" },
     { name: "Notifications", route: "/(notifications)/index" },
+    { name: "Verification", route: "/(verification)/index" },
     { name: "Contact Support", route: "/(support)/index" },
-    // {name: "Verification", route: "/(verification)/index"},
+    { name: "Scan Event QR Code", route: "/(support)/index" },
   ];
   return (
     <SafeAreaView className="flex-1 bg-white">
