@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Link } from "expo-router";
+import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,15 +20,14 @@ export default function WelcomeScreen() {
 
       {/* CTA button -> go to (tabs) */}
       <View className="px-8 pb-28">
-        <Link href="/(tabs)" asChild>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.cta}
-            className="rounded-2xl"
-          >
-            <Text style={styles.ctaText}>LETS GO!</Text>
-          </TouchableOpacity>
-        </Link>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.cta}
+          className="rounded-2xl"
+          onPress={() => router.push("/(tabs)")}
+        >
+          <Text style={styles.ctaText}>LETS GO!</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
