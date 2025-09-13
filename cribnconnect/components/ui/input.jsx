@@ -1,6 +1,6 @@
-import { View, TextInput, StyleSheet } from 'react-native'
-import React from 'react'
-import { Colors } from '@/constants/Colors'
+import { View, TextInput, StyleSheet } from "react-native";
+import React from "react";
+import { Colors } from "@/constants/Colors";
 
 export default function Input({ placeholder, value, onChangeText }) {
   return (
@@ -8,27 +8,25 @@ export default function Input({ placeholder, value, onChangeText }) {
       placeholder={placeholder}
       value={value}
       onChangeText={onChangeText}
-      style={styles.inputView}
+      style={styles.input}
     />
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-    inputView: {
-    display: "flex",
-    flexDirection: "row",
-    fontSize: 16,
-    fontFamily: "Sora-Regular",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingLeft: 12,
-    paddingRight: 8,
+  input: {
+    width: "100%",
+    flex: 1,
+    height: 60,
     borderWidth: 1,
-    width: 80,
-    height: 50,
     borderColor: Colors.borderColor,
     borderRadius: 12,
-    marginBottom: 12,
+    // marginBottom: 12,
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: "Sora-Regular",
+    marginTop: 12,
+    paddingHorizontal: 16,
   },
   label: {
     color: "#111827",
@@ -36,4 +34,4 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontFamily: "Sora-Regular",
   },
-})
+});

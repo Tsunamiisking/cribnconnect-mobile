@@ -1,18 +1,16 @@
 import { View, Text, StyleSheet, Image, TextInput} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Input from '@/components/ui/input'
+import { useState } from 'react'
 import BackHeader from '@/components/BackHeader'
 import { Colors } from '@/constants/Colors'
 
-
-import React from 'react'
-
 const EditProfile = () => {
-  const item = {
-    ImageUri: require("../../../assets/images/displayimageCC.jpg") ,
+  const [item, setItem] = useState({
+    ImageUri: require("../../../assets/images/displayimageCC.jpg"),
     fullName: 'John Doe',
     email: 'douglasallendev@gmail.com'
-  };
+  });
 
   return (
     <SafeAreaView className="flex-1 bg-white">
