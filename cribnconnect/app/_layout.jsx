@@ -1,9 +1,10 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import { StatusBar } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import React from "react";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -49,7 +50,8 @@ export default function RootLayout() {
           {/* 404 Screen */}
           <Stack.Screen name="+not-found" />
         </Stack>
-        {/* <StatusBar style="dark" /> */}
+              <StatusBar barStyle="dark-content" backgroundColor="white" />
+
       </GestureHandlerRootView>
   );
 }

@@ -1,8 +1,10 @@
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 export default function ScreensLayout() {
   return (
-    <Stack screenOptions={{ headerShown: true }}>
+    <Stack>
+      {/* <StatusBar style="dark" /> */}
       <Stack.Screen
         name="apartment-details/[id]"
         options={{

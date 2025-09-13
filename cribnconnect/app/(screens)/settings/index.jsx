@@ -4,34 +4,61 @@ import React from "react";
 import BackHeader from "@/components/BackHeader";
 import { ChevronRight } from "lucide-react-native";
 import { router } from "expo-router";
+import { Colors } from "@/constants/Colors";
+
+const options = [
+  {
+    name: "Host",
+    route: "/(hosting)",
+    description: "List your apartment or create events",
+  },
+  {
+    name: "Profile",
+    route: "/edit-profile",
+    description: "View and edit your profile information",
+  },
+  {
+    name: "Notifications",
+    route: "/(notifications)/index",
+    description: "Manage your notification preferences",
+  },
+  {
+    name: "Verification",
+    route: "/(verification)/index",
+    description: "Verify your account for more features",
+  },
+  {
+    name: "Contact Support",
+    route: "/(support)/index",
+    description: "Get help or contact our support team",
+  },
+  {
+    name: "Scan Event QR Code",
+    route: "/(support)/index",
+    description: "Scan to join or check-in to events",
+  },
+];
 
 const SettingsScreen = () => {
-  const options = [
-    { name: "Host", route: "/(hosting)" },
-    { name: "Profile", route: "/edit-profile" },
-    { name: "Notifications", route: "/(notifications)/index" },
-    { name: "Verification", route: "/(verification)/index" },
-    { name: "Contact Support", route: "/(support)/index" },
-    { name: "Scan Event QR Code", route: "/(support)/index" },
-  ];
   return (
     <SafeAreaView className="flex-1 bg-white">
       <BackHeader title="Settings" showUser={false} />
-      {options.map((option, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.option}
-          onPress={() => router.push(option.route)}
-        >
-          <Text
-            style={styles.optionText}
+      <View style={styles.container}>
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.option}
             onPress={() => router.push(option.route)}
+            activeOpacity={0.8}
           >
-            {option.name}
-          </Text>
-          <ChevronRight />
-        </TouchableOpacity>
-      ))}
+            <View style={styles.textContainer}>
+              <Text style={styles.optionText}>{option.name}</Text>
+              <Text style={styles.optionDescription}>{option.description}</Text>
+            </View>
+            <ChevronRight color={Colors.primary} />
+          </TouchableOpacity>
+        ))}
+      </View>
     </SafeAreaView>
   );
 };
@@ -42,19 +69,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
+    // paddingTop: 8,
+    paddingHorizontal: 16,
   },
   option: {
-    display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 12,
-    // borderBottomWidth: 1,
-    // borderBottomColor: "#eee",
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+    backgroundColor: "white",
+  },
+  textContainer: {
+    flex: 1,
+    marginRight: 12,
   },
   optionText: {
-    padding: 16,
     fontSize: 16,
     fontFamily: "Sora-SemiBold",
+    color: Colors.primary,
+    marginBottom: 2,
+  },
+  optionDescription: {
+    fontSize: 13,
+    color: Colors.gray500,
+    fontFamily: "Sora-Regular",
+    lineHeight: 18,
   },
 });
