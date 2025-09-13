@@ -324,8 +324,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   tabText: {
-    fontFamily: 'Sora-Medium',
-    fontSize: 14,
+    fontFamily: 'Sora-medium',
+    fontSize: 13,
     color: Colors.gray500,
   },
   activeTabText: {
