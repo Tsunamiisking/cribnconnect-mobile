@@ -2,10 +2,11 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Link } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WelcomeScreen() {
   return (
-    <View className="flex-1 bg-white" style={styles.screen}>
+    <SafeAreaView className="flex-1 bg-white" style={styles.screen}>
       {/* Centered hero copy */}
       <View className="flex-1 justify-center px-8">
         <Text style={styles.title} className="text-center">
@@ -28,7 +29,7 @@ export default function WelcomeScreen() {
           </TouchableOpacity>
         </Link>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: Colors.primary, // dark teal-like tone
-    fontSize: 70,
+    fontSize: 60,
     lineHeight: 70,
     fontWeight: "700",
     fontFamily: "Urbanist-Bold", // Applied Urbanist font for headers
