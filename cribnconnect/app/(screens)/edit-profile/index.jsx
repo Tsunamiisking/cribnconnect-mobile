@@ -5,6 +5,7 @@ import {
   Image,
   TextInput,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
@@ -25,6 +26,11 @@ const EditProfile = () => {
     },
   });
 
+  const saveChanges = () => {
+    // Logic to save changes goes here
+    console.log("Changes saved:", item);
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <BackHeader title="Edit Profile" showUser={false} />
@@ -36,7 +42,7 @@ const EditProfile = () => {
           <Text style={styles.label}>Full Name</Text>
           <TextInput
             labelText="Full Name"
-            placeholder="Full Name"
+            // placeholder="Full Name"
             value={item.fullName}
             style={styles.input}
             onChangeText={(text) => setItem({ ...item, fullName: text })}
@@ -108,6 +114,14 @@ const EditProfile = () => {
           </View>
         </View>
       </View>
+
+      <TouchableOpacity style={styles.button} onPress={saveChanges}>
+        <Text
+          style={{ color: "white", fontFamily: "Sora-SemiBold", fontSize: 16 }}
+        >
+          Save Changes
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -126,13 +140,26 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   input: {
+    // width: "100%",
+    // flex: 1,
+    // height: Platform.OS === "ios" ? 50 : 60,
+    // borderWidth: 1,
+    // borderColor: Colors.borderColor,
+    // borderRadius: 12,
+    // fontSize: 16,
+    // color: Colors.primary,
+    // fontFamily: "Sora-Regular",
+    // marginTop: 12,
+    // paddingHorizontal: 16,
+
     width: "100%",
     flex: 1,
     height: Platform.OS === "ios" ? 50 : 60,
     borderWidth: 1,
     borderColor: Colors.borderColor,
     borderRadius: 12,
-    fontSize: 16,
+    // marginBottom: 12,
+    fontSize: 14,
     color: Colors.primary,
     fontFamily: "Sora-Regular",
     marginTop: 12,
@@ -143,6 +170,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.primary,
     fontFamily: "Sora-SemiBold",
+  },
+  button: {
+    backgroundColor: Colors.primary,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginHorizontal: 18,
   },
 });
 
