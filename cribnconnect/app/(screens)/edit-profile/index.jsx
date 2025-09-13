@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import BackHeader from '@/components/BackHeader'
+import { Colors } from '@/constants/Colors'
 import React from 'react'
 
 const EditProfile = () => {
