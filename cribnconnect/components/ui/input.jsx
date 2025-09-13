@@ -1,15 +1,18 @@
-import { View, TextInput, StyleSheet } from "react-native";
+import { View,Text, TextInput, StyleSheet } from "react-native";
 import React from "react";
 import { Colors } from "@/constants/Colors";
 
-export default function Input({ placeholder, value, onChangeText }) {
+export default function Input({ placeholder, value, onChangeText, labelText }) {
   return (
-    <TextInput
-      placeholder={placeholder}
-      value={value}
-      onChangeText={onChangeText}
-      style={styles.input}
-    />
+    <View className="w-full px-4 my-2">
+      <Text>{labelText}</Text>
+      <TextInput
+        placeholder={placeholder}
+        value={value}
+        onChangeText={onChangeText}
+        style={styles.input}
+      />
+    </View>
   );
 }
 
@@ -21,7 +24,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderColor,
     borderRadius: 12,
-    // marginBottom: 12,
     fontSize: 16,
     color: Colors.primary,
     fontFamily: "Sora-Regular",
@@ -30,8 +32,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: "#111827",
-    fontSize: 18,
+    fontSize: 16,
     color: Colors.primary,
-    fontFamily: "Sora-Regular",
+    fontFamily: "Sora-SemiBold",
   },
 });
