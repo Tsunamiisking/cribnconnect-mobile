@@ -109,25 +109,25 @@ export default function ApartmentCard({
 const styles = StyleSheet.create({
   title: {
     fontFamily: 'Sora-SemiBold',
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.black,
   },
   price: {
     fontFamily: 'Sora-SemiBold',
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.emerald,
     marginTop: 4,
   },
   location: {
     fontFamily: 'Sora-Regular',
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.black,
     marginLeft: 4,
     flex: 1,
   },
   availability: {
     fontFamily: 'Sora-Regular',
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.black,
     marginLeft: 4,
     flex: 1,
