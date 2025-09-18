@@ -179,11 +179,11 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontFamily: "Sora-SemiBold",
+    fontSize: 16,
+    fontFamily: "Sora-Bold",
     color: Colors.black,
   },
   carouselContainer: {
