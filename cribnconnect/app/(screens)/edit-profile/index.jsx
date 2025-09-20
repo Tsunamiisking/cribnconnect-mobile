@@ -1,16 +1,16 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TextInput,
-  Platform,
-  TouchableOpacity,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
+import { useState } from "react";
+import {
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const EditProfile = () => {
   const [item, setItem] = useState({
@@ -69,48 +69,56 @@ const EditProfile = () => {
               setItem({ ...item, address: { ...item.address, street: text } })
             }
           />
-          <View className="flex-row">
-            <TextInput
-              style={styles.input}
-              placeholder="State"
-              placeholderTextColor="#B0B0B0"
-              value={item.address.state}
-              onChangeText={(text) =>
-                setItem({ ...item, address: { ...item.address, state: text } })
-              }
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="City"
-              placeholderTextColor="#B0B0B0"
-              value={item.address.city}
-              onChangeText={(text) =>
-                setItem({ ...item, address: { ...item.address, city: text } })
-              }
-            />
+          <View style={styles.rowContainer}>
+            <View style={styles.rowInputContainer}>
+              <TextInput
+                style={styles.rowInput}
+                placeholder="State"
+                placeholderTextColor="#B0B0B0"
+                value={item.address.state}
+                onChangeText={(text) =>
+                  setItem({ ...item, address: { ...item.address, state: text } })
+                }
+              />
+            </View>
+            <View style={styles.rowInputContainer}>
+              <TextInput
+                style={styles.rowInput}
+                placeholder="City"
+                placeholderTextColor="#B0B0B0"
+                value={item.address.city}
+                onChangeText={(text) =>
+                  setItem({ ...item, address: { ...item.address, city: text } })
+                }
+              />
+            </View>
           </View>
-          <View className="flex-row">
-            <TextInput
-              style={styles.input}
-              placeholder="Zip Code"
-              placeholderTextColor="#B0B0B0"
-              value={item.address.zip}
-              onChangeText={(text) =>
-                setItem({ ...item, address: { ...item.address, zip: text } })
-              }
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Country"
-              placeholderTextColor="#B0B0B0"
-              value={item.address.country}
-              onChangeText={(text) =>
-                setItem({
-                  ...item,
-                  address: { ...item.address, country: text },
-                })
-              }
-            />
+          <View style={styles.rowContainer}>
+            <View style={styles.rowInputContainer}>
+              <TextInput
+                style={styles.rowInput}
+                placeholder="Zip Code"
+                placeholderTextColor="#B0B0B0"
+                value={item.address.zip}
+                onChangeText={(text) =>
+                  setItem({ ...item, address: { ...item.address, zip: text } })
+                }
+              />
+            </View>
+            <View style={styles.rowInputContainer}>
+              <TextInput
+                style={styles.rowInput}
+                placeholder="Country"
+                placeholderTextColor="#B0B0B0"
+                value={item.address.country}
+                onChangeText={(text) =>
+                  setItem({
+                    ...item,
+                    address: { ...item.address, country: text },
+                  })
+                }
+              />
+            </View>
           </View>
         </View>
       </View>
@@ -140,30 +148,35 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   input: {
-    // width: "100%",
-    // flex: 1,
-    // height: Platform.OS === "ios" ? 50 : 60,
-    // borderWidth: 1,
-    // borderColor: Colors.borderColor,
-    // borderRadius: 12,
-    // fontSize: 16,
-    // color: Colors.primary,
-    // fontFamily: "Sora-Regular",
-    // marginTop: 12,
-    // paddingHorizontal: 16,
-
     width: "100%",
-    flex: 1,
     height: Platform.OS === "ios" ? 50 : 60,
     borderWidth: 1,
     borderColor: Colors.borderColor,
     borderRadius: 12,
-    // marginBottom: 12,
-    fontSize: 14,
     color: Colors.primary,
-    fontFamily: "Sora-Regular",
     marginTop: 12,
     paddingHorizontal: 16,
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  rowInputContainer: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  rowInput: {
+    height: Platform.OS === "ios" ? 50 : 60,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+    borderRadius: 12,
+    color: Colors.primary,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
   },
   label: {
     color: "#111827",
