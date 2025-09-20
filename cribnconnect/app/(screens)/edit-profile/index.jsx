@@ -3,7 +3,9 @@ import { Colors } from "@/constants/Colors";
 import { useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -29,107 +31,139 @@ const EditProfile = () => {
   const saveChanges = () => {
     // Logic to save changes goes here
     console.log("Changes saved:", item);
-  }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <BackHeader title="Edit Profile" showUser={false} />
-      <View style={styles.imageContainer}>
-        <Image source={item.ImageUri} style={styles.image} resizeMode="cover" />
-      </View>
-      <View style={{ margin: 18 }}>
-        <View style={{ marginTop: 24 }}>
-          <Text style={styles.label}>Full Name</Text>
-          <TextInput
-            labelText="Full Name"
-            // placeholder="Full Name"
-            value={item.fullName}
-            style={styles.input}
-            onChangeText={(text) => setItem({ ...item, fullName: text })}
-          />
-        </View>
-        <View style={{ marginTop: 24 }}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            placeholder="Email"
-            value={item.email}
-            style={styles.input}
-            keyboardType="email-address"
-            onChangeText={(text) => setItem({ ...item, email: text })}
-          />
-        </View>
-        <View style={{ marginTop: 24 }}>
-          <Text style={styles.label}>Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter address"
-            placeholderTextColor="#B0B0B0"
-            value={item.address.street}
-            onChangeText={(text) =>
-              setItem({ ...item, address: { ...item.address, street: text } })
-            }
-          />
-          <View style={styles.rowContainer}>
-            <View style={styles.rowInputContainer}>
-              <TextInput
-                style={styles.rowInput}
-                placeholder="State"
-                placeholderTextColor="#B0B0B0"
-                value={item.address.state}
-                onChangeText={(text) =>
-                  setItem({ ...item, address: { ...item.address, state: text } })
-                }
-              />
-            </View>
-            <View style={styles.rowInputContainer}>
-              <TextInput
-                style={styles.rowInput}
-                placeholder="City"
-                placeholderTextColor="#B0B0B0"
-                value={item.address.city}
-                onChangeText={(text) =>
-                  setItem({ ...item, address: { ...item.address, city: text } })
-                }
-              />
-            </View>
-          </View>
-          <View style={styles.rowContainer}>
-            <View style={styles.rowInputContainer}>
-              <TextInput
-                style={styles.rowInput}
-                placeholder="Zip Code"
-                placeholderTextColor="#B0B0B0"
-                value={item.address.zip}
-                onChangeText={(text) =>
-                  setItem({ ...item, address: { ...item.address, zip: text } })
-                }
-              />
-            </View>
-            <View style={styles.rowInputContainer}>
-              <TextInput
-                style={styles.rowInput}
-                placeholder="Country"
-                placeholderTextColor="#B0B0B0"
-                value={item.address.country}
-                onChangeText={(text) =>
-                  setItem({
-                    ...item,
-                    address: { ...item.address, country: text },
-                  })
-                }
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={saveChanges}>
-        <Text
-          style={{ color: "white", fontFamily: "Sora-SemiBold", fontSize: 16 }}
+      
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 10}
+      >
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
         >
-          Save Changes
-        </Text>
-      </TouchableOpacity>
+          <View style={styles.imageContainer}>
+            <Image
+              source={item.ImageUri}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          </View>
+          <View style={{ margin: 18 }}>
+            <View style={{ marginTop: 24 }}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                labelText="Full Name"
+                // placeholder="Full Name"
+                value={item.fullName}
+                style={styles.input}
+                onChangeText={(text) => setItem({ ...item, fullName: text })}
+              />
+            </View>
+          <View style={{ marginTop: 24 }}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              placeholder="Email"
+              value={item.email}
+              style={styles.input}
+              keyboardType="email-address"
+              onChangeText={(text) => setItem({ ...item, email: text })}
+            />
+          </View>
+          <View style={{ marginTop: 24 }}>
+            <Text style={styles.label}>Address</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter address"
+              placeholderTextColor="#B0B0B0"
+              value={item.address.street}
+              onChangeText={(text) =>
+                setItem({ ...item, address: { ...item.address, street: text } })
+              }
+            />
+            <View style={styles.rowContainer}>
+              <View style={styles.rowInputContainer}>
+                <TextInput
+                  style={styles.rowInput}
+                  placeholder="State"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.address.state}
+                  onChangeText={(text) =>
+                    setItem({
+                      ...item,
+                      address: { ...item.address, state: text },
+                    })
+                  }
+                />
+              </View>
+              <View style={styles.rowInputContainer}>
+                <TextInput
+                  style={styles.rowInput}
+                  placeholder="City"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.address.city}
+                  onChangeText={(text) =>
+                    setItem({
+                      ...item,
+                      address: { ...item.address, city: text },
+                    })
+                  }
+                />
+              </View>
+            </View>
+            <View style={styles.rowContainer}>
+              <View style={styles.rowInputContainer}>
+                <TextInput
+                  style={styles.rowInput}
+                  placeholder="Zip Code"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.address.zip}
+                  onChangeText={(text) =>
+                    setItem({
+                      ...item,
+                      address: { ...item.address, zip: text },
+                    })
+                  }
+                />
+              </View>
+              <View style={styles.rowInputContainer}>
+                <TextInput
+                  style={styles.rowInput}
+                  placeholder="Country"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.address.country}
+                  onChangeText={(text) =>
+                    setItem({
+                      ...item,
+                      address: { ...item.address, country: text },
+                    })
+                  }
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+
+          <TouchableOpacity style={styles.button} onPress={saveChanges}>
+            <Text
+              style={{
+                color: "white",
+                fontFamily: "Sora-SemiBold",
+                fontSize: 16,
+              }}
+            >
+              Save Changes
+            </Text>
+          </TouchableOpacity>
+          
+          {/* Add bottom padding to ensure content isn't hidden behind keyboard */}
+          <View style={{ height: 30 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -160,8 +194,8 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
   },
   rowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 12,
   },
   rowInputContainer: {
@@ -190,6 +224,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     marginHorizontal: 18,
+    marginTop: 20,
   },
 });
 
