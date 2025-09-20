@@ -191,15 +191,6 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     paddingVertical: 20,
     backgroundColor: Colors.white,
-    shadowColor: Colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-    zIndex: 1,
     borderBottomWidth: 0.5,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
