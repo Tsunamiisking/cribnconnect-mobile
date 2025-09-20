@@ -19,7 +19,7 @@ const options = [
   },
   {
     name: "Notifications",
-    route: "/(notifications)/index",
+    route: "/(screens)/notification",
     description: "Manage your notification preferences",
   },
   {

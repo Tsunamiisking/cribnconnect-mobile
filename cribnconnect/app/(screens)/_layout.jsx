@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 
 export default function ScreensLayout() {
   return (
@@ -84,7 +83,25 @@ export default function ScreensLayout() {
           headerBackTitle: "Back",
           headerShown: false,
         }}
-      />  
+      />
+      
+      <Stack.Screen
+        name="notification/index"
+        options={{
+          title: "Notifications",
+          headerBackTitle: "Back",
+          headerShown: false,
+        }}
+      />
+      
+      <Stack.Screen
+        name="notification/[id]"
+        options={{
+          title: "Notification Details",
+          headerBackTitle: "Back",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
