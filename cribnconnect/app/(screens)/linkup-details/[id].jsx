@@ -1,17 +1,11 @@
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import { router, useLocalSearchParams } from "expo-router";
-import {
-  Globe,
-  Heart,
-  Lock,
-  Mail,
-  Share2,
-  Users
-} from "lucide-react-native";
+import { Globe, Heart, Lock, Share2, Users } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
   Modal,
   ScrollView,
   StyleSheet,
@@ -19,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,7 +22,8 @@ export default function LinkupDetailsScreen() {
   const [linkup, setLinkup] = useState(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
+  const [requestMessage, setRequestMessage] = useState("");
+  const [requestSent, setRequestSent] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [hasJoined, setHasJoined] = useState(false);
 
@@ -80,16 +76,10 @@ export default function LinkupDetailsScreen() {
       return;
     }
 
-    // Check if group is private or requires approval
+    // Check if group is private
     if (linkup?.privacy === "private") {
+      // Show request modal instead of password modal
       setJoinModalVisible(true);
-    } else if (linkup?.privacy === "request") {
-      // Send join request to admin
-      console.log("Join request sent to group admin");
-      // In a real app, this would make an API call
-
-      // For demo purposes, we'll just show success
-      setHasJoined(true);
     } else {
       // Public group - join immediately
       // In a real app, this would make an API call
@@ -99,19 +89,22 @@ export default function LinkupDetailsScreen() {
     }
   };
 
-  const handleSubmitPassword = () => {
-    // In a real app, verify password with API
-    if (passwordInput === "1234") {
-      // Demo password
-      setHasJoined(true);
+  const handleSubmitRequest = () => {
+    // In a real app, this would send the request to the admin via API
+    // api.sendJoinRequest(linkup.id, requestMessage);
+
+    console.log(
+      "Join request sent to group admin with message:",
+      requestMessage
+    );
+
+    // Show success state
+    setRequestSent(true);
+
+    // Close the modal after a delay to allow the user to see the success message
+    setTimeout(() => {
       setJoinModalVisible(false);
-      setPasswordInput("");
-      setJoinError("");
-    } else {
-      setJoinError(
-        "Incorrect password. Please try again or contact the group admin."
-      );
-    }
+    }, 3000);
   };
 
   const handleBookmark = () => {
@@ -163,63 +156,87 @@ export default function LinkupDetailsScreen() {
     <SafeAreaView style={styles.container}>
       <BackHeader title="Group Details" showUser={false} />
 
-      {/* Join Group Password Modal */}
+      {/* Join Group Request Modal */}
       <Modal
         visible={joinModalVisible}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setJoinModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Private Group</Text>
-            <Text style={styles.modalText}>
-              This group requires a password to join. Please enter the password
-              or contact the group admin for access.
-            </Text>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1 bg-white"
+        >
+          <View>
+            <View style={styles.modalContent}>
+              {!requestSent ? (
+                <>
+                  <Text style={styles.modalTitle}>Request to Join</Text>
+                  <Text style={styles.modalText}>
+                    This is a private group. Send a request to the group admin
+                    to join. Include a brief message about why you'd like to
+                    join.
+                  </Text>
 
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Enter group password"
-              secureTextEntry
-              value={passwordInput}
-              onChangeText={setPasswordInput}
-              placeholderTextColor={Colors.gray500}
-            />
+                  <TextInput
+                    style={[styles.passwordInput, styles.messageInput]}
+                    placeholder="Why would you like to join this group? (Optional)"
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    value={requestMessage}
+                    onChangeText={setRequestMessage}
+                    placeholderTextColor={Colors.gray500}
+                    maxLength={300}
+                  />
 
-            {joinError ? (
-              <Text style={styles.errorText}>{joinError}</Text>
-            ) : null}
+                  <Text style={styles.charCount}>
+                    {requestMessage.length}/300
+                  </Text>
 
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => {
-                  setJoinModalVisible(false);
-                  setPasswordInput("");
-                  setJoinError("");
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => {
+                        setJoinModalVisible(false);
+                        setRequestMessage("");
+                      }}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmitPassword}
-              >
-                <Text style={styles.submitButtonText}>Join Group</Text>
-              </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.submitButton}
+                      onPress={handleSubmitRequest}
+                    >
+                      <Text style={styles.submitButtonText}>Send Request</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.successContainer}>
+                  <View style={styles.successIconContainer}>
+                    <Text style={styles.successIcon}>✓</Text>
+                  </View>
+                  <Text style={styles.successTitle}>Request Sent</Text>
+                  <Text style={styles.successText}>
+                    Your request to join this group has been sent to the admin.
+                    You'll be notified when your request is approved.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => {
+                      setJoinModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
-
-            <TouchableOpacity
-              style={styles.contactAdminButton}
-              onPress={handleContactHost}
-            >
-              <Mail size={16} color={Colors.primary} />
-              <Text style={styles.contactAdminText}>Contact Admin</Text>
-            </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -331,7 +348,6 @@ export default function LinkupDetailsScreen() {
                 </Text>
               </View>
 
-
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Privacy</Text>
                 <Text style={styles.detailValue}>
@@ -383,8 +399,7 @@ export default function LinkupDetailsScreen() {
               <Text style={styles.contactArrow}>→</Text>
             </TouchableOpacity>
           </View>
-
-  </View>
+        </View>
       </ScrollView>
 
       {/* Bottom Action Bar */}
@@ -396,11 +411,20 @@ export default function LinkupDetailsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.joinButton, hasJoined && styles.joinedButton]}
+            style={[
+              styles.joinButton,
+              hasJoined && styles.joinedButton,
+              requestSent && styles.requestSentButton,
+            ]}
             onPress={handleJoinGroup}
+            disabled={requestSent}
           >
             <Text style={styles.joinButtonText}>
-              {hasJoined ? "Joined ✓" : "Join Group"}
+              {hasJoined
+                ? "Joined ✓"
+                : requestSent
+                  ? "Request Sent ✓"
+                  : "Join Group"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -755,6 +779,18 @@ const styles = StyleSheet.create({
     color: Colors.gray900,
     marginBottom: 10,
   },
+  messageInput: {
+    height: 100,
+    textAlignVertical: "top",
+    paddingTop: 12,
+  },
+  charCount: {
+    alignSelf: "flex-end",
+    color: Colors.gray500,
+    fontFamily: "Sora-Regular",
+    fontSize: 12,
+    marginBottom: 16,
+  },
   errorText: {
     color: "#ef4444",
     fontFamily: "Sora-Regular",
@@ -805,6 +841,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 6,
   },
+  successContainer: {
+    alignItems: "center",
+    padding: 10,
+  },
+  successIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.emerald,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  successIcon: {
+    color: Colors.white,
+    fontSize: 30,
+    fontWeight: "bold",
+  },
+  successTitle: {
+    fontSize: 20,
+    fontFamily: "Urbanist-Bold",
+    color: Colors.gray900,
+    marginBottom: 10,
+  },
+  successText: {
+    color: Colors.gray700,
+    fontFamily: "Sora-Regular",
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: Colors.white,
+    fontFamily: "Sora-SemiBold",
+    fontSize: 15,
+  },
   bottomSpacing: {
     height: 100,
   },
@@ -844,6 +924,9 @@ const styles = StyleSheet.create({
   },
   joinedButton: {
     backgroundColor: Colors.emerald,
+  },
+  requestSentButton: {
+    backgroundColor: Colors.amber,
   },
   joinButtonText: {
     color: Colors.white,
