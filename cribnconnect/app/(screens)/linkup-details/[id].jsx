@@ -56,7 +56,6 @@ export default function LinkupDetailsScreen() {
       privacy: "public", // 'public' or 'private'
       hostName: "Alex Chen",
       meetingFrequency: "Weekly virtual meetups",
-      schedule: "Every Thursday, 7:00 PM",
       groupSize: {
         current: 48,
         max: 100,
@@ -306,10 +305,6 @@ export default function LinkupDetailsScreen() {
                 </View>
               )}
             </View>
-
-            <Text style={styles.lastActive}>
-              Last active: {linkup.lastActive}
-            </Text>
           </View>
 
           {/* Description */}

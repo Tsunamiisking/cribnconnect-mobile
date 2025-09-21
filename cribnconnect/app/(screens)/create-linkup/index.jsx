@@ -78,7 +78,7 @@ export default function CreateLinkupScreen() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.label}>Description (Optional)</Text>
+          <Text style={styles.label}>Description </Text>
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Tell people what your group is about..."
