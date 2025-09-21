@@ -1,75 +1,178 @@
-import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useState, useEffect, useRef } from 'react';
+import BackHeader from "@/components/BackHeader";
+import { Colors } from "@/constants/Colors";
+import { useLocalSearchParams } from "expo-router";
+import { Info, Paperclip, Send, Users } from "lucide-react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams();
   const [messages, setMessages] = useState([]);
-  const [inputText, setInputText] = useState('');
-  const [chatPartner, setChatPartner] = useState(null);
+  const [inputText, setInputText] = useState("");
+  const [chatData, setChatData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const flatListRef = useRef(null);
 
   useEffect(() => {
-    // TODO: Fetch chat history and partner info from API
+    setLoading(true);
+    // TODO: Fetch chat data from API
     // Example API call:
     // const fetchChatData = async () => {
     //   try {
-    //     const chatResponse = await api.getChatHistory(id);
-    //     const partnerResponse = await api.getUserInfo(id);
-    //     setMessages(chatResponse.data);
-    //     setChatPartner(partnerResponse.data);
+    //     const response = await api.getChatData(id);
+    //     setChatData(response.data);
+    //     setMessages(response.data.messages);
     //   } catch (error) {
     //     console.error('Error fetching chat data:', error);
+    //     setError('Failed to load chat data');
+    //   } finally {
+    //     setLoading(false);
     //   }
     // };
     // fetchChatData();
 
-    // Mock data for now
-    setChatPartner({
-      id: id,
-      name: id === 'organizer' ? 'Sarah Johnson' : id === 'host' ? 'Alex Chen' : 'Chat Partner',
-      isOnline: true,
-      lastSeen: new Date(),
-    });
-
-    setMessages([
-      {
-        id: '1',
-        text: 'Hey! Thanks for your interest in the event/linkup!',
-        sender: 'them',
-        timestamp: new Date(Date.now() - 3600000),
-        delivered: true,
-        read: true,
-      },
-      {
-        id: '2',
-        text: 'Hi! I\'m really excited about it. Can you tell me more details?',
-        sender: 'me',
-        timestamp: new Date(Date.now() - 3500000),
-        delivered: true,
-        read: true,
-      },
-      {
-        id: '3',
-        text: 'Absolutely! We usually meet around 7 PM and the vibe is really friendly. Perfect for meeting new people.',
-        sender: 'them',
-        timestamp: new Date(Date.now() - 3400000),
-        delivered: true,
-        read: true,
-      },
-      {
-        id: '4',
-        text: 'That sounds perfect! What should I bring or prepare?',
-        sender: 'me',
-        timestamp: new Date(Date.now() - 3300000),
-        delivered: true,
-        read: false,
-      },
-    ]);
+    // Mock data - Determine if group chat based on ID
+    // In a real app, you'd get this from your API
+    setTimeout(() => {
+      try {
+        const isGroup = id === "group1" || id === "group2" || id === "group3";
+        
+        if (isGroup) {
+          // Mock group chat data
+          const groupData = {
+            id,
+            type: "group",
+            name: id === "group1" ? "Coffee & Code Buddies" : 
+                  id === "group2" ? "Downtown Apartment Hunters" : 
+                  "Photography Meetup",
+            participants: id === "group1" ? 12 : id === "group2" ? 8 : 15,
+            online: Math.floor(Math.random() * 5) + 1,
+            admin: "Alex Chen",
+            messages: [
+              {
+                id: "1",
+                text: "Hey everyone! Welcome to the group chat.",
+                sender: "other",
+                senderName: "Alex",
+                timestamp: new Date(Date.now() - 86400000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "2",
+                text: "Thanks for adding me! Looking forward to connecting with you all.",
+                sender: "me",
+                senderName: "You",
+                timestamp: new Date(Date.now() - 76400000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "3",
+                text: "Has anyone checked out the new resources I shared last week?",
+                sender: "other",
+                senderName: "Emma",
+                timestamp: new Date(Date.now() - 36400000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "4",
+                text: "Yes! They were really helpful. Thanks for sharing.",
+                sender: "other",
+                senderName: "Michael",
+                timestamp: new Date(Date.now() - 26400000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "5",
+                text: "I'm thinking of organizing another meetup soon. What days work best for everyone?",
+                sender: "other",
+                senderName: "Alex",
+                timestamp: new Date(Date.now() - 3600000),
+                delivered: true,
+                read: true,
+              },
+            ],
+          };
+          setChatData(groupData);
+          setMessages(groupData.messages);
+        } else {
+          // Mock direct message data
+          const directMessageData = {
+            id,
+            type: "direct",
+            participant: {
+              id: id,
+              name: id === "organizer" ? "Sarah Johnson" :
+                   id === "host" ? "Alex Chen" : 
+                   id === "user1" ? "Mike Johnson" :
+                   id === "user2" ? "Lisa Rodriguez" : "Chat Partner",
+              isOnline: Math.random() > 0.5,
+              lastSeen: new Date(Date.now() - Math.floor(Math.random() * 3600000)),
+            },
+            messages: [
+              {
+                id: "1",
+                text: "Hey! Thanks for your interest in the event/linkup!",
+                sender: "them",
+                timestamp: new Date(Date.now() - 3600000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "2",
+                text: "Hi! I'm really excited about it. Can you tell me more details?",
+                sender: "me",
+                timestamp: new Date(Date.now() - 3500000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "3",
+                text: "Absolutely! We usually meet around 7 PM and the vibe is really friendly. Perfect for meeting new people.",
+                sender: "them",
+                timestamp: new Date(Date.now() - 3400000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "4",
+                text: "That sounds perfect! What should I bring or prepare?",
+                sender: "me",
+                timestamp: new Date(Date.now() - 3300000),
+                delivered: true,
+                read: false,
+              },
+            ],
+          };
+          setChatData(directMessageData);
+          setMessages(directMessageData.messages);
+        }
+      } catch (error) {
+        console.error('Error creating mock data:', error);
+        setError('Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    }, 800); // Simulate loading delay
   }, [id]);
 
   const sendMessage = () => {
-    if (inputText.trim() === '') return;
+    if (inputText.trim() === "") return;
 
     // TODO: Add API integration to send message
     // Example API call:
@@ -82,23 +185,28 @@ export default function ChatScreen() {
     //   console.error('Error sending message:', error);
     // }
 
+    const isGroupChat = chatData?.type === "group";
+    
     const newMessage = {
       id: Date.now().toString(),
       text: inputText.trim(),
-      sender: 'me',
+      sender: "me",
+      ...(isGroupChat && { senderName: "You" }), // Add sender name for group chats
       timestamp: new Date(),
       delivered: false,
       read: false,
     };
 
-    setMessages(prev => [...prev, newMessage]);
-    setInputText('');
+    setMessages((prev) => [...prev, newMessage]);
+    setInputText("");
 
     // Simulate message delivery
     setTimeout(() => {
-      setMessages(prev => prev.map(msg => 
-        msg.id === newMessage.id ? { ...msg, delivered: true } : msg
-      ));
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id ? { ...msg, delivered: true } : msg
+        )
+      );
     }, 1000);
 
     // Auto-scroll to bottom
@@ -106,60 +214,107 @@ export default function ChatScreen() {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
   };
+  
+  // Function to view group information
+  const handleViewGroupInfo = () => {
+    // In a real app, navigate to group info screen
+    console.log('View group info for:', chatData?.name);
+  };
 
   const formatTime = (date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const formatDate = (date) => {
     const today = new Date();
     const messageDate = new Date(date);
-    
+
     if (messageDate.toDateString() === today.toDateString()) {
-      return 'Today';
+      return "Today";
     }
-    
+
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (messageDate.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
+      return "Yesterday";
     }
-    
+
     return messageDate.toLocaleDateString();
   };
 
   const renderMessage = ({ item, index }) => {
-    const isMe = item.sender === 'me';
-    const showDate = index === 0 || 
-      formatDate(item.timestamp) !== formatDate(messages[index - 1].timestamp);
+    const isMe = item.sender === "me";
+    const showDate =
+      index === 0 ||
+      formatDate(item.timestamp) !== formatDate(messages[index - 1]?.timestamp);
+    
+    // For group chats, determine if we should show the sender name
+    const isGroupChat = chatData?.type === "group";
+    const showSenderName = isGroupChat && !isMe && (
+      index === 0 || 
+      messages[index - 1]?.sender !== item.sender ||
+      showDate
+    );
 
     return (
       <View>
         {showDate && (
           <View style={styles.dateContainer} className="py-2">
-            <Text style={styles.dateText} className="text-center text-gray-500 text-sm">
+            <Text
+              style={styles.dateText}
+              className="text-center text-gray-500 text-sm"
+            >
               {formatDate(item.timestamp)}
             </Text>
           </View>
         )}
-        
-        <View style={[styles.messageContainer, isMe ? styles.myMessageContainer : styles.theirMessageContainer]} className="px-4 py-2">
-          <View style={[styles.messageBubble, isMe ? styles.myMessage : styles.theirMessage]} 
-                className={`max-w-3/4 p-3 rounded-2xl ${isMe ? 'bg-blue-600 self-end' : 'bg-gray-200 self-start'}`}>
-            <Text style={[styles.messageText, isMe ? styles.myMessageText : styles.theirMessageText]} 
-                  className={isMe ? 'text-white' : 'text-gray-900'}>
+
+        <View
+          style={[
+            styles.messageContainer,
+            isMe ? styles.myMessageContainer : styles.theirMessageContainer,
+          ]}
+          className="px-4 py-2"
+        >
+          {/* Show sender name for group chats */}
+          {showSenderName && (
+            <Text style={styles.senderName}>
+              {item.senderName}
+            </Text>
+          )}
+          
+          <View
+            style={[
+              styles.messageBubble,
+              isMe ? styles.myMessage : styles.theirMessage,
+            ]}
+            className={`max-w-3/4 p-3 rounded-2xl ${isMe ? "bg-blue-600 self-end" : "bg-gray-200 self-start"}`}
+          >
+            <Text
+              style={[
+                styles.messageText,
+                isMe ? styles.myMessageText : styles.theirMessageText,
+              ]}
+              className={isMe ? "text-white" : "text-gray-900"}
+            >
               {item.text}
             </Text>
           </View>
-          
-          <View style={styles.messageInfo} className="flex-row items-center mt-1">
+
+          <View
+            style={styles.messageInfo}
+            className="flex-row items-center mt-1"
+          >
             <Text style={styles.timestamp} className="text-gray-500 text-xs">
               {formatTime(item.timestamp)}
             </Text>
             {isMe && (
-              <Text style={styles.deliveryStatus} className="text-gray-500 text-xs ml-1">
-                {item.read ? '✓✓' : item.delivered ? '✓' : '○'}
+              <Text
+                style={styles.deliveryStatus}
+                className="text-gray-500 text-xs ml-1"
+              >
+                {item.read ? "✓✓" : item.delivered ? "✓" : "○"}
               </Text>
             )}
           </View>
@@ -168,144 +323,181 @@ export default function ChatScreen() {
     );
   };
 
-  if (!chatPartner) {
+  if (loading) {
     return (
-      <View style={styles.loadingContainer} className="flex-1 justify-center items-center bg-white">
-        <Text style={styles.loadingText} className="text-gray-500">Loading chat...</Text>
-      </View>
+      <SafeAreaView className="flex-1 bg-white">
+        <View
+          style={styles.loadingContainer}
+          className="flex-1 justify-center items-center bg-white"
+        >
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText} className="text-gray-500 mt-4">
+            Loading chat...
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
+  
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View
+          style={styles.errorContainer}
+          className="flex-1 justify-center items-center bg-white p-4"
+        >
+          <Text style={styles.errorText} className="text-red-500">
+            Error: {error}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  const isGroupChat = chatData?.type === "group";
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      className="flex-1 bg-white"
-    >
-      {/* Chat Header */}
-      <View style={styles.chatHeader} className="px-4 py-3 bg-white border-b border-gray-200">
-        <View style={styles.headerContent} className="flex-row items-center">
-          <View style={styles.partnerInfo} className="flex-1">
-            <Text style={styles.partnerName} className="text-lg font-semibold text-gray-900">
-              {chatPartner.name}
-            </Text>
-            <Text style={styles.onlineStatus} className="text-sm text-gray-500">
-              {chatPartner.isOnline ? 'Online' : `Last seen ${formatTime(chatPartner.lastSeen)}`}
-            </Text>
-          </View>
-          
-          <View style={styles.headerActions} className="flex-row space-x-3">
-            <TouchableOpacity style={styles.headerButton} className="p-2">
-              <Text style={styles.headerButtonText} className="text-blue-600">📞</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton} className="p-2">
-              <Text style={styles.headerButtonText} className="text-blue-600">📹</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Messages List */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        style={styles.messagesList}
-        className="flex-1 bg-gray-50"
-        contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-      />
-
-      {/* Message Input */}
-      <View style={styles.inputContainer} className="px-4 py-3 bg-white border-t border-gray-200">
-        <View style={styles.inputRow} className="flex-row items-end space-x-3">
-          <TouchableOpacity style={styles.attachButton} className="p-2">
-            <Text style={styles.attachIcon} className="text-gray-500">📎</Text>
-          </TouchableOpacity>
-          
-          <View style={styles.textInputContainer} className="flex-1 bg-gray-100 rounded-2xl px-4 py-2">
-            <TextInput
-              style={styles.textInput}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Type a message..."
-              placeholderTextColor="#9ca3af"
-              multiline
-              maxLength={1000}
-              className="text-gray-900 text-base"
-            />
-          </View>
-          
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+        className="flex-1 bg-white"
+      >
+        {/* Chat Header */}
+        <BackHeader 
+          title={isGroupChat ? chatData?.name : chatData?.participant?.name} 
+        />
+        
+        {/* Group Info Bar (only for group chats) */}
+        {isGroupChat && (
           <TouchableOpacity 
-            style={[styles.sendButton, inputText.trim() && styles.sendButtonActive]} 
-            className={`p-3 rounded-full ${inputText.trim() ? 'bg-blue-600' : 'bg-gray-300'}`}
-            onPress={sendMessage}
-            disabled={!inputText.trim()}
+            style={styles.groupInfoContainer}
+            onPress={handleViewGroupInfo}
           >
-            <Text style={styles.sendIcon} className={inputText.trim() ? 'text-white' : 'text-gray-500'}>
-              ➤
-            </Text>
+            <View style={styles.groupInfoLeft}>
+              <Users size={18} color={Colors.primary} />
+              <Text style={styles.groupMemberCount}>
+                {chatData?.participants || 0} Members
+              </Text>
+              {chatData?.online > 0 && (
+                <View style={styles.onlineContainer}>
+                  <View style={styles.onlineDot} />
+                  <Text style={styles.onlineText}>{chatData.online} online</Text>
+                </View>
+              )}
+            </View>
+            
+            <View style={styles.groupInfoRight}>
+              <Info size={18} color={Colors.primary} />
+            </View>
           </TouchableOpacity>
+        )}
+        
+        {/* Online Status (only for direct messages) */}
+        {!isGroupChat && (
+          <View style={styles.onlineStatusContainer}>
+            <View style={[
+              styles.statusIndicator, 
+              { backgroundColor: chatData?.participant?.isOnline ? Colors.emerald : Colors.gray400 }
+            ]} />
+            <Text style={styles.onlineStatusText}>
+              {chatData?.participant?.isOnline ? 'Online' : 'Offline'}
+            </Text>
+          </View>
+        )}
+
+        {/* Messages List */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          style={styles.messagesList}
+          className="flex-1 bg-gray-50"
+          contentContainerStyle={styles.messagesContent}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: false })
+          }
+        />
+
+        {/* Message Input */}
+        <View
+          style={styles.inputContainer}
+          className="px-4 py-3 bg-white border-t border-gray-200"
+        >
+          <View
+            style={styles.inputRow}
+            className="flex-row items-end space-x-3"
+          >
+            <TouchableOpacity style={styles.attachButton} className="p-2">
+              <Paperclip size={20} color="#6b7280" />
+            </TouchableOpacity>
+
+            <View
+              style={styles.textInputContainer}
+              className="flex-1 bg-gray-100 rounded-2xl px-4 py-2"
+            >
+              <TextInput
+                style={styles.textInput}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder={isGroupChat ? "Message to group..." : "Type a message..."}
+                placeholderTextColor="#9ca3af"
+                multiline
+                maxLength={1000}
+                className="text-gray-900 text-base"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                inputText.trim() && styles.sendButtonActive,
+              ]}
+              className={`p-3 rounded-full bg-gray-200`}
+              onPress={sendMessage}
+              disabled={!inputText.trim()}
+            >
+              <Send size={16} color={inputText.trim() ? "#fff" : "#6b7280"} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
   },
   loadingText: {
-    color: '#6b7280',
+    color: "#6b7280",
+    marginTop: 16,
   },
-  chatHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  partnerInfo: {
+  errorContainer: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
-  partnerName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  onlineStatus: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  headerButton: {
-    padding: 8,
-  },
-  headerButtonText: {
-    color: '#2563eb',
-    fontSize: 18,
+  errorText: {
+    fontSize: 16,
+    color: "#ef4444",
+    textAlign: "center",
   },
   messagesList: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: "#f9fafb",
   },
   messagesContent: {
     paddingVertical: 12,
@@ -314,8 +506,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   dateText: {
-    textAlign: 'center',
-    color: '#6b7280',
+    textAlign: "center",
+    color: "#6b7280",
     fontSize: 14,
   },
   messageContainer: {
@@ -323,87 +515,156 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   myMessageContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   theirMessageContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   messageBubble: {
-    maxWidth: '75%',
+    maxWidth: "75%",
     padding: 12,
     borderRadius: 16,
   },
   myMessage: {
-    backgroundColor: '#2563eb',
-    alignSelf: 'flex-end',
+    backgroundColor: Colors.primary,
+    alignSelf: "flex-end",
   },
   theirMessage: {
-    backgroundColor: '#e5e7eb',
-    alignSelf: 'flex-start',
+    backgroundColor: Colors.gray200,
+    alignSelf: "flex-start",
   },
   messageText: {
     fontSize: 16,
     lineHeight: 20,
   },
   myMessageText: {
-    color: 'white',
+    color: "white",
   },
   theirMessageText: {
-    color: '#111827',
+    color: "#111827",
   },
   messageInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 4,
   },
   timestamp: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 12,
   },
   deliveryStatus: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 12,
     marginLeft: 4,
   },
   inputContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: "#e5e7eb",
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     gap: 12,
   },
   attachButton: {
     padding: 8,
   },
   attachIcon: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 20,
   },
   textInputContainer: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 20,
+    backgroundColor: "#f3f4f6",
     paddingHorizontal: 16,
     paddingVertical: 8,
+    height: 40,
   },
   textInput: {
-    color: '#111827',
+    color: "#111827",
     fontSize: 16,
-    maxHeight: 100,
   },
   sendButton: {
     padding: 12,
     borderRadius: 50,
   },
   sendButtonActive: {
-    backgroundColor: '#2563eb',
+    backgroundColor: Colors.blue600,
   },
   sendIcon: {
     fontSize: 16,
+  },
+  // Group chat specific styles
+  groupInfoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray100,
+  },
+  groupInfoLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  groupMemberCount: {
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray800,
+    marginLeft: 8,
+  },
+  onlineContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 12,
+  },
+  onlineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.emerald,
+    marginRight: 6,
+  },
+  onlineText: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.emerald,
+  },
+  groupInfoRight: {
+    padding: 6,
+  },
+  // Direct message specific styles
+  onlineStatusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray100,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  onlineStatusText: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+  },
+  // Sender name for group chats
+  senderName: {
+    fontFamily: "Sora-SemiBold",
+    fontSize: 13,
+    color: Colors.gray700,
+    marginBottom: 3,
+    marginLeft: 4,
   },
 });

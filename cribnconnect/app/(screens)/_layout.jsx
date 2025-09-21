@@ -8,21 +8,21 @@ export default function ScreensLayout() {
         name="apartment-details/[id]"
         options={{
           title: "Apartment Details",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
         name="event-details/[id]"
         options={{
           title: "Event Details",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
         name="linkup-details/[id]"
         options={{
           title: "Linkup Details",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />
@@ -30,14 +30,15 @@ export default function ScreensLayout() {
         name="profile/[id]"
         options={{
           title: "Profile",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
         name="chat/[id]"
         options={{
           title: "Chat",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
+          headerShown: false,
         }}
       />
 
@@ -45,7 +46,7 @@ export default function ScreensLayout() {
         name="settings/index"
         options={{
           title: "Settings",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />
@@ -54,7 +55,7 @@ export default function ScreensLayout() {
         name="search/index"
         options={{
           title: "Search",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />
@@ -63,7 +64,7 @@ export default function ScreensLayout() {
         name="create-linkup/index"
         options={{
           title: "Create Linkup",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />
@@ -72,7 +73,7 @@ export default function ScreensLayout() {
         name="nearby-people/index"
         options={{
           title: "Nearby People",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />
@@ -81,7 +82,7 @@ export default function ScreensLayout() {
         name="edit-profile/index"
         options={{
           title: "Edit Profile",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />
@@ -90,7 +91,7 @@ export default function ScreensLayout() {
         name="notification/index"
         options={{
           title: "Notifications",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />
@@ -99,7 +100,7 @@ export default function ScreensLayout() {
         name="notification/[id]"
         options={{
           title: "Notification Details",
-          headerBackTitle: "Back",
+          // headerBackTitle: "Back",
           headerShown: false,
         }}
       />

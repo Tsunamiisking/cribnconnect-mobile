@@ -31,6 +31,7 @@ export const Colors = {
   gray900: "#111827",
   
   // Blue variations for selected states
+  blue600: "#2563eb",
   blue50: "#eff6ff",
   warning: "#f59e0b",
 
