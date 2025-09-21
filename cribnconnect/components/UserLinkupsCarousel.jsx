@@ -78,12 +78,6 @@ export default function UserLinkupsCarousel() {
           
           <View style={styles.cardDetails}>
             <View style={styles.cardDetailRow}>
-              <Calendar size={12} color={Colors.white} />
-              <Text style={styles.cardDetailText} numberOfLines={1}>
-                {item.nextMeeting}
-              </Text>
-            </View>
-            <View style={styles.cardDetailRow}>
               <Users size={12} color={Colors.white} />
               <Text style={styles.cardDetailText} numberOfLines={1}>
                 {item.memberCount}
@@ -102,10 +96,10 @@ export default function UserLinkupsCarousel() {
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Your Active Linkups</Text>
-        <TouchableOpacity onPress={() => router.push("/(screens)/my-linkups")}>
+        <Text style={styles.sectionTitle}>Created Linkup Groups</Text>
+        {/* <TouchableOpacity onPress={() => router.push('/(chat)/${id}')}>
           <Text style={styles.viewAllText}>View All</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       
       <FlatList

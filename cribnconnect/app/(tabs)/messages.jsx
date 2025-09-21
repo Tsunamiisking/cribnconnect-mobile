@@ -1,21 +1,21 @@
-import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  FlatList,
-  Platform,
-  Image,
-} from 'react-native';
-import { useState } from 'react';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import NormalHeader from '@/components/NormalHeader';
 import UserLinkupsCarousel from '@/components/UserLinkupsCarousel';
 import { Colors } from '@/constants/Colors';
-import { MessageCircle, Users, Calendar, MapPin } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { MessageCircle, Users } from 'lucide-react-native';
+import { useState } from 'react';
+import {
+  FlatList,
+  Image,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Mock data - TODO: Replace with API integration
 const APARTMENT_CONVERSATIONS = [
@@ -80,6 +80,7 @@ const EVENT_CONVERSATIONS = [
   },
 ];
 
+// Conversations from linkups that the user has joined (but not created)
 const LINKUP_CONVERSATIONS = [
   {
     id: '2',
@@ -247,11 +248,11 @@ export default function MessagesScreen() {
 
         {/* Tab Content */}
         {selectedTab === 'linkups' ? (
-          // Special content for Linkups tab - show active linkups
+          // Special content for Linkups tab - show created linkups at the top
           <View>
             <UserLinkupsCarousel />
             
-            {/* Linkup Conversations */}
+            {/* Linkup Conversations - Groups that the user has joined */}
             <View style={styles.conversationsSection}>
               <Text style={styles.sectionTitle}>Linkup Conversations</Text>
               <FlatList
