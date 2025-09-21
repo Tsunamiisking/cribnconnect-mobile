@@ -36,37 +36,36 @@ const APARTMENT_CONVERSATIONS = [
   },
   {
     id: '4',
+    type: 'direct',
+    participant: {
+      name: 'Michael Lee',
+      avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=400&fit=crop&crop=face',
+    },
+    lastMessage: {
+      text: 'Thanks for the apartment recommendation! When can we schedule a viewing?',
+      timestamp: '2 min ago',
+      unread: true,
+    },
+    context: 'Apartment Inquiry',
+  },
+];
+
+const EVENT_CONVERSATIONS = [
+  {
+    id: 'group3',
     type: 'group',
-    name: 'Downtown Apartment Hunters',
-    avatar: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
+    name: 'Tech Conference 2024',
+    avatar: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=300&fit=crop',
     participants: 8,
     lastMessage: {
       text: 'Alex: Found a great 1BR for $1800, sharing details...',
       timestamp: '3 hours ago',
       unread: false,
     },
-    context: 'Apartment Group',
-  },
-];
-
-const EVENT_CONVERSATIONS = [
-  {
-    id: '3',
-    type: 'direct',
-    participant: {
-      name: 'Mike Johnson',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
-      status: 'offline',
-    },
-    lastMessage: {
-      text: 'The event was amazing! Let\'s plan the next one.',
-      timestamp: '1 hour ago',
-      unread: false,
-    },
     context: 'Event Follow-up',
   },
   {
-    id: '7',
+    id: 'group7',
     type: 'group',
     name: 'Photography Meetup',
     avatar: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&h=300&fit=crop',
@@ -83,7 +82,7 @@ const EVENT_CONVERSATIONS = [
 // Conversations from linkups that the user has joined (but not created)
 const LINKUP_CONVERSATIONS = [
   {
-    id: '2',
+    id: 'group2',
     type: 'group',
     name: 'Coffee & Code Buddies',
     avatar: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
@@ -96,19 +95,17 @@ const LINKUP_CONVERSATIONS = [
     context: 'Linkup Group',
   },
   {
-    id: '5',
-    type: 'direct',
-    participant: {
-      name: 'Lisa Rodriguez',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face',
-      status: 'away',
-    },
+    id: 'group5',
+    type: 'group',
+    name: 'Coffee & Code Buddies',
+    avatar: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
+    participants: 12,
     lastMessage: {
-      text: 'Perfect! See you at the photography walk this weekend.',
-      timestamp: 'Yesterday',
-      unread: false,
+      text: 'Emma: Who\'s joining us for tomorrow\'s session?',
+      timestamp: '15 min ago',
+      unread: true,
     },
-    context: 'Linkup Chat',
+    context: 'Linkup Group',
   },
 ];
 

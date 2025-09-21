@@ -47,7 +47,8 @@ export default function ChatScreen() {
     // In a real app, you'd get this from your API
     setTimeout(() => {
       try {
-        const isGroup = id === "group1" || id === "group2" || id === "group3";
+        // For testing, treat any ID with "group" in it as a group chat
+        const isGroup = id.includes("group") || id === "2" || id === "3" || id === "7" || id === "5";
         
         if (isGroup) {
           // Mock group chat data
@@ -56,8 +57,12 @@ export default function ChatScreen() {
             type: "group",
             name: id === "group1" ? "Coffee & Code Buddies" : 
                   id === "group2" ? "Downtown Apartment Hunters" : 
+                  id === "2" ? "Tech Enthusiasts" :
+                  id === "4" ? "Fitness Group" :
+                  id === "7" ? "Book Club" :
                   "Photography Meetup",
-            participants: id === "group1" ? 12 : id === "group2" ? 8 : 15,
+            participants: id === "group1" ? 12 : id === "group2" ? 8 : 
+                         id === "2" ? 18 : id === "4" ? 9 : id === "7" ? 14 : 15,
             online: Math.floor(Math.random() * 5) + 1,
             admin: "Alex Chen",
             messages: [
@@ -103,6 +108,33 @@ export default function ChatScreen() {
                 sender: "other",
                 senderName: "Alex",
                 timestamp: new Date(Date.now() - 3600000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "6",
+                text: "Weekends work best for me. Saturday afternoon?",
+                sender: "other",
+                senderName: "Jessica",
+                timestamp: new Date(Date.now() - 2400000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "7",
+                text: "I could do Sunday too if that works better for everyone.",
+                sender: "other",
+                senderName: "David",
+                timestamp: new Date(Date.now() - 1200000),
+                delivered: true,
+                read: true,
+              },
+              {
+                id: "8",
+                text: "Saturday works for me as well!",
+                sender: "me",
+                senderName: "You",
+                timestamp: new Date(Date.now() - 600000),
                 delivered: true,
                 read: true,
               },
@@ -279,9 +311,11 @@ export default function ChatScreen() {
         >
           {/* Show sender name for group chats */}
           {showSenderName && (
-            <Text style={styles.senderName}>
-              {item.senderName}
-            </Text>
+            <View style={styles.senderNameContainer}>
+              <Text style={styles.senderName}>
+                {item.senderName}
+              </Text>
+            </View>
           )}
           
           <View
@@ -374,6 +408,7 @@ export default function ChatScreen() {
           <TouchableOpacity 
             style={styles.groupInfoContainer}
             onPress={handleViewGroupInfo}
+            activeOpacity={0.7}
           >
             <View style={styles.groupInfoLeft}>
               <Users size={18} color={Colors.primary} />
@@ -660,11 +695,13 @@ const styles = StyleSheet.create({
     color: Colors.gray600,
   },
   // Sender name for group chats
+  senderNameContainer: {
+    marginBottom: 2,
+    paddingLeft: 4,
+  },
   senderName: {
     fontFamily: "Sora-SemiBold",
     fontSize: 13,
-    color: Colors.gray700,
-    marginBottom: 3,
-    marginLeft: 4,
+    color: Colors.primary,
   },
 });
