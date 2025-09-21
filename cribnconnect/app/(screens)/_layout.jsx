@@ -23,6 +23,7 @@ export default function ScreensLayout() {
         options={{
           title: "Linkup Details",
           headerBackTitle: "Back",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -84,7 +85,7 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-      
+
       <Stack.Screen
         name="notification/index"
         options={{
@@ -93,7 +94,7 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-      
+
       <Stack.Screen
         name="notification/[id]"
         options={{
