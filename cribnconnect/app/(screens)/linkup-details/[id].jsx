@@ -53,7 +53,7 @@ export default function LinkupDetailsScreen() {
       interest: "Tech & Programming",
       description:
         "A community for developers, designers, and tech enthusiasts to discuss the latest trends, share resources, and help each other grow professionally.",
-      privacy: "public", // 'public' or 'private'
+      privacy: "private", // 'public' or 'private'
       hostName: "Alex Chen",
       meetingFrequency: "Weekly virtual meetups",
       groupSize: {
@@ -130,7 +130,8 @@ export default function LinkupDetailsScreen() {
   const handleContactHost = () => {
     // TODO: Navigate to messaging or contact options based on contact method
     if (linkup?.contactMethod === "App Messaging") {
-      router.push(`/(screens)/chat/${linkup?.hostName || "host"}`);
+      router.push(`/(screens)/chat/${linkup?.id || "host"}`);
+      setJoinModalVisible(false);
     } else {
       // Handle other contact methods
       console.log("Contact via:", linkup?.contactMethod);
