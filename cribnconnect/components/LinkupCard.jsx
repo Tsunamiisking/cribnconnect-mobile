@@ -1,14 +1,13 @@
-import React, { useState } from "react"
-import { View, Text, Image, Pressable, StyleSheet } from "react-native"
-import { Heart, MapPin, Calendar, Users, Lock, Globe } from "lucide-react-native"
 import { Colors } from "@/constants/Colors"
+import { Globe, Heart, Lock, MessageSquare, Users } from "lucide-react-native"
+import React, { useState } from "react"
+import { Image, Pressable, StyleSheet, Text, View } from "react-native"
 
 export default function LinkupCard({
   imageUri = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop", // Default group image
-  title = "Book Club Meetup",
+  title = "Book Lovers Group",
   interest = "Reading & Discussion",
-  location = "Downtown Library, Lagos...",
-  schedule = "Every Saturday, 3:00 PM",
+  description = "A community for book enthusiasts to discuss their latest reads and literary passions",
   memberCount = "12 members",
   privacy = "public", // "public" or "private"
   host = "Sarah Chen",
@@ -35,6 +34,11 @@ export default function LinkupCard({
   const isPrivate = privacy === "private"
   const PrivacyIcon = isPrivate ? Lock : Globe
   const privacyIconColor = isPrivate ? Colors.amber : Colors.indigo
+  
+  // Group activity indicator
+  const activityLevel = Math.random() > 0.5 ? "active" : "normal" // In real app, this would be based on actual group activity
+  const activityBadgeColor = activityLevel === "active" ? Colors.emerald : "transparent"
+  const activityBadgeBorder = activityLevel === "active" ? "transparent" : Colors.gray300
 
   return (
     <Pressable
@@ -65,6 +69,13 @@ export default function LinkupCard({
             <PrivacyIcon size={16} color={privacyIconColor} />
           </View>
         </View>
+        
+        {/* Activity badge */}
+        {activityLevel === "active" && (
+          <View style={[styles.activityBadge, {backgroundColor: activityBadgeColor, borderColor: activityBadgeBorder}]}>
+            <Text style={styles.activityText}>Active now</Text>
+          </View>
+        )}
       </View>
 
       {/* Texts BELOW the image (transparent background) */}
@@ -80,28 +91,15 @@ export default function LinkupCard({
         <Text style={styles.interest}>
           {interest}
         </Text>
-
-        {location && (
-          <View className="mt-2 flex-row items-start">
-            <MapPin size={14} color={Colors.black} style={{ marginTop: 2 }} />
-            <Text 
-              style={styles.location}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {location}
-            </Text>
-          </View>
-        )}
-
-        <View className="mt-1 flex-row items-start">
-          <Calendar size={14} color={Colors.black} style={{ marginTop: 2 }} />
+        
+        <View className="mt-2 flex-row items-start">
+          <MessageSquare size={14} color={Colors.black} style={{ marginTop: 2 }} />
           <Text 
-            style={styles.schedule}
+            style={styles.description}
             numberOfLines={2}
             ellipsizeMode="tail"
           >
-            {schedule}
+            {description}
           </Text>
         </View>
 
@@ -117,7 +115,7 @@ export default function LinkupCard({
         </View>
 
         <Text style={styles.host}>
-          by {host}
+          Created by {host}
         </Text>
       </View>
     </Pressable>
@@ -136,17 +134,10 @@ const styles = StyleSheet.create({
     color: Colors.emerald,
     marginTop: 2,
   },
-  location: {
+  description: {
     fontFamily: 'Sora-Regular',
     fontSize: 14,
-    color: Colors.black,
-    marginLeft: 4,
-    flex: 1,
-  },
-  schedule: {
-    fontFamily: 'Sora-Regular',
-    fontSize: 14,
-    color: Colors.black,
+    color: Colors.gray700,
     marginLeft: 4,
     flex: 1,
   },
@@ -163,4 +154,20 @@ const styles = StyleSheet.create({
     color: Colors.gray500,
     marginTop: 4,
   },
+  activityBadge: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    backgroundColor: Colors.emerald,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  activityText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 12,
+    color: Colors.white,
+  }
 });
