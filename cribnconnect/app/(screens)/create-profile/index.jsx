@@ -1,19 +1,22 @@
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { Camera, ImagePlus, UserRound, Video, X } from 'lucide-react-native';
+import * as VideoThumbnails from 'expo-video-thumbnails';
+import { Camera, ImagePlus, Play, UserRound, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,6 +33,7 @@ export default function CreateProfile() {
   const [loading, setLoading] = useState(false);
   const maxBioChars = 300;
   const maxImages = 3;
+  const [mediaFiles, setMediaFiles] = useState([]);
 
   // Handle form input changes
   const updateField = (field, value) => {
@@ -38,25 +42,50 @@ export default function CreateProfile() {
       setCharacterCount(value.length);
     }
   };
+  
+  // Generate video thumbnail
+  const generateThumbnail = async (videoUri) => {
+    try {
+      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+        time: 1500, // get frame at 1.5s
+      });
+      return uri;
+    } catch (e) {
+      console.warn("Thumbnail generation failed:", e);
+      return null;
+    }
+  };
 
-  // Mock function to add image
-  const handleAddImage = () => {
-    if (formData.images.length >= maxImages) return;
+  // Function to pick and add images
+  const handleAddImage = async () => {
+    if (formData.images.length >= maxImages) {
+      Alert.alert('Maximum Images', `You can only upload up to ${maxImages} images`);
+      return;
+    }
     
-    // In a real app, you'd integrate with image picker
-    // For now, we'll add a mock image
-    const mockImages = [
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1000&auto=format&fit=crop',
-    ];
+    // Request permission to access the media library
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission Required', 'Please allow access to your photo library to upload images.');
+      return;
+    }
     
-    const newImage = mockImages[formData.images.length];
+    // Launch image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      selectionLimit: maxImages - formData.images.length,
+    });
     
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, newImage],
-    }));
+    if (!result.canceled) {
+      const newImages = result.assets.map(asset => asset.uri);
+      
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...newImages].slice(0, maxImages),
+      }));
+    }
   };
 
   // Remove image
@@ -67,13 +96,47 @@ export default function CreateProfile() {
     }));
   };
 
-  // Mock function to add video
-  const handleAddVideo = () => {
-    // In a real app, you'd integrate with video picker
-    setFormData(prev => ({
-      ...prev,
-      video: 'https://example.com/mock-video.mp4', // Mock video URL
-    }));
+  // Function to pick and add video
+  const handleAddVideo = async () => {
+    if (formData.video) {
+      Alert.alert('Video Already Added', 'You can only add one video. Please remove the existing video first.');
+      return;
+    }
+    
+    // Request permission to access the media library
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission Required', 'Please allow access to your photo library to upload videos.');
+      return;
+    }
+    
+    // Launch video picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 1,
+      videoMaxDuration: 60, // 60 seconds max
+    });
+    
+    if (!result.canceled) {
+      const videoUri = result.assets[0].uri;
+      
+      try {
+        // Generate thumbnail for video preview
+        const thumbnailUri = await generateThumbnail(videoUri);
+        
+        setFormData(prev => ({
+          ...prev,
+          video: {
+            uri: videoUri,
+            thumbnail: thumbnailUri
+          },
+        }));
+      } catch (error) {
+        console.error('Error adding video:', error);
+        Alert.alert('Error', 'Failed to process video. Please try again.');
+      }
+    }
   };
 
   // Remove video
@@ -86,30 +149,96 @@ export default function CreateProfile() {
 
   // Submit profile creation form
   const handleSubmit = () => {
+    // Basic validation
+    if (!formData.username.trim()) {
+      Alert.alert('Username Required', 'Please enter a username to continue.');
+      return;
+    }
+    
+    if (formData.images.length === 0) {
+      Alert.alert('Photos Required', 'Please add at least one photo to your profile.');
+      return;
+    }
+    
     setLoading(true);
     
-    // Process the interests string into an array (for API compatibility)
+    // Process the data for API submission
     const processedFormData = {
       ...formData,
+      // Process interests string into an array
       interests: formData.interests
         .split(',')
         .map(interest => interest.trim())
-        .filter(interest => interest !== '')
+        .filter(interest => interest !== ''),
+      // For the API, we might want to keep just the URIs
+      videoUri: formData.video?.uri || null
     };
     
     // TODO: Add API integration for profile creation
     // Example API call:
     // try {
-    //   const response = await api.createProfile(processedFormData);
-    //   if (response.success) {
-    //     // Navigate to main app
+    //   // Create form data for multipart upload
+    //   const apiFormData = new FormData();
+    //   
+    //   // Add text fields
+    //   apiFormData.append('username', processedFormData.username);
+    //   apiFormData.append('biography', processedFormData.biography);
+    //   apiFormData.append('interests', JSON.stringify(processedFormData.interests));
+    //   
+    //   // Add images
+    //   processedFormData.images.forEach((imageUri, index) => {
+    //     const filename = imageUri.split('/').pop();
+    //     const match = /\.(\w+)$/.exec(filename);
+    //     const type = match ? `image/${match[1]}` : 'image';
+    //     apiFormData.append('images', {
+    //       uri: imageUri,
+    //       name: filename,
+    //       type
+    //     });
+    //   });
+    //   
+    //   // Add video if exists
+    //   if (processedFormData.videoUri) {
+    //     const filename = processedFormData.videoUri.split('/').pop();
+    //     const match = /\.(\w+)$/.exec(filename);
+    //     const type = match ? `video/${match[1]}` : 'video/mp4';
+    //     apiFormData.append('video', {
+    //       uri: processedFormData.videoUri,
+    //       name: filename,
+    //       type
+    //     });
+    //   }
+    //   
+    //   // Send to API
+    //   const response = await fetch('https://your-api-url.com/profile', {
+    //     method: 'POST',
+    //     body: apiFormData,
+    //     headers: {
+    //       'Content-Type': 'multipart/form-data',
+    //       'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+    //     }
+    //   });
+    //   
+    //   const result = await response.json();
+    //   if (result.success) {
     //     router.replace('/(tabs)');
+    //   } else {
+    //     Alert.alert('Error', result.message || 'Failed to create profile');
     //   }
     // } catch (error) {
-    //   // Handle profile creation error
+    //   console.error('Error creating profile:', error);
+    //   Alert.alert('Error', 'Failed to create profile. Please try again.');
+    // } finally {
+    //   setLoading(false);
     // }
     
-    console.log('Submitting profile with interests:', processedFormData.interests);
+    console.log('Submitting profile data:', {
+      username: processedFormData.username,
+      biography: processedFormData.biography,
+      interests: processedFormData.interests,
+      imageCount: processedFormData.images.length,
+      hasVideo: !!processedFormData.videoUri
+    });
     
     // Temporary navigation for demo
     setTimeout(() => {
@@ -141,7 +270,7 @@ export default function CreateProfile() {
             <View style={styles.imagesContainer}>
               {formData.images.map((image, index) => (
                 <View key={`image-${index}`} style={styles.imageWrapper}>
-                  <Image source={{ uri: image }} style={styles.imagePreview} />
+                  <Image source={{ uri: image }} style={styles.imagePreview} resizeMode="cover" />
                   <TouchableOpacity 
                     style={styles.removeButton}
                     onPress={() => handleRemoveImage(index)}
@@ -157,7 +286,7 @@ export default function CreateProfile() {
                   onPress={handleAddImage}
                 >
                   <ImagePlus size={32} color={Colors.primary} />
-                  <Text style={styles.addMediaText}>Add Photo</Text>
+                  <Text style={styles.addMediaText}>Add Photo{formData.images.length > 0 ? ` (${formData.images.length}/${maxImages})` : ''}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -165,9 +294,14 @@ export default function CreateProfile() {
             <View style={styles.videoContainer}>
               {formData.video ? (
                 <View style={styles.videoWrapper}>
-                  {/* In a real app, you'd show a video thumbnail or player */}
-                  <View style={styles.videoPreview}>
-                    <Video size={32} color={Colors.white} />
+                  <Image 
+                    source={{ uri: formData.video.thumbnail || formData.video.uri }} 
+                    style={styles.videoPreview} 
+                    resizeMode="cover"
+                  />
+                  <View style={styles.videoIndicator}>
+                    <Play size={14} color="white" />
+                    <Text style={styles.videoIndicatorText}>Video</Text>
                   </View>
                   <TouchableOpacity 
                     style={styles.removeButton}
@@ -362,9 +496,23 @@ const styles = StyleSheet.create({
   videoPreview: {
     width: '100%',
     height: '100%',
-    backgroundColor: Colors.gray500,
-    justifyContent: 'center',
+  },
+  videoIndicator: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  videoIndicatorText: {
+    color: 'white',
+    fontSize: 12,
+    marginLeft: 4,
+    fontFamily: 'Sora-Regular',
   },
   inputContainer: {
     flexDirection: 'row',
