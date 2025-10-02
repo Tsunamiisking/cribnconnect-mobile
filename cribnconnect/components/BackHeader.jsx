@@ -1,18 +1,28 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import React, { useState } from "react";
-import { MoveLeft } from "lucide-react-native";
-import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import { router, useNavigation, usePathname } from "expo-router";
+import { MoveLeft } from "lucide-react-native";
+import React, { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import ProfilePopup from "./ProfilePopup";
 
-export default function BackHeader({ title = "Title", onBack, showUser }) {
+export default function BackHeader({ 
+  title = "Title", 
+  onBack, 
+  showUser,
+  fallbackPath = "/(tabs)" // Default fallback path
+}) {
   const [showProfilePopup, setShowProfilePopup] = useState(false);
-
+  const navigation = useNavigation();
+  const currentPath = usePathname();
+  
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else {
+    } else if (navigation.canGoBack()) {
       router.back();
+    } else {
+      // If we can't go back, navigate to the fallback path
+      router.replace(fallbackPath);
     }
   };
 
