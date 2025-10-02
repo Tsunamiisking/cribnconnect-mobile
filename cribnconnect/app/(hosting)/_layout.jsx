@@ -28,6 +28,13 @@ export default function HostingLayout() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="drafts"
+          options={{
+            title: "Drafts",
+            headerShown: false,
+          }}
+        />
       </Stack>
     </GestureHandlerRootView>
   );
