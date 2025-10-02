@@ -1,9 +1,37 @@
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useHostingStore from "@/stores/hostingStore";
 
 export default function EventTicket({ styles }) {
+  const { eventData, updateEventNestedData } = useHostingStore();
   const [selected, setSelected] = useState([]); // multiple selections
   const [ticketData, setTicketData] = useState({}); // store form data for each ticket type
+
+  // Initialize from store data
+  useEffect(() => {
+    if (eventData.ticket) {
+      if (eventData.ticket.isFree) {
+        setSelected(['free']);
+      }
+      // You could add more initialization logic here for other ticket types
+    }
+  }, []);
+
+  // Update store when ticket data changes
+  useEffect(() => {
+    updateEventNestedData('ticket', 'isFree', selected.includes('free'));
+    if (selected.includes('free')) {
+      updateEventNestedData('ticket', 'price', '0');
+    } else {
+      // Handle paid tickets - for now, we'll use the first non-free ticket price
+      const paidTickets = selected.filter(s => s !== 'free');
+      if (paidTickets.length > 0) {
+        const firstPaidTicket = paidTickets[0];
+        const price = ticketData[firstPaidTicket]?.price || '';
+        updateEventNestedData('ticket', 'price', price);
+      }
+    }
+  }, [selected, ticketData]);
 
   const formatNaira = (amount) => {
     if (!amount || isNaN(amount)) return "";
@@ -22,6 +50,11 @@ export default function EventTicket({ styles }) {
         [field]: value,
       },
     }));
+
+    // Update capacity in store if it's the capacity field
+    if (field === 'maxTickets') {
+      updateEventNestedData('ticket', 'capacity', value);
+    }
   };
 
   const renderTicketCategories = (ticketType) => {

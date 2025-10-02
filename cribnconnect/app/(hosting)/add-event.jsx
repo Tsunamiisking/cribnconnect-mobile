@@ -2,13 +2,11 @@ import {
   ScrollView,
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
 } from "react-native";
-import { useState } from "react";
+import { useEffect } from "react";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,71 +17,60 @@ import EventTitle from "./eventSteps/EventTitle";
 import EventAddress from "./eventSteps/EventAddress";
 import EventTicket from "./eventSteps/EventTicket";
 import EventSafetyTips from "./eventSteps/EventSafetyTips";
+import useHostingStore from "@/stores/hostingStore";
 
 export default function AddEventScreen() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    // Basic Info
-    title: "",
-    description: "",
-    category: "",
+  const {
+    currentStep,
+    eventData,
+    hostingType,
+    setHostingType,
+    setCurrentStep,
+    nextStep,
+    previousStep,
+    submitListing,
+    saveAsDraft,
+    isSubmitting,
+    isStepValid,
+  } = useHostingStore();
 
-    // Date & Time
-    date: "",
-    startTime: "",
-    endTime: "",
+  // Set hosting type to event when component mounts
+  useEffect(() => {
+    if (hostingType !== 'event') {
+      setHostingType('event');
+      setCurrentStep(1);
+    }
+  }, []);
 
-    // Location
-    venue: "",
-    address: "",
-    city: "",
-    state: "",
-
-    // Details
-    ticketPrice: "",
-    capacity: "",
-    ageRestriction: "",
-    dressCode: "",
-
-    // Requirements
-    requirements: [],
-
-    // Contact
-    organizer: "",
-    contactEmail: "",
-    contactPhone: "",
-  });
-
-  const updateField = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const nextStep = () => {
+  const handleNext = () => {
     if (currentStep < 5) {
-      setCurrentStep(currentStep + 1);
+      nextStep();
+    } else {
+      handleSubmit();
     }
   };
 
-  const previousStep = () => {
+  const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      previousStep();
+    } else {
+      router.back();
     }
   };
 
-  const submitEvent = () => {
-    // TODO: Add API integration to submit event
-    // Example API call:
-    // try {
-    //   const response = await api.createEvent(formData);
-    //   if (response.success) {
-    //     router.push('/(tabs)/events');
-    //   }
-    // } catch (error) {
-    //   // Handle error
-    // }
+  const handleSubmit = async () => {
+    const result = await submitListing();
+    if (result.success) {
+      router.push("/(tabs)/events");
+    } else {
+      // Handle error
+      console.error("Submission failed:", result.error);
+    }
+  };
 
-    console.log("Submitting event:", formData);
-    router.push("/(tabs)/events");
+  const handleSaveDraft = () => {
+    const draftId = saveAsDraft();
+    console.log('Event draft saved with ID:', draftId);
   };
 
   const renderStepContent = () => {
@@ -120,15 +107,18 @@ export default function AddEventScreen() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        // keyboardVerticalOffset={80}
       >
         <ScrollView style={styles.content}>
           {renderStepContent()}
           <HostingButtonNav
-            onNext={nextStep}
-            onBack={previousStep}
+            onNext={handleNext}
+            onBack={handleBack}
+            onSaveDraft={handleSaveDraft}
             currentStep={currentStep}
-            totalSteps={9}
+            totalSteps={5}
+            isValid={isStepValid(currentStep)}
+            isSubmitting={isSubmitting}
+            isLastStep={currentStep === 5}
           />
         </ScrollView>
       </KeyboardAvoidingView>

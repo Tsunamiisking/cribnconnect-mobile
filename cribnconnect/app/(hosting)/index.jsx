@@ -8,13 +8,15 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HostTypeScreen() {
-  const { drafts } = useHostingStore();
+  const { drafts, setHostingType } = useHostingStore();
 
   const handleNewApartment = () => {
+    setHostingType('apartment');
     router.push("/(hosting)/add-apartment");
   };
 
   const handleNewEvent = () => {
+    setHostingType('event');
     router.push("/(hosting)/add-event");
   };
 

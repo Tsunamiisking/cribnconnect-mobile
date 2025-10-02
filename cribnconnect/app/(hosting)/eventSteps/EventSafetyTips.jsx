@@ -1,11 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import useHostingStore from "@/stores/hostingStore";
 
 export default function EventSafetyTips({ styles }) {
+  const { eventData, updateEventData } = useHostingStore();
   const [refundable, setRefundable] = useState(false);
   const [transferable, setTransferable] = useState(false);
   const [upgradable, setUpgradable] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Initialize from store data
+  useEffect(() => {
+    if (eventData.safetyTips?.length > 0) {
+      // You could parse existing safety tips data here if needed
+    }
+  }, []);
+
+  const handleSafetyTipsChange = (value) => {
+    updateEventData('safetyTips', [value]); // Store as array to match schema
+  };
+
+  // Update store when ticket policies change
+  useEffect(() => {
+    const policies = {
+      refundable,
+      transferable, 
+      upgradable,
+      termsAccepted
+    };
+    updateEventData('ticketPolicies', policies);
+  }, [refundable, transferable, upgradable, termsAccepted]);
 
   return (
     <View style={styles.stepContent}>
@@ -23,6 +47,8 @@ export default function EventSafetyTips({ styles }) {
           multiline
           numberOfLines={6}
           textAlignVertical="top"
+          value={eventData.safetyTips?.[0] || ''}
+          onChangeText={handleSafetyTipsChange}
         />
       </View>
       <View className="flex-row items-center ">

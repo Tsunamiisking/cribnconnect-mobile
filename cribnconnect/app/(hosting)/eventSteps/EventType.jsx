@@ -1,8 +1,24 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useHostingStore from "@/stores/hostingStore";
 
 export default function EventType({ styles }) {
-  const [selected, setSelected] = useState([]); // store selected subtypes in an array
+  const { eventData, updateEventData } = useHostingStore();
+  const [selected, setSelected] = useState(eventData.eventType ? [eventData.eventType] : []); // store selected subtypes in an array
+
+  // Update store when selection changes
+  useEffect(() => {
+    if (selected.length > 0) {
+      updateEventData('eventType', selected[0]); // Take the first selected type
+    }
+  }, [selected]);
+
+  // Initialize from store data
+  useEffect(() => {
+    if (eventData.eventType && !selected.includes(eventData.eventType)) {
+      setSelected([eventData.eventType]);
+    }
+  }, []);
 
   const eventCategories = {
     "Entertainment & Nightlife": [
@@ -55,13 +71,16 @@ export default function EventType({ styles }) {
     ],
   };
 
-  // toggle selection
+  // toggle selection (single selection for event type)
   const toggleSelect = (subtype) => {
-    setSelected((prev) =>
-      prev.includes(subtype)
-        ? prev.filter((item) => item !== subtype)
-        : [...prev, subtype]
-    );
+    setSelected((prev) => {
+      // Only allow single selection for event type
+      if (prev.includes(subtype)) {
+        return []; // Deselect if already selected
+      } else {
+        return [subtype]; // Select new type, replacing any existing selection
+      }
+    });
   };
 
   return (

@@ -71,6 +71,12 @@ const initialEventData = {
   tags: [],
   specialPerks: [],
   safetyTips: [],
+  ticketPolicies: {
+    refundable: false,
+    transferable: false,
+    upgradable: false,
+    termsAccepted: false,
+  },
 };
 
 const useHostingStore = create(
@@ -179,6 +185,15 @@ const useHostingStore = create(
         eventData: {
           ...state.eventData,
           media: state.eventData.media.filter((_, i) => i !== index),
+        },
+      })),
+      
+      updateMediaInEvent: (index, mediaItem) => set((state) => ({
+        eventData: {
+          ...state.eventData,
+          media: state.eventData.media.map((item, i) => 
+            i === index ? mediaItem : item
+          ),
         },
       })),
       
@@ -458,11 +473,11 @@ const useHostingStore = create(
           }
         } else if (state.hostingType === 'event') {
           switch (step) {
-            case 1: return Boolean(data.title);
-            case 2: return Boolean(data.eventType);
-            case 3: return Boolean(data.location.address && data.location.city);
-            case 4: return Boolean(data.dateTime.date && data.dateTime.time);
-            case 5: return Boolean(data.ticket.isFree || data.ticket.price);
+            case 1: return Boolean(data.eventType);
+            case 2: return Boolean(data.title);
+            case 3: return Boolean(data.location.address && data.location.city && data.location.state);
+            case 4: return Boolean(data.ticket.isFree || data.ticket.price);
+            case 5: return true; // Safety tips are optional
             default: return false;
           }
         }
