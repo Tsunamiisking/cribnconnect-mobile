@@ -1,6 +1,6 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { useState, useEffect } from "react";
 import useHostingStore from "@/stores/hostingStore";
+import { useEffect, useState } from "react";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function EventTicket({ styles }) {
   const { eventData, updateEventNestedData } = useHostingStore();

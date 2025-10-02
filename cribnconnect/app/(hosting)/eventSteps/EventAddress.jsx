@@ -1,5 +1,5 @@
-import { Text, TextInput, View } from "react-native";
 import useHostingStore from "@/stores/hostingStore";
+import { Text, TextInput, View } from "react-native";
 
 export default function EventAddress({ styles }) {
   const { eventData, updateEventNestedData } = useHostingStore();

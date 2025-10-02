@@ -1,23 +1,22 @@
-import {
-  ScrollView,
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-} from "react-native";
-import { useEffect } from "react";
-import { router } from "expo-router";
-import { Colors } from "@/constants/Colors";
-import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
 import HostingButtonNav from "@/components/HostingButtonNav";
-import EventType from "./eventSteps/EventType";
-import EventTitle from "./eventSteps/EventTitle";
-import EventAddress from "./eventSteps/EventAddress";
-import EventTicket from "./eventSteps/EventTicket";
-import EventSafetyTips from "./eventSteps/EventSafetyTips";
+import { Colors } from "@/constants/Colors";
 import useHostingStore from "@/stores/hostingStore";
+import { router } from "expo-router";
+import { useEffect } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import EventAddress from "./eventSteps/EventAddress";
+import EventSafetyTips from "./eventSteps/EventSafetyTips";
+import EventTicket from "./eventSteps/EventTicket";
+import EventTitle from "./eventSteps/EventTitle";
+import EventType from "./eventSteps/EventType";
 
 export default function AddEventScreen() {
   const {

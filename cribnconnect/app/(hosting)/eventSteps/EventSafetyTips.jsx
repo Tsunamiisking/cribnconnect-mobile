@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import useHostingStore from "@/stores/hostingStore";
+import { useEffect, useState } from "react";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function EventSafetyTips({ styles }) {
   const { eventData, updateEventData } = useHostingStore();
