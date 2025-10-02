@@ -1,9 +1,10 @@
 import useHostingStore from "@/stores/hostingStore";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { CloudUpload, Play, X } from "lucide-react-native";
-import { useState } from "react";
+import { CloudUpload, Play, RefreshCw, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import {
+  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -13,9 +14,27 @@ import {
 } from "react-native";
 
 export default function Step8({ styles }) {
-  const { apartmentData, addMediaToApartment, removeMediaFromApartment } = useHostingStore();
+  const { apartmentData, addMediaToApartment, removeMediaFromApartment, updateMediaInApartment } = useHostingStore();
   const [mediaFiles, setMediaFiles] = useState(apartmentData.media || []);
   const [isSelecting, setIsSelecting] = useState(false);
+
+  // Check for missing media files on component mount
+  useEffect(() => {
+    const missingMediaCount = mediaFiles.filter(item => item.needsReselection).length;
+    
+    if (missingMediaCount > 0) {
+      Alert.alert(
+        'Media Files Missing',
+        `${missingMediaCount} media file(s) need to be selected again. Tap the refresh button on missing items to reselect them.`,
+        [{ text: 'OK' }]
+      );
+    }
+  }, []);
+
+  // Update local state when store changes
+  useEffect(() => {
+    setMediaFiles(apartmentData.media || []);
+  }, [apartmentData.media]);
 
 const generateThumbnail = async (videoUri) => {
   try {
@@ -111,6 +130,72 @@ const removeMedia = (index) => {
   setMediaFiles(prev => prev.filter((_, i) => i !== index));
 };
 
+const handleReselectMedia = async (index) => {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    alert("Permission required!");
+    return;
+  }
+
+  try {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsMultipleSelection: false,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const asset = result.assets[0];
+      let mediaItem;
+
+      if (asset.type === "video") {
+        const thumbnail = await generateThumbnail(asset.uri);
+        
+        mediaItem = {
+          public_id: null,
+          url: null,
+          resource_type: "video",
+          thumbnail_url: null,
+          width: asset.width || null,
+          height: asset.height || null,
+          format: asset.fileName?.split('.').pop() || "mp4",
+          size: asset.fileSize || 0,
+          localUri: asset.uri,
+          localThumbnail: thumbnail,
+          filename: asset.fileName || `video_${Date.now()}.mp4`,
+          duration: asset.duration || 0,
+          mimeType: "video/mp4",
+          needsReselection: false
+        };
+      } else {
+        mediaItem = {
+          public_id: null,
+          url: null,
+          resource_type: "image",
+          thumbnail_url: null,
+          width: asset.width || null,
+          height: asset.height || null,
+          format: asset.fileName?.split('.').pop() || "jpg",
+          size: asset.fileSize || 0,
+          localUri: asset.uri,
+          filename: asset.fileName || `image_${Date.now()}.jpg`,
+          mimeType: "image/jpeg",
+          needsReselection: false
+        };
+      }
+
+      // Update the specific media item in the store
+      updateMediaInApartment(index, mediaItem);
+      
+      // Update local state
+      setMediaFiles(prev => prev.map((item, i) => i === index ? mediaItem : item));
+    }
+  } catch (error) {
+    console.error('Media reselection failed:', error);
+    alert(`Reselection failed: ${error.message}`);
+  }
+};
+
 const renderMediaItem = ({ item, index }) => (
   <View
     style={{
@@ -119,12 +204,35 @@ const renderMediaItem = ({ item, index }) => (
       margin: 6,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: styles.borderColor || "#E5E7EB",
+      borderColor: item.needsReselection ? "#FF6B6B" : (styles.borderColor || "#E5E7EB"),
       overflow: "hidden",
       position: "relative",
+      backgroundColor: item.needsReselection ? "#FFF5F5" : "transparent",
     }}
   >
-    {item.resource_type === "video" ? (
+    {item.needsReselection ? (
+      // Show placeholder for missing media
+      <View
+        style={{
+          width: "100%",
+          height: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#F8F8F8",
+        }}
+      >
+        <RefreshCw size={32} color="#FF6B6B" />
+        <Text style={{ 
+          color: "#FF6B6B", 
+          fontSize: 12, 
+          textAlign: "center",
+          marginTop: 8,
+          paddingHorizontal: 8 
+        }}>
+          Media Missing{"\n"}Tap to reselect
+        </Text>
+      </View>
+    ) : item.resource_type === "video" ? (
       <Image
         source={{ uri: item.localThumbnail || item.localUri }}
         style={{ width: "100%", height: "100%" }}
@@ -138,7 +246,7 @@ const renderMediaItem = ({ item, index }) => (
       />
     )}
 
-    {item.resource_type === "video" && (
+    {item.resource_type === "video" && !item.needsReselection && (
       <View
         style={{
           position: "absolute",
@@ -159,19 +267,37 @@ const renderMediaItem = ({ item, index }) => (
       </View>
     )}
 
-    <TouchableOpacity
-      onPress={() => removeMedia(index)}
-      style={{
-        position: "absolute",
-        top: 8,
-        right: 8,
-        backgroundColor: "rgba(0,0,0,0.75)",
-        borderRadius: 12,
-        padding: 4,
-      }}
-    >
-      <X size={16} color="white" />
-    </TouchableOpacity>
+    {item.needsReselection ? (
+      // Reselect button for missing media
+      <TouchableOpacity
+        onPress={() => handleReselectMedia(index)}
+        style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          backgroundColor: "#FF6B6B",
+          borderRadius: 12,
+          padding: 6,
+        }}
+      >
+        <RefreshCw size={14} color="white" />
+      </TouchableOpacity>
+    ) : (
+      // Remove button for valid media
+      <TouchableOpacity
+        onPress={() => removeMedia(index)}
+        style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          backgroundColor: "rgba(0,0,0,0.75)",
+          borderRadius: 12,
+          padding: 4,
+        }}
+      >
+        <X size={16} color="white" />
+      </TouchableOpacity>
+    )}
   </View>
 );
 

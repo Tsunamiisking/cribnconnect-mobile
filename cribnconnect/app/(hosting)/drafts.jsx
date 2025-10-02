@@ -2,20 +2,27 @@ import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import useHostingStore from '@/stores/hostingStore';
 import { router } from 'expo-router';
-import { Building2, Edit3, Tickets, Trash2 } from 'lucide-react-native';
+import { Building2, Cloud, CloudOff, Edit3, Loader2, Tickets, Trash2, Wifi } from 'lucide-react-native';
 import React from 'react';
 import {
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DraftsScreen() {
-  const { drafts, deleteDraft, loadDraft } = useHostingStore();
+  const { 
+    drafts, 
+    deleteDraft, 
+    loadDraft, 
+    syncDraftToServer, 
+    cleanupDrafts, 
+    getDraftStorageInfo 
+  } = useHostingStore();
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -26,6 +33,63 @@ export default function DraftsScreen() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const getSyncStatusIcon = (draft) => {
+    switch (draft.status) {
+      case 'synced':
+        return <Cloud size={16} color={Colors.success} />;
+      case 'uploading':
+        return <Loader2 size={16} color={Colors.primary} style={{ opacity: 0.7 }} />;
+      case 'local':
+      default:
+        return <CloudOff size={16} color={Colors.gray600} />;
+    }
+  };
+
+  const getSyncStatusText = (draft) => {
+    switch (draft.status) {
+      case 'synced':
+        return 'Synced';
+      case 'uploading':
+        return 'Syncing...';
+      case 'local':
+      default:
+        return 'Local only';
+    }
+  };
+
+  const handleSyncDraft = async (draft) => {
+    const result = await syncDraftToServer(draft.id);
+    if (!result.success) {
+      Alert.alert('Sync Failed', result.error || 'Unable to sync draft to server');
+    }
+  };
+
+  const handleCleanupDrafts = () => {
+    const storageInfo = getDraftStorageInfo();
+    
+    Alert.alert(
+      'Clean Up Drafts',
+      `Storage: ${storageInfo.sizeInMB}MB used by ${storageInfo.totalDrafts} drafts.\n\nThis will remove old local drafts (30+ days) and limit total drafts to 50.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clean Up',
+          onPress: () => {
+            const result = cleanupDrafts();
+            if (result.removedCount > 0) {
+              Alert.alert('Success', `Removed ${result.removedCount} old drafts.`);
+            } else {
+              Alert.alert('Info', 'No old drafts found to clean up.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getTitle = (draft) => {
@@ -52,13 +116,36 @@ export default function DraftsScreen() {
     return 'Draft in progress';
   };
 
-  const handleEditDraft = (draft) => {
-    loadDraft(draft.id);
+  const handleEditDraft = async (draft) => {
+    const result = loadDraft(draft.id);
     
-    if (draft.type === 'apartment') {
-      router.push('/(hosting)/add-apartment');
-    } else if (draft.type === 'event') {
-      router.push('/(hosting)/add-event');
+    if (result.needsMediaReselection) {
+      Alert.alert(
+        'Media Files Missing',
+        'Some media files are no longer available and need to be selected again. You can continue editing and re-select your media files.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Continue',
+            onPress: () => {
+              if (draft.type === 'apartment') {
+                router.push('/(hosting)/add-apartment');
+              } else if (draft.type === 'event') {
+                router.push('/(hosting)/add-event');
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      if (draft.type === 'apartment') {
+        router.push('/(hosting)/add-apartment');
+      } else if (draft.type === 'event') {
+        router.push('/(hosting)/add-event');
+      }
     }
   };
 
@@ -91,11 +178,22 @@ export default function DraftsScreen() {
               <Tickets size={20} color={Colors.primary} />
             )}
             <Text style={styles.draftTitle}>{getTitle(draft)}</Text>
+            <View style={styles.syncStatus}>
+              {getSyncStatusIcon(draft)}
+            </View>
           </View>
           <Text style={styles.draftSubtitle}>{getSubtitle(draft)}</Text>
-          <Text style={styles.draftMeta}>
-            Step {draft.currentStep} • Updated {formatDate(draft.updatedAt)}
-          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.draftMeta}>
+              Step {draft.currentStep} • Updated {formatDate(draft.updatedAt)}
+            </Text>
+            <Text style={[styles.syncStatusText, 
+              draft.status === 'synced' && styles.syncedText,
+              draft.status === 'uploading' && styles.uploadingText
+            ]}>
+              {getSyncStatusText(draft)}
+            </Text>
+          </View>
         </View>
       </View>
       
@@ -107,6 +205,15 @@ export default function DraftsScreen() {
           <Edit3 size={16} color={Colors.white} />
           <Text style={styles.editButtonText}>Continue</Text>
         </TouchableOpacity>
+        
+        {draft.status === 'local' && (
+          <TouchableOpacity
+            style={styles.syncButton}
+            onPress={() => handleSyncDraft(draft)}
+          >
+            <Wifi size={16} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
         
         <TouchableOpacity
           style={styles.deleteButton}
@@ -143,9 +250,20 @@ export default function DraftsScreen() {
       <BackHeader title="Drafts" />
       
       <View style={styles.content}>
-        <Text style={styles.headerText}>
-          {drafts.length} Draft{drafts.length !== 1 ? 's' : ''}
-        </Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerText}>
+            {drafts.length} Draft{drafts.length !== 1 ? 's' : ''}
+          </Text>
+          
+          {drafts.length > 5 && (
+            <TouchableOpacity
+              style={styles.cleanupButton}
+              onPress={handleCleanupDrafts}
+            >
+              <Text style={styles.cleanupButtonText}>Clean Up</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         
         <FlatList
           data={drafts}
@@ -169,11 +287,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   headerText: {
     fontSize: 18,
     fontFamily: 'Sora-SemiBold',
     color: Colors.primary,
-    marginBottom: 20,
+  },
+  cleanupButton: {
+    backgroundColor: Colors.gray600,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  cleanupButtonText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontFamily: 'Sora-Medium',
   },
   listContainer: {
     gap: 16,
@@ -208,16 +342,37 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     flex: 1,
   },
+  syncStatus: {
+    marginLeft: 'auto',
+  },
   draftSubtitle: {
     fontSize: 14,
     fontFamily: 'Sora-Regular',
     color: Colors.darkgray,
     marginBottom: 4,
   },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   draftMeta: {
     fontSize: 12,
     fontFamily: 'Sora-Regular',
     color: Colors.gray600,
+    flex: 1,
+  },
+  syncStatusText: {
+    fontSize: 10,
+    fontFamily: 'Sora-Medium',
+    color: Colors.gray600,
+    textTransform: 'uppercase',
+  },
+  syncedText: {
+    color: Colors.success,
+  },
+  uploadingText: {
+    color: Colors.primary,
   },
   draftActions: {
     flexDirection: 'row',
@@ -239,6 +394,12 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 14,
     fontFamily: 'Sora-Medium',
+  },
+  syncButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: Colors.primary + '10',
+    marginRight: 8,
   },
   deleteButton: {
     padding: 8,

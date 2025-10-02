@@ -159,6 +159,15 @@ const useHostingStore = create(
         },
       })),
       
+      updateMediaInApartment: (index, mediaItem) => set((state) => ({
+        apartmentData: {
+          ...state.apartmentData,
+          media: state.apartmentData.media.map((item, i) => 
+            i === index ? mediaItem : item
+          ),
+        },
+      })),
+      
       addMediaToEvent: (mediaItem) => set((state) => ({
         eventData: {
           ...state.eventData,
@@ -181,12 +190,32 @@ const useHostingStore = create(
           type: state.hostingType,
           data: state.hostingType === 'apartment' ? state.apartmentData : state.eventData,
           currentStep: state.currentStep,
+          status: 'local', // 'local', 'synced', 'uploading'
+          lastSyncedAt: null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
         
+        // Clean media data for storage (remove local URIs to save space)
+        const cleanedData = {
+          ...draftData,
+          data: {
+            ...draftData.data,
+            media: draftData.data.media?.map(item => ({
+              ...item,
+              // Keep metadata but remove heavy local data
+              localUri: null,
+              localThumbnail: null,
+              // Keep only essential info for reconstruction
+              originalFilename: item.filename,
+              fileSize: item.size,
+              mediaType: item.resource_type
+            })) || []
+          }
+        };
+        
         set((state) => ({
-          drafts: [...state.drafts, draftData],
+          drafts: [...state.drafts.filter(d => d.id !== draftData.id), cleanedData],
           isSavingDraft: false,
         }));
         
@@ -214,18 +243,179 @@ const useHostingStore = create(
         const draft = state.drafts.find((d) => d.id === draftId);
         
         if (draft) {
+          // Restore draft data but handle missing media gracefully
+          const restoredData = {
+            ...draft.data,
+            media: draft.data.media?.map(item => ({
+              ...item,
+              // If no local URI, show placeholder or prompt for re-selection
+              localUri: item.localUri || null,
+              localThumbnail: item.localThumbnail || null,
+              needsReselection: !item.localUri && !item.url // Flag for UI
+            })) || []
+          };
+          
           set({
             hostingType: draft.type,
             currentStep: draft.currentStep,
-            apartmentData: draft.type === 'apartment' ? draft.data : { ...initialApartmentData },
-            eventData: draft.type === 'event' ? draft.data : { ...initialEventData },
+            apartmentData: draft.type === 'apartment' ? restoredData : { ...initialApartmentData },
+            eventData: draft.type === 'event' ? restoredData : { ...initialEventData },
           });
+          
+          return { success: true, needsMediaReselection: restoredData.media?.some(m => m.needsReselection) };
         }
+        
+        return { success: false, error: 'Draft not found' };
       },
       
       deleteDraft: (draftId) => set((state) => ({
         drafts: state.drafts.filter((draft) => draft.id !== draftId),
       })),
+      
+      // Sync draft to backend
+      syncDraftToServer: async (draftId) => {
+        const state = get();
+        const draft = state.drafts.find(d => d.id === draftId);
+        
+        if (!draft) return { success: false, error: 'Draft not found' };
+        
+        try {
+          // Mark as uploading
+          set((state) => ({
+            drafts: state.drafts.map(d => 
+              d.id === draftId 
+                ? { ...d, status: 'uploading' }
+                : d
+            )
+          }));
+          
+          // TODO: Replace with actual API call
+          console.log('Syncing draft to server:', draft);
+          
+          // Simulate API call
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Mark as synced
+          set((state) => ({
+            drafts: state.drafts.map(d => 
+              d.id === draftId 
+                ? { 
+                    ...d, 
+                    status: 'synced',
+                    lastSyncedAt: new Date().toISOString()
+                  }
+                : d
+            )
+          }));
+          
+          return { success: true };
+        } catch (error) {
+          // Revert to local status on error
+          set((state) => ({
+            drafts: state.drafts.map(d => 
+              d.id === draftId 
+                ? { ...d, status: 'local' }
+                : d
+            )
+          }));
+          
+          return { success: false, error: error.message };
+        }
+      },
+      
+      // Load drafts from server
+      loadDraftsFromServer: async () => {
+        try {
+          // TODO: Replace with actual API call
+          console.log('Loading drafts from server...');
+          
+          // Simulate API call
+          const serverDrafts = []; // Response from your API
+          
+          set((state) => ({
+            drafts: [...state.drafts, ...serverDrafts.filter(
+              serverDraft => !state.drafts.find(localDraft => localDraft.id === serverDraft.id)
+            )]
+          }));
+          
+          return { success: true };
+        } catch (error) {
+          return { success: false, error: error.message };
+        }
+      },
+      
+      // Clean up old drafts
+      cleanupDrafts: () => {
+        const state = get();
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        const cleanedDrafts = state.drafts.filter(draft => {
+          const draftDate = new Date(draft.updatedAt);
+          const isOld = draftDate < thirtyDaysAgo;
+          
+          // Keep synced drafts longer, remove old local-only drafts
+          if (draft.status === 'local' && isOld) {
+            console.log(`Removing old local draft: ${draft.id}`);
+            return false;
+          }
+          
+          return true;
+        });
+        
+        // Also limit total number of drafts to prevent bloat
+        const maxDrafts = 50;
+        const sortedDrafts = cleanedDrafts
+          .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+          .slice(0, maxDrafts);
+        
+        if (sortedDrafts.length !== state.drafts.length) {
+          console.log(`Cleaned up ${state.drafts.length - sortedDrafts.length} old drafts`);
+          set({ drafts: sortedDrafts });
+          return { 
+            success: true, 
+            removedCount: state.drafts.length - sortedDrafts.length 
+          };
+        }
+        
+        return { success: true, removedCount: 0 };
+      },
+      
+      // Get storage usage info
+      getDraftStorageInfo: () => {
+        const state = get();
+        const draftsString = JSON.stringify(state.drafts);
+        const sizeInBytes = new Blob([draftsString]).size;
+        const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+        
+        const statusCounts = state.drafts.reduce((counts, draft) => {
+          counts[draft.status] = (counts[draft.status] || 0) + 1;
+          return counts;
+        }, {});
+        
+        return {
+          totalDrafts: state.drafts.length,
+          sizeInMB: parseFloat(sizeInMB),
+          sizeInBytes,
+          statusCounts,
+          oldestDraft: state.drafts.length > 0 
+            ? Math.min(...state.drafts.map(d => new Date(d.createdAt).getTime()))
+            : null
+        };
+      },
+      
+      // Initialize store and run cleanup
+      initialize: () => {
+        const state = get();
+        
+        // Run cleanup on app start
+        setTimeout(() => {
+          const result = state.cleanupDrafts();
+          if (result.removedCount > 0) {
+            console.log(`Auto-cleaned ${result.removedCount} old drafts on app start`);
+          }
+        }, 1000);
+      },
       
       // Reset functions
       resetApartmentData: () => set({
