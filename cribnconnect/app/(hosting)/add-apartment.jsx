@@ -1,17 +1,17 @@
-import {
-  ScrollView,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { useState } from "react";
-import HostingButtonNav from "@/components/HostingButtonNav";
 import BackHeader from "@/components/BackHeader";
-import StepApartmentType from "./apartmentSteps/StepApartmentType";
+import HostingButtonNav from "@/components/HostingButtonNav";
+import { Colors } from "@/constants/Colors";
+import useHostingStore from "@/stores/hostingStore";
+import { router } from "expo-router";
+import { useEffect } from "react";
+import {
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import StepSpace from "./apartmentSteps/Step2";
 import Step3 from "./apartmentSteps/Step3";
 import Step4 from "./apartmentSteps/Step4";
@@ -20,66 +20,60 @@ import Step6 from "./apartmentSteps/Step6";
 import Step7 from "./apartmentSteps/Step7";
 import Step8 from "./apartmentSteps/Step8";
 import Step9 from "./apartmentSteps/Step9";
-import { router } from "expo-router";
-import { Colors } from "@/constants/Colors";
-import { SafeAreaView } from "react-native-safe-area-context";
+import StepApartmentType from "./apartmentSteps/StepApartmentType";
 
 export default function AddApartmentScreen() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    apartmentType: "", // Step 1
-    step2Space: "", // Step 2
-    step3Value: {
-      beds: "",
-      rooms: "",
-      privateBathIn: "",
-      privateBathOut: "",
-      sharedBath: "",
-    }, // Step 3
-    step4Value: {
-      complexType: "", // 'yes' or 'no'
-      complexName: "",
-      address: "",
-      state: "",
-      city: "",
-      zip: "",
-      country: "",
-    }, // Step 4
-    step5Value: {
-      title: "",
-      description: "",
-    }, // Step 5
-    step6Value: {
-      amenities: [],
-      otherAmenities: "",
-    }, // Step 6
-    step7Value: {
-      perNight: "",
-      perWeek: "",
-    }, // Step 7
-    // ...existing fields for future steps
-  });
+  // Get store state and actions
+  const {
+    currentStep,
+    apartmentData,
+    setHostingType,
+    setCurrentStep,
+    nextStep,
+    previousStep,
+    updateApartmentData,
+    updateApartmentNestedData,
+    submitListing,
+    saveAsDraft,
+    isSubmitting,
+    isStepValid,
+  } = useHostingStore();
 
-  const updateField = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  // Set hosting type when component mounts
+  useEffect(() => {
+    setHostingType('apartment');
+  }, [setHostingType]);
 
-  const nextStep = () => {
+  const handleNext = () => {
     if (currentStep < 9) {
-      setCurrentStep(currentStep + 1);
+      nextStep();
     }
   };
 
-  const previousStep = () => {
+  const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      previousStep();
     }
   };
 
-  const submitListing = () => {
-    // TODO: Add API integration to submit apartment listing
-    console.log("Submitting apartment listing:", formData);
-    router.push("/(tabs)");
+  const handleSubmit = async () => {
+    try {
+      const result = await submitListing();
+      if (result.success) {
+        router.push("/(tabs)");
+      } else {
+        // Handle error - show alert or toast
+        console.error('Submission failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+    }
+  };
+
+  const handleSaveDraft = () => {
+    const draftId = saveAsDraft();
+    // Show success message or toast
+    console.log('Draft saved with ID:', draftId);
   };
 
   // Apartment type options moved to StepApartmentType.jsx
@@ -89,56 +83,42 @@ export default function AddApartmentScreen() {
       case 1:
         return (
           <StepApartmentType
-            value={formData.apartmentType}
-            onSelect={(type) => updateField("apartmentType", type)}
             styles={styles}
           />
         );
       case 2:
         return (
           <StepSpace
-            value={formData.step2Space}
-            onSelect={(space) => updateField("step2Space", space)}
             styles={styles}
           />
         );
       case 3:
         return (
           <Step3
-            value={formData.step3Value}
-            onChange={(val) => updateField("step3Value", val)}
             styles={styles}
           />
         );
       case 4:
         return (
           <Step4
-            value={formData.step4Value}
-            onChange={(val) => updateField("step4Value", val)}
             styles={styles}
           />
         );
       case 5:
         return (
           <Step5
-            value={formData.step5Value}
-            onChange={(val) => updateField("step5Value", val)}
             styles={styles}
           />
         );
       case 6:
         return (
           <Step6
-            value={formData.step6Value}
-            onChange={(val) => updateField("step6Value", val)}
             styles={styles}
           />
         );
       case 7:
         return (
           <Step7
-            value={formData.step7Value}
-            onChange={(val) => updateField("step7Value", val)}
             styles={styles}
           />
         );
@@ -173,10 +153,14 @@ export default function AddApartmentScreen() {
         <ScrollView style={styles.content}>
           {renderStepContent()}
           <HostingButtonNav
-            onNext={nextStep}
-            onBack={previousStep}
+            onNext={handleNext}
+            onBack={handlePrevious}
+            onSubmit={handleSubmit}
+            onSaveDraft={handleSaveDraft}
             currentStep={currentStep}
             totalSteps={9}
+            isSubmitting={isSubmitting}
+            isStepValid={isStepValid(currentStep)}
           />
         </ScrollView>
       </KeyboardAvoidingView>

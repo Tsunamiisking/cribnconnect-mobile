@@ -1,17 +1,17 @@
-import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/Colors";
+import useHostingStore from "@/stores/hostingStore";
 import {
-  House,
   Building2,
-  Ship,
-  Hotel,
   Caravan,
   Container,
-  Trees,
+  Hotel,
+  House,
+  Ship,
   Tent,
-  Sparkle,
+  Trees
 } from "lucide-react-native";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 const apartmentTypeOptions = [
   { type: "House", icon: House },
@@ -24,26 +24,39 @@ const apartmentTypeOptions = [
   { type: "Tent", icon: Tent },
 ];
 
-export default function StepApartmentType({ value, onSelect, styles }) {
+export default function StepApartmentType({ styles }) {
+  const { apartmentData, updateApartmentData } = useHostingStore();
+
+  const handleSelect = (type) => {
+    updateApartmentData('apartmentType', type);
+  };
+
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>How would you describe your space?</Text>
-      <Text style={styles.sectionSubtitle}>Select the type of place you want to list</Text>
+      <Text style={styles.sectionSubtitle}>
+        Select the type of place you want to list
+      </Text>
       <View style={styles.verticalOptions}>
         {apartmentTypeOptions.map(({ type, icon: Icon }) => {
-          const selected = value === type;
+          const selected = apartmentData.apartmentType === type;
           return (
             <TouchableOpacity
               key={type}
               style={[styles.typeOption, selected && styles.selectedTypeOption]}
               activeOpacity={0.85}
-              onPress={() => onSelect(type)}
+              onPress={() => handleSelect(type)}
             >
               <View style={styles.typeOptionRow}>
                 <View style={styles.typeIcon}>
                   <Icon size={28} color={Colors.black} />
                 </View>
-                <Text style={[styles.typeOptionText, selected && styles.selectedTypeOptionText]}>
+                <Text
+                  style={[
+                    styles.typeOptionText,
+                    selected && styles.selectedTypeOptionText,
+                  ]}
+                >
                   {type}
                 </Text>
               </View>

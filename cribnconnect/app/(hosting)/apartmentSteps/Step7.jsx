@@ -1,12 +1,14 @@
-import { View, Text, TextInput } from "react-native";
+import useHostingStore from "@/stores/hostingStore";
+import { Text, TextInput, View } from "react-native";
 
-export default function Step7({ value, onChange, styles }) {
-  // value: { perNight: string, perWeek: string }
-  const handleNightChange = (text) => {
-    onChange({ ...value, perNight: text });
-  };
-  const handleWeekChange = (text) => {
-    onChange({ ...value, perWeek: text });
+export default function Step7({ styles }) {
+  const { apartmentData, updateApartmentData } = useHostingStore();
+
+  const handlePricingChange = (field, value) => {
+    updateApartmentData('pricing', {
+      ...apartmentData.pricing,
+      [field]: value
+    });
   };
 
   // Helper to format price with naira sign, commas, and .00
@@ -28,10 +30,10 @@ export default function Step7({ value, onChange, styles }) {
           placeholder="Enter Price Per Night"
           placeholderTextColor="#B0B0B0"
           keyboardType="numeric"
-          value={value?.perNight || ""}
-          onChangeText={handleNightChange}
+          value={apartmentData.pricing.perNight || ""}
+          onChangeText={(text) => handlePricingChange('perNight', text)}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(value?.perNight)}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(apartmentData.pricing.perNight)}</Text>
       </View>
       <View style={{ marginVertical: 24, position: 'relative', justifyContent: 'center', alignItems: 'center', height: 24 }}>
         <View style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, backgroundColor: '#B0B0B0' }} />
@@ -47,10 +49,10 @@ export default function Step7({ value, onChange, styles }) {
           placeholder="Enter Price Per Week"
           placeholderTextColor="#B0B0B0"
           keyboardType="numeric"
-          value={value?.perWeek || ""}
-          onChangeText={handleWeekChange}
+          value={apartmentData.pricing.perWeek || ""}
+          onChangeText={(text) => handlePricingChange('perWeek', text)}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(value?.perWeek)}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(apartmentData.pricing.perWeek)}</Text>
       </View>
     </View>
   );

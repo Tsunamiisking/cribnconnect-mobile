@@ -1,15 +1,35 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import useHostingStore from "@/stores/hostingStore";
 import { useState } from "react";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 // import { KeyboardAvoidingView } from "react-native";
 
 export default function Step4({ styles }) {
-  const [selected, setSelected] = useState(null); // 'yes' | 'no' | null
+  const { apartmentData, updateApartmentData } = useHostingStore();
+  const [selected, setSelected] = useState(apartmentData.location.complexType || null);
+
+  const handleLocationChange = (field, value) => {
+    updateApartmentData('location', {
+      ...apartmentData.location,
+      [field]: value
+    });
+  };
+
+  const handleComplexTypeChange = (type) => {
+    setSelected(type);
+    handleLocationChange('complexType', type);
+  };
 
   const renderComplexAddress = () => {
     return (
       <View className="mt-7">
         <Text style={styles.label}>Enter the name of the complex</Text>
-        <TextInput style={styles.input} />
+        <TextInput 
+          style={styles.input} 
+          value={apartmentData.location.complexName || ""}
+          onChangeText={(text) => handleLocationChange('complexName', text)}
+          placeholder="Enter complex name"
+          placeholderTextColor="#B0B0B0"
+        />
         <Text style={styles.typeOptionDescription}>
           (e.g. Pearl Towers Kuje, Genesis Apartments Festac, The View Estate
           Surulere, Golden tulip Festac)
@@ -21,17 +41,23 @@ export default function Step4({ styles }) {
             style={styles.input}
             placeholder="Enter address"
             placeholderTextColor="#B0B0B0"
+            value={apartmentData.location.address || ""}
+            onChangeText={(text) => handleLocationChange('address', text)}
           />
           <View className="flex-row">
             <TextInput
               style={styles.input}
               placeholder="State"
               placeholderTextColor="#B0B0B0"
+              value={apartmentData.location.state || ""}
+              onChangeText={(text) => handleLocationChange('state', text)}
             />
             <TextInput
               style={styles.input}
               placeholder="City"
               placeholderTextColor="#B0B0B0"
+              value={apartmentData.location.city || ""}
+              onChangeText={(text) => handleLocationChange('city', text)}
             />
           </View>
           <View className="flex-row">
@@ -39,11 +65,15 @@ export default function Step4({ styles }) {
               style={styles.input}
               placeholder="Zip Code"
               placeholderTextColor="#B0B0B0"
+              value={apartmentData.location.zip || ""}
+              onChangeText={(text) => handleLocationChange('zip', text)}
             />
             <TextInput
               style={styles.input}
               placeholder="Country"
               placeholderTextColor="#B0B0B0"
+              value={apartmentData.location.country || ""}
+              onChangeText={(text) => handleLocationChange('country', text)}
             />
           </View>
         </View>
@@ -59,17 +89,23 @@ export default function Step4({ styles }) {
           style={styles.input}
           placeholder="Enter address"
           placeholderTextColor="#B0B0B0"
+          value={apartmentData.location.address || ""}
+          onChangeText={(text) => handleLocationChange('address', text)}
         />
         <View className="flex-row">
           <TextInput
             style={styles.input}
             placeholder="State"
             placeholderTextColor="#B0B0B0"
+            value={apartmentData.location.state || ""}
+            onChangeText={(text) => handleLocationChange('state', text)}
           />
           <TextInput
             style={styles.input}
             placeholder="City"
             placeholderTextColor="#B0B0B0"
+            value={apartmentData.location.city || ""}
+            onChangeText={(text) => handleLocationChange('city', text)}
           />
         </View>
         <View className="flex-row">
@@ -77,11 +113,15 @@ export default function Step4({ styles }) {
             style={styles.input}
             placeholder="Zip Code"
             placeholderTextColor="#B0B0B0"
+            value={apartmentData.location.zip || ""}
+            onChangeText={(text) => handleLocationChange('zip', text)}
           />
           <TextInput
             style={styles.input}
             placeholder="Country"
             placeholderTextColor="#B0B0B0"
+            value={apartmentData.location.country || ""}
+            onChangeText={(text) => handleLocationChange('country', text)}
           />
         </View>
       </View>
@@ -100,14 +140,14 @@ export default function Step4({ styles }) {
       <View>
         <View className="flex-row items-center">
           <TouchableOpacity
-            onPress={() => setSelected("yes")}
+            onPress={() => handleComplexTypeChange("yes")}
             className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === "yes" ? "bg-[#274046]" : "bg-white"}`}
           />
           <Text style={[styles.typeOptionText, { marginTop: 14}]}>Yes</Text>
         </View>
         <View className="flex-row items-center ">
           <TouchableOpacity
-            onPress={() => setSelected("no")}
+            onPress={() => handleComplexTypeChange("no")}
             className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === "no" ? "bg-[#274046]" : "bg-white"}`}
           />
           <Text style={[styles.typeOptionText, { marginTop: 14}]}>No</Text>

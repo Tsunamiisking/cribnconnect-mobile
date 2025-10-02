@@ -1,6 +1,15 @@
-import { View, Text, TextInput } from "react-native";
+import useHostingStore from "@/stores/hostingStore";
+import { Text, TextInput, View } from "react-native";
 
 export default function Step5({ styles }) {
+  const { apartmentData, updateApartmentData } = useHostingStore();
+
+  const handleDetailsChange = (field, value) => {
+    updateApartmentData('details', {
+      ...apartmentData.details,
+      [field]: value
+    });
+  };
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>
@@ -16,6 +25,8 @@ export default function Step5({ styles }) {
           style={styles.input}
           placeholder="Enter title"
           placeholderTextColor="#B0B0B0"
+          value={apartmentData.details.title || ""}
+          onChangeText={(text) => handleDetailsChange('title', text)}
         />
       </View>
 
@@ -28,6 +39,8 @@ export default function Step5({ styles }) {
           multiline
           numberOfLines={6}
           textAlignVertical="top"
+          value={apartmentData.details.description || ""}
+          onChangeText={(text) => handleDetailsChange('description', text)}
         />
       </View>
     </View>

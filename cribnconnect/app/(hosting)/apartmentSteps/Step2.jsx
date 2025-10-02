@@ -1,7 +1,12 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Colors } from "@/constants/Colors";
+import useHostingStore from "@/stores/hostingStore";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function StepSpace({ value, onSelect, styles }) {
+export default function StepSpace({ styles }) {
+  const { apartmentData, updateApartmentData } = useHostingStore();
+
+  const handleSelect = (space) => {
+    updateApartmentData('space', space);
+  };
   const apartmentOption = [
     {
       label: "Whole Space ",
@@ -25,13 +30,13 @@ export default function StepSpace({ value, onSelect, styles }) {
 
       <View style={styles.verticalOptions}>
         {apartmentOption.map((option) => {
-          const selected = value === option.label;
+          const selected = apartmentData.space === option.label;
           return (
             <TouchableOpacity
               key={option.label}
               style={[styles.typeOption, selected && styles.selectedTypeOption]}
               activeOpacity={0.85}
-              onPress={() => onSelect(option.label)}
+              onPress={() => handleSelect(option.label)}
             >
               <Text style={styles.typeOptionText}>{option.label}</Text>
               <Text style={styles.typeOptionDescription}>{option.text}</Text>

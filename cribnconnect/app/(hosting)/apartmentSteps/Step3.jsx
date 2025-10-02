@@ -1,7 +1,15 @@
-import { View, Text, TextInput } from "react-native";
-import { ChevronsUpDown } from "lucide-react-native";
+import useHostingStore from "@/stores/hostingStore";
+import { Text, TextInput, View } from "react-native";
 
-export default function Step3({ value = {}, onChange, styles }) {
+export default function Step3({ styles }) {
+  const { apartmentData, updateApartmentData } = useHostingStore();
+
+  const handleChange = (field, value) => {
+    updateApartmentData('rooms', {
+      ...apartmentData.rooms,
+      [field]: value
+    });
+  };
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>How many rooms are available?</Text>
@@ -22,8 +30,8 @@ export default function Step3({ value = {}, onChange, styles }) {
           <TextInput
             style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            value={value.beds || ""}
-            onChangeText={(text) => onChange({ ...value, beds: text })}
+            value={apartmentData.rooms.beds || ""}
+            onChangeText={(text) => handleChange('beds', text)}
           />
         </View>
         {/* Rooms input */}
@@ -39,8 +47,8 @@ export default function Step3({ value = {}, onChange, styles }) {
           <TextInput
             style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            value={value.rooms || ""}
-            onChangeText={(text) => onChange({ ...value, rooms: text })}
+            value={apartmentData.rooms.rooms || ""}
+            onChangeText={(text) => handleChange('rooms', text)}
           />
         </View>
         {/* Private bathroom inside room */}
@@ -58,8 +66,8 @@ export default function Step3({ value = {}, onChange, styles }) {
           <TextInput
             style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            value={value.privateBathIn || ""}
-            onChangeText={(text) => onChange({ ...value, privateBathIn: text })}
+            value={apartmentData.rooms.privateBathIn || ""}
+            onChangeText={(text) => handleChange('privateBathIn', text)}
           />
         </View>
         {/* Private bathroom outside room */}
@@ -77,10 +85,8 @@ export default function Step3({ value = {}, onChange, styles }) {
           <TextInput
             style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            value={value.privateBathOut || ""}
-            onChangeText={(text) =>
-              onChange({ ...value, privateBathOut: text })
-            }
+            value={apartmentData.rooms.privateBathOut || ""}
+            onChangeText={(text) => handleChange('privateBathOut', text)}
           />
         </View>
         {/* Shared bathrooms */}
@@ -96,8 +102,8 @@ export default function Step3({ value = {}, onChange, styles }) {
           <TextInput
             style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
-            value={value.sharedBath || ""}
-            onChangeText={(text) => onChange({ ...value, sharedBath: text })}
+            value={apartmentData.rooms.sharedBath || ""}
+            onChangeText={(text) => handleChange('sharedBath', text)}
           />
         </View>
       </View>

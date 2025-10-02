@@ -1,32 +1,49 @@
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
-import { useState } from "react";
-import Wifi from "@/components/svgs/wifi";
-import Tv from "@/components/svgs/tv";
-import SmartLock from "@/components/svgs/smartLock";
-import Water from "@/components/svgs/water";
-import Washer from "@/components/svgs/washer";
 import AirVent from "@/components/svgs/airVent";
-import Electricity from "@/components/svgs/electricity";
-import Refrigerator from "@/components/svgs/refrigerator";
-import Kitchen from "@/components/svgs/kichen";
 import BathTub from "@/components/svgs/bathTub";
-import IndoorDining from "@/components/svgs/indoorDining";
-import Workspace from "@/components/svgs/workspace";
-import Beach from "@/components/svgs/beach";
-import PoolBall from "@/components/svgs/poolBall";
-import OutdoorDining from "@/components/svgs/outdoorDining";
-import Fireplace from "@/components/svgs/fireplace";
-import Gym from "@/components/svgs/gym";
-import Pool from "@/components/svgs/pool";
-import Parking from "@/components/svgs/parking";
 import BBQGrill from "@/components/svgs/bbqGrill";
-import HomeAssistant from "@/components/svgs/homeAssistant";
-import Piano from "@/components/svgs/piano";
-import Security from "@/components/svgs/security";
+import Beach from "@/components/svgs/beach";
+import Electricity from "@/components/svgs/electricity";
+import Fireplace from "@/components/svgs/fireplace";
 import Generator from "@/components/svgs/generator";
+import Gym from "@/components/svgs/gym";
+import HomeAssistant from "@/components/svgs/homeAssistant";
+import IndoorDining from "@/components/svgs/indoorDining";
+import Kitchen from "@/components/svgs/kichen";
+import OutdoorDining from "@/components/svgs/outdoorDining";
+import Parking from "@/components/svgs/parking";
+import Piano from "@/components/svgs/piano";
+import Pool from "@/components/svgs/pool";
+import PoolBall from "@/components/svgs/poolBall";
+import Refrigerator from "@/components/svgs/refrigerator";
+import Security from "@/components/svgs/security";
+import SmartLock from "@/components/svgs/smartLock";
+import Tv from "@/components/svgs/tv";
+import Washer from "@/components/svgs/washer";
+import Water from "@/components/svgs/water";
+import Wifi from "@/components/svgs/wifi";
+import Workspace from "@/components/svgs/workspace";
+import useHostingStore from "@/stores/hostingStore";
+import { useEffect, useState } from "react";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Step6({ styles }) {
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
+  const { apartmentData, updateApartmentData } = useHostingStore();
+  const [selectedAmenities, setSelectedAmenities] = useState(apartmentData.amenities.selected || []);
+
+  // Update store when selectedAmenities changes
+  useEffect(() => {
+    updateApartmentData('amenities', {
+      ...apartmentData.amenities,
+      selected: selectedAmenities
+    });
+  }, [selectedAmenities]);
+
+  const handleOtherAmenitiesChange = (text) => {
+    updateApartmentData('amenities', {
+      ...apartmentData.amenities,
+      other: text
+    });
+  };
 
   const basicAmenities = [
     { name: "WIFI", icon: Wifi },
@@ -196,7 +213,12 @@ export default function Step6({ styles }) {
         <Text style={styles.typeOptionDescription}>
           Add any special features your space offers that are not listed above.
         </Text>
-        <TextInput style={styles.input} placeholder="Other Amenities" />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Other Amenities" 
+          value={apartmentData.amenities.other || ""}
+          onChangeText={handleOtherAmenitiesChange}
+        />
         <Text style={styles.typeOptionDescription}>
           Have something unique in your space? Add it here (e.g., solar panels,
           inverter, pet-friendly area), Make sure to separate each item with a comma.

@@ -1,19 +1,28 @@
-import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-} from "react-native";
-import { Tickets, Building2 } from "lucide-react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import BackHeader from "@/components/BackHeader";
-import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import useHostingStore from "@/stores/hostingStore";
+import { router } from "expo-router";
+import { Building2, FileText, Tickets } from "lucide-react-native";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HostTypeScreen() {
+  const { drafts } = useHostingStore();
+
+  const handleNewApartment = () => {
+    router.push("/(hosting)/add-apartment");
+  };
+
+  const handleNewEvent = () => {
+    router.push("/(hosting)/add-event");
+  };
+
+  const handleViewDrafts = () => {
+    // TODO: Create a drafts screen
+    router.push("/(hosting)/drafts");
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* <StatusBar barStyle="dark-content" backgroundColor="white" /> */}
@@ -24,13 +33,24 @@ export default function HostTypeScreen() {
       </View>
 
       <View style={styles.optionsContainer}>
-        <View className="items-end mr-6 mb-2 ">
-          <Text className="text-[#007AFF] text-lg">Go to drafts?</Text>
+        <View style={{ alignItems: "flex-end", width: "100%" }}>
+          {drafts.length > 0 && (
+            <TouchableOpacity
+              style={styles.draftsContainer}
+              onPress={handleViewDrafts}
+            >
+              <FileText size={20} color={Colors.primary} />
+              <Text style={styles.draftsText}>
+                {drafts.length} Draft{drafts.length !== 1 ? "s" : ""} saved
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
+
         <TouchableOpacity
           style={[styles.optionCard]}
           activeOpacity={0.85}
-          onPress={() => router.push("/(hosting)/add-apartment")}
+          onPress={handleNewApartment}
         >
           <View className="mr-4">
             <Building2 />
@@ -44,7 +64,7 @@ export default function HostTypeScreen() {
         <TouchableOpacity
           style={[styles.optionCard]}
           activeOpacity={0.85}
-          onPress={() => router.push("/(hosting)/add-event")}
+          onPress={handleNewEvent}
         >
           <View className="mr-4">
             <Tickets />
@@ -132,5 +152,29 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
     fontSize: 13,
     color: Colors.darkgray,
+  },
+  draftsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    // backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.blue50,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    maxWidth: 150,
+  },
+  draftsText: {
+    marginLeft: 8,
+    color: Colors.primary,
+    fontFamily: "Sora-Medium",
+    fontSize: 14,
   },
 });

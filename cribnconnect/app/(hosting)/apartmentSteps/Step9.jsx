@@ -1,9 +1,19 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import useHostingStore from "@/stores/hostingStore";
 import { useState } from "react";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Step9({ styles }) {
+  const { apartmentData, updateApartmentData } = useHostingStore();
   const [selected, setSelected] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const handleHouseRulesChange = (text) => {
+    updateApartmentData('houseRules', text ? [text] : []);
+  };
+
+  const handleMaxGuestsChange = (text) => {
+    updateApartmentData('maxGuests', text);
+  };
 
   return (
     <View style={styles.stepContent}>
@@ -20,6 +30,8 @@ export default function Step9({ styles }) {
           multiline
           numberOfLines={6}
           textAlignVertical="top"
+          value={apartmentData.houseRules?.[0] || ""}
+          onChangeText={handleHouseRulesChange}
         />
       </View>
       <View className="flex-row items-center ">
@@ -43,8 +55,8 @@ export default function Step9({ styles }) {
         <TextInput
           style={[styles.inputView, { width: 70 }]}
           keyboardType="numeric"
-          // value={value.beds || ""}
-          // onChangeText={(text) => onChange({ ...value, beds: text })}
+          value={apartmentData.maxGuests || ""}
+          onChangeText={handleMaxGuestsChange}
         />
       </View>
       <View style={{ marginVertical: 12 }}>

@@ -1,19 +1,21 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  FlatList,
-  Dimensions,
-} from "react-native";
-import { useState } from "react";
-import { CloudUpload, X, Play } from "lucide-react-native";
+import useHostingStore from "@/stores/hostingStore";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import Colors from "../../../constants/Colors";
+import { CloudUpload, Play, X } from "lucide-react-native";
+import { useState } from "react";
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function Step8({ styles }) {
-  const [mediaFiles, setMediaFiles] = useState([]);
+  const { apartmentData, addMediaToApartment, removeMediaFromApartment } = useHostingStore();
+  const [mediaFiles, setMediaFiles] = useState(apartmentData.media || []);
+  const [isSelecting, setIsSelecting] = useState(false);
 
 const generateThumbnail = async (videoUri) => {
   try {
@@ -27,44 +29,86 @@ const generateThumbnail = async (videoUri) => {
   }
 };
 
-const handleUpload = async () => {
+const handleMediaSelection = async () => {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
     alert("Permission required!");
     return;
   }
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.All,
-    allowsMultipleSelection: true,
-    quality: 1,
-    selectionLimit: 20,
-  });
+  setIsSelecting(true);
 
-  if (!result.canceled) {
-    const newAssets = await Promise.all(
-      result.assets.map(async (asset) => {
+  try {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsMultipleSelection: true,
+      quality: 1,
+      selectionLimit: 20,
+    });
+
+    if (!result.canceled) {
+      for (const asset of result.assets) {
+        let mediaItem;
+
         if (asset.type === "video") {
+          // Generate thumbnail for local display
           const thumbnail = await generateThumbnail(asset.uri);
-          return {
-            uri: asset.uri,
-            type: "video",
-            thumbnail,
+
+          mediaItem = {
+            // For backend submission (will be populated after upload)
+            public_id: null, // Will be set by Cloudinary
+            url: null, // Will be set by Cloudinary
+            resource_type: "video",
+            thumbnail_url: null, // Will be set by Cloudinary
+            width: asset.width || null,
+            height: asset.height || null,
+            format: asset.fileName?.split('.').pop() || "mp4",
+            size: asset.fileSize || 0,
+            
+            // For local display and upload
+            localUri: asset.uri,
+            localThumbnail: thumbnail,
+            filename: asset.fileName || `video_${Date.now()}.mp4`,
+            duration: asset.duration || 0,
+            mimeType: "video/mp4"
+          };
+        } else {
+          mediaItem = {
+            // For backend submission (will be populated after upload)
+            public_id: null, // Will be set by Cloudinary
+            url: null, // Will be set by Cloudinary
+            resource_type: "image",
+            thumbnail_url: null, // Will be set by Cloudinary for smaller variants
+            width: asset.width || null,
+            height: asset.height || null,
+            format: asset.fileName?.split('.').pop() || "jpg",
+            size: asset.fileSize || 0,
+            
+            // For local display and upload
+            localUri: asset.uri,
+            filename: asset.fileName || `image_${Date.now()}.jpg`,
+            mimeType: "image/jpeg"
           };
         }
-        return {
-          uri: asset.uri,
-          type: "image",
-        };
-      })
-    );
 
-    setMediaFiles((prev) => [...prev, ...newAssets]);
+        // Add to store (this will be sent to backend later)
+        addMediaToApartment(mediaItem);
+        
+        // Update local state for display
+        setMediaFiles(prev => [...prev, mediaItem]);
+      }
+    }
+  } catch (error) {
+    console.error('Media selection failed:', error);
+    alert(`Selection failed: ${error.message}`);
+  } finally {
+    setIsSelecting(false);
   }
 };
 
 const removeMedia = (index) => {
-  setMediaFiles((prev) => prev.filter((_, i) => i !== index));
+  removeMediaFromApartment(index);
+  setMediaFiles(prev => prev.filter((_, i) => i !== index));
 };
 
 const renderMediaItem = ({ item, index }) => (
@@ -80,21 +124,21 @@ const renderMediaItem = ({ item, index }) => (
       position: "relative",
     }}
   >
-    {item.type === "video" ? (
+    {item.resource_type === "video" ? (
       <Image
-        source={{ uri: item.thumbnail || item.uri }}
+        source={{ uri: item.localThumbnail || item.localUri }}
         style={{ width: "100%", height: "100%" }}
         resizeMode="cover"
       />
     ) : (
       <Image
-        source={{ uri: item.uri }}
+        source={{ uri: item.localUri }}
         style={{ width: "100%", height: "100%" }}
         resizeMode="cover"
       />
     )}
 
-    {item.type === "video" && (
+    {item.resource_type === "video" && (
       <View
         style={{
           position: "absolute",
@@ -111,7 +155,6 @@ const renderMediaItem = ({ item, index }) => (
         <Text style={{ color: "white", fontSize: 12, marginRight: 4 }}>
           Video
         </Text>
-        {/* Play icon overlay (optional, just for clarity) */}
         <Play size={14} color="white" />
       </View>
     )}
@@ -135,9 +178,9 @@ const renderMediaItem = ({ item, index }) => (
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.stepContent}>
-        <Text style={styles.stepTitle}>Upload Pictures / Videos</Text>
+        <Text style={styles.stepTitle}>Select Pictures / Videos</Text>
         <Text style={styles.sectionSubtitle}>
-          Select images or videos to upload
+          Choose images or videos to include with your listing
         </Text>
 
         <View style={styles.uploadContainer}>
@@ -147,9 +190,13 @@ const renderMediaItem = ({ item, index }) => (
               { marginBottom: 12, textAlign: "center" },
             ]}
           >
-            Tap to Upload images or videos of available space
+            Select images or videos of your available space
           </Text>
-          <TouchableOpacity style={styles.uploadButton} onPress={handleUpload}>
+          <TouchableOpacity 
+            style={styles.uploadButton} 
+            onPress={handleMediaSelection}
+            disabled={isSelecting}
+          >
             <CloudUpload size={32} color="white" />
             <Text
               style={{
@@ -159,12 +206,12 @@ const renderMediaItem = ({ item, index }) => (
                 marginLeft: 8,
               }}
             >
-              Upload
+              {isSelecting ? "Selecting..." : "Select Media"}
             </Text>
           </TouchableOpacity>
         </View>
         <View>
-          <Text style={styles.warning}>*Upload One video and as many images as possible, Your video would be the cover display of your Apartment Listing.</Text>
+          <Text style={styles.warning}>*Select one video and as many images as possible. Your video will be the cover display of your apartment listing.</Text>
         </View>
         <View
           style={{
@@ -186,7 +233,7 @@ const renderMediaItem = ({ item, index }) => (
             }}
           />
           <View style={{ backgroundColor: "#fff", paddingHorizontal: 8 }}>
-            <Text style={[styles.labelText]}>Uploaded Items</Text>
+            <Text style={[styles.labelText]}>Selected Items</Text>
           </View>
         </View>
 
