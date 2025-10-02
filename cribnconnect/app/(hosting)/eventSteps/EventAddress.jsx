@@ -1,4 +1,4 @@
-import { View, Text, TextInput } from "react-native";
+import { Text, TextInput, View } from "react-native";
 
 export default function EventAddress({ styles }) {
   return (
@@ -35,6 +35,17 @@ export default function EventAddress({ styles }) {
             placeholder="Country"
             placeholderTextColor="#B0B0B0"
           />
+        </View>
+
+        {/* ADD SPACE TO ADD VENUE.. LIKE A MALL NAME OR SOMETHING */}
+        <View className="mt-6">
+          <Text style={styles.label}>Venue Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter venue name"
+            placeholderTextColor="#B0B0B0"
+          />
+          <Text style={styles.typeOptionDescription}>Specific Venue Detail or Name (e.g., Lekki Event Center, Oriental Hotel)</Text>
         </View>
       </View>
     </View>
