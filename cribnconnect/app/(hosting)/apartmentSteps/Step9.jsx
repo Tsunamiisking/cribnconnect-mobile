@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useState } from "react";
 
 export default function Step9({ styles }) {
-  const [selected, setSelected] = useState(false); 
+  const [selected, setSelected] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   return (
@@ -66,9 +66,11 @@ export default function Step9({ styles }) {
           onPress={() => setTermsAccepted(!termsAccepted)}
           className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${termsAccepted === true ? "bg-[#274046]" : "bg-white"}`}
         />
-        <Text style={[styles.typeOptionDescription, { marginTop: 14 }]}>
-          I agree to the Cribnconnect safety terms and conditions
-        </Text>
+        <View className="flex-1">
+          <Text style={[styles.typeOptionDescription, { marginTop: 14 }]}>
+            I agree to the Cribnconnect safety terms and conditions
+          </Text>
+        </View>
       </View>
     </View>
   );

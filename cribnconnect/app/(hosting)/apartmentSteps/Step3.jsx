@@ -52,7 +52,9 @@ export default function Step3({ value = {}, onChange, styles }) {
             marginBottom: 12,
           }}
         >
-          <Text style={styles.label}>Private bathroom inside room:</Text>
+          <View className="flex-1">
+            <Text style={styles.label}>Private bathroom inside room:</Text>
+          </View>
           <TextInput
             style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
@@ -69,7 +71,9 @@ export default function Step3({ value = {}, onChange, styles }) {
             marginBottom: 12,
           }}
         >
-          <Text style={styles.label}>Private bathroom outside room:</Text>
+          <View className="flex-1">
+            <Text style={styles.label}>Private bathroom outside room:</Text>
+          </View>
           <TextInput
             style={[styles.inputView, { width: 70 }]}
             keyboardType="numeric"
