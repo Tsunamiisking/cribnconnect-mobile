@@ -60,7 +60,8 @@ const initialEventData = {
   },
   dateTime: {
     date: null,
-    time: "",
+    startTime: "",
+    endTime: "",
   },
   ticket: {
     price: "",
@@ -477,7 +478,8 @@ const useHostingStore = create(
             case 2: return Boolean(data.title);
             case 3: return Boolean(data.location.address && data.location.city && data.location.state);
             case 4: return Boolean(data.ticket.isFree || data.ticket.price);
-            case 5: return true; // Safety tips are optional
+            case 5: return Boolean(data.dateTime.date && data.dateTime.startTime);
+            case 6: return true; // Safety tips are optional
             default: return false;
           }
         }
