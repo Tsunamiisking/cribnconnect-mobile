@@ -25,7 +25,7 @@ import StepApartmentType from "./apartmentSteps/StepApartmentType";
 export default function AddApartmentScreen() {
   // Get store state and actions
   const {
-    currentStep,
+    getCurrentStep,
     apartmentData,
     setHostingType,
     setCurrentStep,
@@ -38,6 +38,8 @@ export default function AddApartmentScreen() {
     isSubmitting,
     isStepValid,
   } = useHostingStore();
+
+  const currentStep = getCurrentStep();
 
   // Set hosting type when component mounts
   useEffect(() => {

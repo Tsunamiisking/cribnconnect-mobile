@@ -22,7 +22,7 @@ import EventType from "./eventSteps/EventType";
 
 export default function AddEventScreen() {
   const {
-    currentStep,
+    getCurrentStep,
     eventData,
     hostingType,
     setHostingType,
@@ -34,6 +34,8 @@ export default function AddEventScreen() {
     isSubmitting,
     isStepValid,
   } = useHostingStore();
+
+  const currentStep = getCurrentStep();
 
   // Set hosting type to event when component mounts
   useEffect(() => {

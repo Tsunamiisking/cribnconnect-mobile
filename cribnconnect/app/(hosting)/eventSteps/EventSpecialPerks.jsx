@@ -1,64 +1,102 @@
 import useHostingStore from "@/stores/hostingStore";
 import { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Music,
+  Headphones,
+  Guitar,
+  Camera,
+  Video,
+  CameraIcon,
+  Dance,
+  Mic,
+  Utensils,
+  CupSoda,
+  Wine,
+  Soup,
+  GlassWater,
+  Popcorn,
+  Flame,
+  Bento,
+  Handshake,
+  BookOpen,
+  Mic2,
+  Gift,
+  Trophy,
+  ShoppingBag,
+  Star,
+  Bird,
+  ParkingCircle,
+  Snowflake,
+  Wifi,
+  Armchair,
+  Toilet,
+  Shirt,
+  Shield,
+  Accessibility,
+  HandPlatter,
+} from "lucide-react-native";
 
 export default function EventSpecialPerks({ styles }) {
-  const { eventData, updateEventData, updateEventNestedData } = useHostingStore();
-  const [selectedPerks, setSelectedPerks] = useState(eventData.specialPerks || []);
+  const { eventData, updateEventData, updateEventNestedData } =
+    useHostingStore();
+  const [selectedPerks, setSelectedPerks] = useState(
+    eventData.specialPerks || []
+  );
 
   // Update store when selectedPerks changes
   useEffect(() => {
-    updateEventData('specialPerks', selectedPerks);
+    updateEventData("specialPerks", selectedPerks);
   }, [selectedPerks]);
 
   const handleMaxCapacityChange = (text) => {
     // Only allow numbers
-    const numericValue = text.replace(/[^0-9]/g, '');
-    updateEventNestedData('ticket', 'capacity', numericValue);
+    const numericValue = text.replace(/[^0-9]/g, "");
+    updateEventNestedData("ticket", "capacity", numericValue);
   };
 
   const entertainmentPerks = [
-    { name: "Live Music", icon: "🎵" },
-    { name: "DJ Performance", icon: "🎧" },
-    { name: "Live Band", icon: "🎸" },
-    { name: "Photography", icon: "📸" },
-    { name: "Video Recording", icon: "🎥" },
-    { name: "Photo Booth", icon: "📷" },
-    { name: "Dancing", icon: "💃" },
-    { name: "Karaoke", icon: "🎤" },
+    { name: "Live Music", icon: Music },
+    { name: "DJ Performance", icon: Headphones },
+    { name: "Live Band", icon: Guitar },
+    { name: "Photography", icon: Camera },
+    { name: "Video Recording", icon: Video },
+    { name: "Photo Booth", icon: CameraIcon },
+    { name: "Dancing", icon: Music }, // closest match
+    { name: "Karaoke", icon: Mic },
   ];
 
   const foodAndDrinkPerks = [
-    { name: "Free Food", icon: "🍽️" },
-    { name: "Free Drinks", icon: "🥤" },
-    { name: "Alcohol Available", icon: "🍷" },
-    { name: "Catering Service", icon: "🍴" },
-    { name: "Welcome Drinks", icon: "🥂" },
-    { name: "Snacks Included", icon: "🍿" },
-    { name: "BBQ/Grill", icon: "🔥" },
-    { name: "Buffet Style", icon: "🍱" },
+    { name: "Free Food", icon: Utensils },
+    { name: "Free Drinks", icon: CupSoda },
+    { name: "Alcohol Available", icon: Wine },
+    { name: "Catering Service", icon: Soup },
+    { name: "Welcome Drinks", icon: GlassWater },
+    { name: "Snacks Included", icon: Popcorn },
+    { name: "BBQ/Grill", icon: Flame },
+    { name: "Buffet Style", icon: HandPlatter },
   ];
 
   const experiencePerks = [
-    { name: "Networking", icon: "🤝" },
-    { name: "Workshop/Training", icon: "📚" },
-    { name: "Guest Speaker", icon: "🎙️" },
-    { name: "Prize/Giveaways", icon: "🎁" },
-    { name: "Certificates", icon: "🏆" },
-    { name: "Goodie Bag", icon: "🛍️" },
-    { name: "VIP Access", icon: "⭐" },
-    { name: "Early Bird Benefits", icon: "🐦" },
+    { name: "Networking", icon: Handshake },
+    { name: "Workshop/Training", icon: BookOpen },
+    { name: "Guest Speaker", icon: Mic2 },
+    { name: "Prize/Giveaways", icon: Gift },
+    { name: "Certificates", icon: Trophy },
+    { name: "Goodie Bag", icon: ShoppingBag },
+    { name: "VIP Access", icon: Star },
+    { name: "Early Bird Benefits", icon: Bird },
   ];
 
   const facilitiesPerks = [
-    { name: "Free Parking", icon: "🅿️" },
-    { name: "Air Conditioning", icon: "❄️" },
-    { name: "WiFi Access", icon: "📶" },
-    { name: "Seating Provided", icon: "🪑" },
-    { name: "Restroom Access", icon: "🚻" },
-    { name: "Coat Check", icon: "🧥" },
-    { name: "Security", icon: "🛡️" },
-    { name: "Accessibility", icon: "♿" },
+    { name: "Free Parking", icon: ParkingCircle },
+    { name: "Air Conditioning", icon: Snowflake },
+    { name: "WiFi Access", icon: Wifi },
+    { name: "Seating Provided", icon: Armchair },
+    { name: "Restroom Access", icon: Toilet },
+    { name: "Coat Check", icon: Shirt },
+    { name: "Security", icon: Shield },
+    { name: "Accessibility", icon: Accessibility },
   ];
 
   // Helper to split array into rows of 2
@@ -91,9 +129,9 @@ export default function EventSpecialPerks({ styles }) {
         <Text style={styles.typeOptionDescription}>
           How many people can attend your event?
         </Text>
-        <TextInput 
-          style={styles.input} 
-          placeholder="e.g. 50, 100, 500" 
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. 50, 100, 500"
           value={eventData.ticket.capacity || ""}
           onChangeText={handleMaxCapacityChange}
           keyboardType="numeric"
@@ -112,6 +150,7 @@ export default function EventSpecialPerks({ styles }) {
           >
             {row.map((perk) => {
               const selected = selectedPerks.includes(perk.name);
+              const IconComponent = perk.icon;
               return (
                 <TouchableOpacity
                   key={perk.name}
@@ -124,7 +163,7 @@ export default function EventSpecialPerks({ styles }) {
                   onPress={() => handleSelect(perk.name)}
                 >
                   <View style={{ marginBottom: 8 }}>
-                    <Text style={{ fontSize: 32 }}>{perk.icon}</Text>
+                    <IconComponent size={20} color="#274046" />
                   </View>
                   <Text style={styles.labelText}>{perk.name}</Text>
                 </TouchableOpacity>
@@ -146,6 +185,7 @@ export default function EventSpecialPerks({ styles }) {
           >
             {row.map((perk) => {
               const selected = selectedPerks.includes(perk.name);
+              const IconComponent = perk.icon;
               return (
                 <TouchableOpacity
                   key={perk.name}
@@ -158,7 +198,7 @@ export default function EventSpecialPerks({ styles }) {
                   onPress={() => handleSelect(perk.name)}
                 >
                   <View style={{ marginBottom: 8 }}>
-                    <Text style={{ fontSize: 32 }}>{perk.icon}</Text>
+                    <IconComponent size={20} color="#274046" />
                   </View>
                   <Text style={styles.labelText}>{perk.name}</Text>
                 </TouchableOpacity>
@@ -180,6 +220,7 @@ export default function EventSpecialPerks({ styles }) {
           >
             {row.map((perk) => {
               const selected = selectedPerks.includes(perk.name);
+              const IconComponent = perk.icon;
               return (
                 <TouchableOpacity
                   key={perk.name}
@@ -192,7 +233,7 @@ export default function EventSpecialPerks({ styles }) {
                   onPress={() => handleSelect(perk.name)}
                 >
                   <View style={{ marginBottom: 8 }}>
-                    <Text style={{ fontSize: 32 }}>{perk.icon}</Text>
+                    <IconComponent size={20} color="#274046" />
                   </View>
                   <Text style={styles.labelText}>{perk.name}</Text>
                 </TouchableOpacity>
@@ -214,6 +255,7 @@ export default function EventSpecialPerks({ styles }) {
           >
             {row.map((perk) => {
               const selected = selectedPerks.includes(perk.name);
+              const IconComponent = perk.icon;
               return (
                 <TouchableOpacity
                   key={perk.name}
@@ -226,7 +268,7 @@ export default function EventSpecialPerks({ styles }) {
                   onPress={() => handleSelect(perk.name)}
                 >
                   <View style={{ marginBottom: 8 }}>
-                    <Text style={{ fontSize: 32 }}>{perk.icon}</Text>
+                    <IconComponent size={20} color="#274046" />
                   </View>
                   <Text style={styles.labelText}>{perk.name}</Text>
                 </TouchableOpacity>

@@ -86,8 +86,9 @@ const useHostingStore = create(
       // Current hosting type ('apartment' or 'event')
       hostingType: null,
       
-      // Current step in the process
-      currentStep: 1,
+      // Current step for each hosting type
+      apartmentCurrentStep: 1,
+      eventCurrentStep: 1,
       
       // Data for apartment hosting
       apartmentData: { ...initialApartmentData },
@@ -105,15 +106,38 @@ const useHostingStore = create(
       // Actions
       setHostingType: (type) => set({ hostingType: type }),
       
-      setCurrentStep: (step) => set({ currentStep: step }),
+      // Get current step based on hosting type
+      getCurrentStep: () => {
+        const state = get();
+        return state.hostingType === 'apartment' ? state.apartmentCurrentStep : state.eventCurrentStep;
+      },
       
-      nextStep: () => set((state) => ({ 
-        currentStep: state.currentStep + 1 
-      })),
+      setCurrentStep: (step) => {
+        const state = get();
+        if (state.hostingType === 'apartment') {
+          set({ apartmentCurrentStep: step });
+        } else if (state.hostingType === 'event') {
+          set({ eventCurrentStep: step });
+        }
+      },
       
-      previousStep: () => set((state) => ({ 
-        currentStep: Math.max(1, state.currentStep - 1) 
-      })),
+      nextStep: () => {
+        const state = get();
+        if (state.hostingType === 'apartment') {
+          set((state) => ({ apartmentCurrentStep: state.apartmentCurrentStep + 1 }));
+        } else if (state.hostingType === 'event') {
+          set((state) => ({ eventCurrentStep: state.eventCurrentStep + 1 }));
+        }
+      },
+      
+      previousStep: () => {
+        const state = get();
+        if (state.hostingType === 'apartment') {
+          set((state) => ({ apartmentCurrentStep: Math.max(1, state.apartmentCurrentStep - 1) }));
+        } else if (state.hostingType === 'event') {
+          set((state) => ({ eventCurrentStep: Math.max(1, state.eventCurrentStep - 1) }));
+        }
+      },
       
       // Apartment data actions
       updateApartmentData: (field, value) => set((state) => ({
@@ -205,7 +229,7 @@ const useHostingStore = create(
           id: Date.now().toString(),
           type: state.hostingType,
           data: state.hostingType === 'apartment' ? state.apartmentData : state.eventData,
-          currentStep: state.currentStep,
+          currentStep: state.hostingType === 'apartment' ? state.apartmentCurrentStep : state.eventCurrentStep,
           status: 'local', // 'local', 'synced', 'uploading'
           lastSyncedAt: null,
           createdAt: new Date().toISOString(),
@@ -240,13 +264,14 @@ const useHostingStore = create(
       
       updateDraft: (draftId) => {
         const state = get();
+        const currentStep = state.hostingType === 'apartment' ? state.apartmentCurrentStep : state.eventCurrentStep;
         set((state) => ({
           drafts: state.drafts.map((draft) =>
             draft.id === draftId
               ? {
                   ...draft,
                   data: state.hostingType === 'apartment' ? state.apartmentData : state.eventData,
-                  currentStep: state.currentStep,
+                  currentStep: currentStep,
                   updatedAt: new Date().toISOString(),
                 }
               : draft
@@ -273,7 +298,8 @@ const useHostingStore = create(
           
           set({
             hostingType: draft.type,
-            currentStep: draft.currentStep,
+            apartmentCurrentStep: draft.type === 'apartment' ? draft.currentStep : 1,
+            eventCurrentStep: draft.type === 'event' ? draft.currentStep : 1,
             apartmentData: draft.type === 'apartment' ? restoredData : { ...initialApartmentData },
             eventData: draft.type === 'event' ? restoredData : { ...initialEventData },
           });
@@ -436,12 +462,12 @@ const useHostingStore = create(
       // Reset functions
       resetApartmentData: () => set({
         apartmentData: { ...initialApartmentData },
-        currentStep: 1,
+        apartmentCurrentStep: 1,
       }),
       
       resetEventData: () => set({
         eventData: { ...initialEventData },
-        currentStep: 1,
+        eventCurrentStep: 1,
       }),
       
       resetCurrentHosting: () => {
