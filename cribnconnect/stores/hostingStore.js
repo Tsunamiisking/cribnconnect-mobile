@@ -479,7 +479,8 @@ const useHostingStore = create(
             case 3: return Boolean(data.location.address && data.location.city && data.location.state);
             case 4: return Boolean(data.ticket.isFree || data.ticket.price);
             case 5: return Boolean(data.dateTime.date && data.dateTime.startTime);
-            case 6: return true; // Safety tips are optional
+            case 6: return Boolean(data.ticket.capacity); // Special perks step - capacity is required
+            case 7: return true; // Safety tips are optional
             default: return false;
           }
         }

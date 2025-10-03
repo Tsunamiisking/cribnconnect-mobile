@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import EventAddress from "./eventSteps/EventAddress";
 import EventDate from "./eventSteps/EventDate";
 import EventSafetyTips from "./eventSteps/EventSafetyTips";
+import EventSpecialPerks from "./eventSteps/EventSpecialPerks";
 import EventTicket from "./eventSteps/EventTicket";
 import EventTitle from "./eventSteps/EventTitle";
 import EventType from "./eventSteps/EventType";
@@ -43,7 +44,7 @@ export default function AddEventScreen() {
   }, []);
 
   const handleNext = () => {
-    if (currentStep < 6) {
+    if (currentStep < 7) {
       nextStep();
     } else {
       handleSubmit();
@@ -86,6 +87,8 @@ export default function AddEventScreen() {
       case 5:
         return <EventDate styles={styles} />;
       case 6:
+        return <EventSpecialPerks styles={styles} />;
+      case 7:
         return <EventSafetyTips styles={styles} />;
       default:
         return null;
@@ -100,7 +103,7 @@ export default function AddEventScreen() {
           <View
             style={[
               styles.progressFill,
-              { width: `${(currentStep / 6) * 100}%` },
+              { width: `${(currentStep / 7) * 100}%` },
             ]}
           />
         </View>
@@ -117,10 +120,10 @@ export default function AddEventScreen() {
             onBack={handleBack}
             onSaveDraft={handleSaveDraft}
             currentStep={currentStep}
-            totalSteps={6}
+            totalSteps={7}
             isValid={isStepValid(currentStep)}
             isSubmitting={isSubmitting}
-            isLastStep={currentStep === 6}
+            isLastStep={currentStep === 7}
           />
         </ScrollView>
       </KeyboardAvoidingView>
