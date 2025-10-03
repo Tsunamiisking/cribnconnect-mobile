@@ -5,11 +5,11 @@ import useHostingStore from "@/stores/hostingStore";
 import { router } from "expo-router";
 import { useEffect } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    View
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import StepSpace from "./apartmentSteps/Step2";
