@@ -106,7 +106,7 @@ export default function EventDate({ styles }) {
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    setShowDatePicker(false);
+    // Don't close immediately, let user confirm selection
   };
 
   const handleMonthYearChange = (date) => {
@@ -117,6 +117,10 @@ export default function EventDate({ styles }) {
   const handleOnDateChange = (date) => {
     // This handles individual date selection
     setSelectedDate(date);
+    // Close picker after selection
+    setTimeout(() => {
+      setShowDatePicker(false);
+    }, 300);
   };
 
   const formatDisplayDate = (dateString) => {
@@ -236,10 +240,7 @@ export default function EventDate({ styles }) {
               onMonthYearChange={handleMonthYearChange}
               onDateChange={handleOnDateChange}
               selected={selectedDate}
-              current={
-                selectedDate ||
-                new Date().toISOString().split("T")[0].replace(/-/g, "/")
-              }
+              current={selectedDate || new Date().toISOString().split("T")[0].replace(/-/g, "/")}
               mode="calendar"
               isGregorian={true}
               minimumDate={new Date()
@@ -261,6 +262,12 @@ export default function EventDate({ styles }) {
                 headerFont: "Sora-Medium",
               }}
             />
+            <TouchableOpacity
+              style={localStyles.closeDatePickerButton}
+              onPress={() => setShowDatePicker(false)}
+            >
+              <Text style={localStyles.closeDatePickerText}>Done</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -367,6 +374,19 @@ const localStyles = StyleSheet.create({
   },
   selectedPeriodText: {
     color: "#ffffff",
+    fontFamily: "Sora-Medium",
+  },
+  closeDatePickerButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: "#274046",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  closeDatePickerText: {
+    color: "#ffffff",
+    fontSize: 16,
     fontFamily: "Sora-Medium",
   },
 });
