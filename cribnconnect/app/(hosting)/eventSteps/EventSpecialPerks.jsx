@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { Zap, Utensils, Star, Wifi, Music, Camera, Car, Wine, Coffee, Gift, Users, Sparkles } from 'lucide-react-native';
-import useHostingStore from '@/stores/hostingStore';
 import { Colors } from '@/constants/Colors';
+import useHostingStore from '@/stores/hostingStore';
+import { Camera, Car, Coffee, Gift, Music, Sparkles, Star, Users, Utensils, Wifi, Wine, Zap } from 'lucide-react-native';
+import React from 'react';
+import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const EventSpecialPerks = ({ styles }) => {
   const { eventData, updateEventData, nextStep, previousStep } = useHostingStore();

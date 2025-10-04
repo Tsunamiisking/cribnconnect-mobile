@@ -1,11 +1,11 @@
 import useHostingStore from "@/stores/hostingStore";
 import { useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import DatePicker from "react-native-modern-datepicker";
 // Fix for displayName error in react-native-modern-datepicker

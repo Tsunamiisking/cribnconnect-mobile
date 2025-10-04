@@ -1,8 +1,8 @@
-import useHostingStore from "@/stores/hostingStore";
-import { useEffect, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
-import { Plus, X } from "lucide-react-native";
 import { Colors } from "@/constants/Colors";
+import useHostingStore from "@/stores/hostingStore";
+import { Plus, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
+import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function EventTicket({ styles }) {
   const { eventData, updateEventData } = useHostingStore();
