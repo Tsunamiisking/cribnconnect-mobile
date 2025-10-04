@@ -49,35 +49,28 @@ const initialApartmentData = {
 const initialEventData = {
   title: "",
   description: "",
-  eventType: "",
+  category: "", // Maps to backend category enum
+  eventType: "", // Maps to backend eventType (specific type within category)
   location: {
-    address: "",
+    street: "", // Changed from 'address' to match backend
     city: "",
     state: "",
     venue: "",
-    zip: "",
-    country: "",
+    zip: "", // Keep for frontend validation, don't send to backend
+    country: "", // Keep for frontend validation, don't send to backend
   },
-  dateTime: {
-    date: null,
-    startTime: "",
-    endTime: "",
-  },
-  ticket: {
-    price: "",
-    isFree: false,
-    capacity: "",
-  },
+  date: null, // Changed from dateTime.date to match backend
+  time: "", // Changed from dateTime.startTime to match backend
+  endTime: "", // Keep for frontend, can derive duration for backend
+  ticketPrice: "", // Changed from ticket.price to match backend (computed from ticketTypes)
+  capacity: "", // Moved from ticket.capacity to match backend
+  isFree: false, // Changed from ticket.isFree to match backend
+  ticketTypes: [], // New field for multiple ticket types
   media: [],
   tags: [],
   specialPerks: [],
-  safetyTips: [],
-  ticketPolicies: {
-    refundable: false,
-    transferable: false,
-    upgradable: false,
-    termsAccepted: false,
-  },
+  safetyTips: [], // Keep for frontend, optional backend field
+  // Remove ticketPolicies as it's not in backend schema
 };
 
 const useHostingStore = create(
@@ -500,12 +493,12 @@ const useHostingStore = create(
           }
         } else if (state.hostingType === 'event') {
           switch (step) {
-            case 1: return Boolean(data.eventType);
-            case 2: return Boolean(data.title);
-            case 3: return Boolean(data.location.address && data.location.city && data.location.state);
-            case 4: return Boolean(data.ticket.isFree || data.ticket.price);
-            case 5: return Boolean(data.dateTime.date && data.dateTime.startTime);
-            case 6: return Boolean(data.ticket.capacity); // Special perks step - capacity is required
+            case 1: return Boolean(data.category && data.eventType);
+            case 2: return Boolean(data.title && data.description);
+            case 3: return Boolean(data.location.street && data.location.city && data.location.state);
+            case 4: return Boolean(data.isFree || data.ticketPrice);
+            case 5: return Boolean(data.date && data.time);
+            case 6: return Boolean(data.capacity); // Special perks step - capacity is required
             case 7: return true; // Safety tips are optional
             default: return false;
           }
@@ -518,6 +511,45 @@ const useHostingStore = create(
       getCurrentData: () => {
         const state = get();
         return state.hostingType === 'apartment' ? state.apartmentData : state.eventData;
+      },
+
+      // Transform event data for backend submission
+      getBackendEventData: () => {
+        const state = get();
+        const eventData = state.eventData;
+        
+        // Calculate minimum ticket price from ticket types
+        let ticketPrice = 0;
+        if (!eventData.isFree && eventData.ticketTypes && eventData.ticketTypes.length > 0) {
+          const prices = eventData.ticketTypes
+            .map(t => parseFloat(t.price) || 0)
+            .filter(p => p > 0);
+          ticketPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        }
+        
+        // Transform frontend structure to match backend schema
+        return {
+          title: eventData.title,
+          category: eventData.category,
+          eventType: eventData.eventType,
+          description: eventData.description,
+          media: eventData.media,
+          location: {
+            street: eventData.location.street,
+            city: eventData.location.city,
+            state: eventData.location.state,
+            venue: eventData.location.venue,
+          },
+          date: eventData.date, // Should be a Date object
+          time: eventData.time,
+          ticketPrice: ticketPrice,
+          capacity: parseInt(eventData.capacity) || 0,
+          isFree: eventData.isFree,
+          ticketTypes: eventData.ticketTypes, // Include ticket types for frontend reference
+          tags: eventData.tags,
+          specialPerks: eventData.specialPerks,
+          isPublished: true, // Set based on your app logic
+        };
       },
       
       // Submission

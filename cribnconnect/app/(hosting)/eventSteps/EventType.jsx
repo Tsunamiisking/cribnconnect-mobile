@@ -4,19 +4,29 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 export default function EventType({ styles }) {
   const { eventData, updateEventData } = useHostingStore();
-  const [selected, setSelected] = useState(eventData.eventType ? [eventData.eventType] : []); // store selected subtypes in an array
+  const [selectedCategory, setSelectedCategory] = useState(eventData.category || "");
+  const [selectedEventType, setSelectedEventType] = useState(eventData.eventType || "");
 
-  // Update store when selection changes
+  // Update store when selections change
   useEffect(() => {
-    if (selected.length > 0) {
-      updateEventData('eventType', selected[0]); // Take the first selected type
+    if (selectedCategory) {
+      updateEventData('category', selectedCategory);
     }
-  }, [selected]);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    if (selectedEventType) {
+      updateEventData('eventType', selectedEventType);
+    }
+  }, [selectedEventType]);
 
   // Initialize from store data
   useEffect(() => {
-    if (eventData.eventType && !selected.includes(eventData.eventType)) {
-      setSelected([eventData.eventType]);
+    if (eventData.category && selectedCategory !== eventData.category) {
+      setSelectedCategory(eventData.category);
+    }
+    if (eventData.eventType && selectedEventType !== eventData.eventType) {
+      setSelectedEventType(eventData.eventType);
     }
   }, []);
 
@@ -71,43 +81,74 @@ export default function EventType({ styles }) {
     ],
   };
 
-  // toggle selection (single selection for event type)
-  const toggleSelect = (subtype) => {
-    setSelected((prev) => {
-      // Only allow single selection for event type
-      if (prev.includes(subtype)) {
-        return []; // Deselect if already selected
-      } else {
-        return [subtype]; // Select new type, replacing any existing selection
-      }
-    });
+  // Handle category selection
+  const selectCategory = (category) => {
+    setSelectedCategory(category);
+    setSelectedEventType(""); // Reset event type when category changes
+  };
+
+  // Handle event type selection
+  const selectEventType = (eventType, category) => {
+    setSelectedCategory(category);
+    setSelectedEventType(eventType);
   };
 
   return (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>What type of event are you hosting?</Text>
-      <Text style={styles.sectionSubtitle}>Select the type of event</Text>
+      <Text style={styles.sectionSubtitle}>
+        {!selectedCategory 
+          ? "First, select a category" 
+          : selectedCategory 
+            ? `Selected: ${selectedCategory}${selectedEventType ? ` > ${selectedEventType}` : ""}`
+            : "Select the type of event"
+        }
+      </Text>
 
       <View className="mt-6">
         {Object.entries(eventCategories).map(([category, subtypes]) => (
           <View key={category} style={{ marginBottom: 24 }}>
-            <Text style={[styles.label, { marginBottom: 12 }]}>{category}</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {subtypes.map((subtype) => {
-                const isSelected = selected.includes(subtype);
-                return (
-                  <View className="flex-row items-center w-full" key={subtype}>
+            <TouchableOpacity
+              onPress={() => selectCategory(category)}
+              style={[
+                styles.typeOption,
+                selectedCategory === category && styles.selectedTypeOption,
+                { marginBottom: 12 }
+              ]}
+            >
+              <Text style={[
+                styles.labelText,
+                selectedCategory === category && styles.selectedTypeOptionText
+              ]}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+            
+            {selectedCategory === category && (
+              <View style={{ paddingLeft: 16 }}>
+                {subtypes.map((subtype) => {
+                  const isSelected = selectedEventType === subtype;
+                  return (
                     <TouchableOpacity
-                      onPress={() => toggleSelect(subtype)}
-                      className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${isSelected ? "bg-[#274046]" : "bg-white"}`}
-                    />
-                    <Text style={[styles.labelText, { marginTop: 14 }]}>
-                      {subtype}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
+                      key={subtype}
+                      onPress={() => selectEventType(subtype, category)}
+                      style={[
+                        styles.typeOption,
+                        isSelected && styles.selectedTypeOption,
+                        { marginBottom: 8, backgroundColor: isSelected ? "#274046" : "#f9fafb" }
+                      ]}
+                    >
+                      <Text style={[
+                        styles.labelText,
+                        isSelected && { color: "#ffffff" }
+                      ]}>
+                        {subtype}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
           </View>
         ))}
       </View>

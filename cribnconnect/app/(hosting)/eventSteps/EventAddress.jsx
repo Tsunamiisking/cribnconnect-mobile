@@ -16,10 +16,10 @@ export default function EventAddress({ styles }) {
         <Text style={styles.label}>Provide event address</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter address"
+          placeholder="Enter street address"
           placeholderTextColor="#B0B0B0"
-          value={eventData.location.address}
-          onChangeText={(value) => handleLocationChange('address', value)}
+          value={eventData.location.street}
+          onChangeText={(value) => handleLocationChange('street', value)}
         />
         <View className="flex-row">
           <TextInput

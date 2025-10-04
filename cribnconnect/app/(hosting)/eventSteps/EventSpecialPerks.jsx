@@ -1,280 +1,150 @@
-import useHostingStore from "@/stores/hostingStore";
-import {
-    Accessibility,
-    Armchair,
-    Bird,
-    BookOpen,
-    Camera,
-    CameraIcon,
-    CupSoda,
-    Flame,
-    Gift,
-    GlassWater,
-    Guitar,
-    HandPlatter,
-    Handshake,
-    Headphones,
-    Mic,
-    Mic2,
-    Music,
-    ParkingCircle,
-    Popcorn,
-    Shield,
-    Shirt,
-    ShoppingBag,
-    Snowflake,
-    Soup,
-    Star,
-    Toilet,
-    Trophy,
-    Utensils,
-    Video,
-    Wifi,
-    Wine
-} from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { Zap, Utensils, Star, Wifi, Music, Camera, Car, Wine, Coffee, Gift, Users, Sparkles } from 'lucide-react-native';
+import useHostingStore from '@/stores/hostingStore';
+import { Colors } from '@/constants/Colors';
 
-export default function EventSpecialPerks({ styles }) {
-  const { eventData, updateEventData, updateEventNestedData } =
-    useHostingStore();
-  const [selectedPerks, setSelectedPerks] = useState(
-    eventData.specialPerks || []
-  );
+const EventSpecialPerks = ({ styles }) => {
+  const { eventData, updateEventData, nextStep, previousStep } = useHostingStore();
 
-  // Update store when selectedPerks changes
-  useEffect(() => {
-    updateEventData("specialPerks", selectedPerks);
-  }, [selectedPerks]);
-
-  const handleMaxCapacityChange = (text) => {
-    // Only allow numbers
-    const numericValue = text.replace(/[^0-9]/g, "");
-    updateEventNestedData("ticket", "capacity", numericValue);
+  const perkCategories = {
+    'Entertainment': [
+      { id: 'live_music', name: 'Live Music', icon: Music },
+      { id: 'photography', name: 'Professional Photography', icon: Camera },
+      { id: 'live_dj', name: 'Live DJ', icon: Zap },
+      { id: 'games', name: 'Games & Activities', icon: Star }
+    ],
+    'Food & Drink': [
+      { id: 'catering', name: 'Catering Service', icon: Utensils },
+      { id: 'bar_service', name: 'Bar Service', icon: Wine },
+      { id: 'coffee_station', name: 'Coffee Station', icon: Coffee },
+      { id: 'welcome_drinks', name: 'Welcome Drinks', icon: Gift }
+    ],
+    'Experience': [
+      { id: 'vip_access', name: 'VIP Access', icon: Star },
+      { id: 'meet_greet', name: 'Meet & Greet', icon: Users },
+      { id: 'exclusive_content', name: 'Exclusive Content', icon: Sparkles },
+      { id: 'networking', name: 'Networking Session', icon: Users }
+    ],
+    'Facilities': [
+      { id: 'wifi', name: 'Free WiFi', icon: Wifi },
+      { id: 'parking', name: 'Parking Available', icon: Car },
+      { id: 'accessibility', name: 'Wheelchair Accessible', icon: Star },
+      { id: 'coat_check', name: 'Coat Check', icon: Gift }
+    ]
   };
 
-  const entertainmentPerks = [
-    { name: "Live Music", icon: Music },
-    { name: "DJ Performance", icon: Headphones },
-    { name: "Live Band", icon: Guitar },
-    { name: "Photography", icon: Camera },
-    { name: "Video Recording", icon: Video },
-    { name: "Photo Booth", icon: CameraIcon },
-    { name: "Dancing", icon: Music }, // closest match
-    { name: "Karaoke", icon: Mic },
-  ];
+  const togglePerk = (perkId) => {
+    const currentPerks = eventData.specialPerks || [];
+    const updatedPerks = currentPerks.includes(perkId)
+      ? currentPerks.filter(id => id !== perkId)
+      : [...currentPerks, perkId];
+    
+    updateEventData('specialPerks', updatedPerks);
+  };
 
-  const foodAndDrinkPerks = [
-    { name: "Free Food", icon: Utensils },
-    { name: "Free Drinks", icon: CupSoda },
-    { name: "Alcohol Available", icon: Wine },
-    { name: "Catering Service", icon: Soup },
-    { name: "Welcome Drinks", icon: GlassWater },
-    { name: "Snacks Included", icon: Popcorn },
-    { name: "BBQ/Grill", icon: Flame },
-    { name: "Buffet Style", icon: HandPlatter },
-  ];
-
-  const experiencePerks = [
-    { name: "Networking", icon: Handshake },
-    { name: "Workshop/Training", icon: BookOpen },
-    { name: "Guest Speaker", icon: Mic2 },
-    { name: "Prize/Giveaways", icon: Gift },
-    { name: "Certificates", icon: Trophy },
-    { name: "Goodie Bag", icon: ShoppingBag },
-    { name: "VIP Access", icon: Star },
-    { name: "Early Bird Benefits", icon: Bird },
-  ];
-
-  const facilitiesPerks = [
-    { name: "Free Parking", icon: ParkingCircle },
-    { name: "Air Conditioning", icon: Snowflake },
-    { name: "WiFi Access", icon: Wifi },
-    { name: "Seating Provided", icon: Armchair },
-    { name: "Restroom Access", icon: Toilet },
-    { name: "Coat Check", icon: Shirt },
-    { name: "Security", icon: Shield },
-    { name: "Accessibility", icon: Accessibility },
-  ];
-
-  // Helper to split array into rows of 2
-  function toRows(arr) {
-    const rows = [];
-    for (let i = 0; i < arr.length; i += 2) {
-      rows.push(arr.slice(i, i + 2));
+  const handleCapacityChange = (value) => {
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      updateEventData('capacity', numValue);
+    } else if (value === '') {
+      updateEventData('capacity', '');
     }
-    return rows;
-  }
-
-  const handleSelect = (name) => {
-    setSelectedPerks((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
-    );
   };
 
-  return (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>
-        What special perks does your event offer?
-      </Text>
-      <Text style={styles.sectionSubtitle}>
-        Select all perks and features that make your event special
-      </Text>
+  const handleNext = () => {
+    if (!eventData.capacity || eventData.capacity === '') {
+      Alert.alert('Required Field', 'Please enter the event capacity');
+      return;
+    }
+    nextStep();
+  };
 
-      {/* Maximum Capacity */}
-      <View style={{ marginBottom: 24 }}>
-        <Text style={styles.label}>Maximum Capacity</Text>
-        <Text style={styles.typeOptionDescription}>
-          How many people can attend your event?
-        </Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. 50, 100, 500"
-          value={eventData.ticket.capacity || ""}
-          onChangeText={handleMaxCapacityChange}
-          keyboardType="numeric"
-        />
-      </View>
-
-      {/* Entertainment Perks */}
-      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>
-        Entertainment & Activities
+  const renderPerkCategory = (categoryName, perks) => (
+    <View key={categoryName} style={{ marginBottom: 24 }}>
+      <Text style={[styles.label, { marginBottom: 12 }]}>
+        {categoryName}
       </Text>
-      <View style={{ marginBottom: 8 }}>
-        {toRows(entertainmentPerks).map((row, idx) => (
-          <View
-            key={idx}
-            style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
-          >
-            {row.map((perk) => {
-              const selected = selectedPerks.includes(perk.name);
-              const IconComponent = perk.icon;
-              return (
-                <TouchableOpacity
-                  key={perk.name}
-                  style={[
-                    styles.typeOption,
-                    selected && styles.selectedTypeOption,
-                    { flex: 1, alignItems: "center", justifyContent: "center" },
-                  ]}
-                  activeOpacity={0.85}
-                  onPress={() => handleSelect(perk.name)}
-                >
-                  <View style={{ marginBottom: 8 }}>
-                    <IconComponent size={20} color="#274046" />
-                  </View>
-                  <Text style={styles.labelText}>{perk.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-
-      {/* Food & Drink Perks */}
-      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>
-        Food & Beverages
-      </Text>
-      <View style={{ marginBottom: 8 }}>
-        {toRows(foodAndDrinkPerks).map((row, idx) => (
-          <View
-            key={idx}
-            style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
-          >
-            {row.map((perk) => {
-              const selected = selectedPerks.includes(perk.name);
-              const IconComponent = perk.icon;
-              return (
-                <TouchableOpacity
-                  key={perk.name}
-                  style={[
-                    styles.typeOption,
-                    selected && styles.selectedTypeOption,
-                    { flex: 1, alignItems: "center", justifyContent: "center" },
-                  ]}
-                  activeOpacity={0.85}
-                  onPress={() => handleSelect(perk.name)}
-                >
-                  <View style={{ marginBottom: 8 }}>
-                    <IconComponent size={20} color="#274046" />
-                  </View>
-                  <Text style={styles.labelText}>{perk.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-
-      {/* Experience Perks */}
-      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>
-        Experience & Networking
-      </Text>
-      <View style={{ marginBottom: 8 }}>
-        {toRows(experiencePerks).map((row, idx) => (
-          <View
-            key={idx}
-            style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
-          >
-            {row.map((perk) => {
-              const selected = selectedPerks.includes(perk.name);
-              const IconComponent = perk.icon;
-              return (
-                <TouchableOpacity
-                  key={perk.name}
-                  style={[
-                    styles.typeOption,
-                    selected && styles.selectedTypeOption,
-                    { flex: 1, alignItems: "center", justifyContent: "center" },
-                  ]}
-                  activeOpacity={0.85}
-                  onPress={() => handleSelect(perk.name)}
-                >
-                  <View style={{ marginBottom: 8 }}>
-                    <IconComponent size={20} color="#274046" />
-                  </View>
-                  <Text style={styles.labelText}>{perk.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-
-      {/* Facilities Perks */}
-      <Text style={[styles.label, { marginTop: 12, marginBottom: 8 }]}>
-        Facilities & Services
-      </Text>
-      <View style={{ marginBottom: 8 }}>
-        {toRows(facilitiesPerks).map((row, idx) => (
-          <View
-            key={idx}
-            style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
-          >
-            {row.map((perk) => {
-              const selected = selectedPerks.includes(perk.name);
-              const IconComponent = perk.icon;
-              return (
-                <TouchableOpacity
-                  key={perk.name}
-                  style={[
-                    styles.typeOption,
-                    selected && styles.selectedTypeOption,
-                    { flex: 1, alignItems: "center", justifyContent: "center" },
-                  ]}
-                  activeOpacity={0.85}
-                  onPress={() => handleSelect(perk.name)}
-                >
-                  <View style={{ marginBottom: 8 }}>
-                    <IconComponent size={20} color="#274046" />
-                  </View>
-                  <Text style={styles.labelText}>{perk.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
+      <View style={styles.verticalOptions}>
+        {perks.map((perk) => {
+          const isSelected = eventData.specialPerks?.includes(perk.id);
+          const IconComponent = perk.icon;
+          
+          return (
+            <TouchableOpacity
+              key={perk.id}
+              onPress={() => togglePerk(perk.id)}
+              style={[
+                styles.typeOption,
+                isSelected && styles.selectedTypeOption,
+              ]}
+            >
+              <View style={styles.typeOptionRow}>
+                <IconComponent 
+                  size={20} 
+                  color={isSelected ? Colors.primary : Colors.gray600} 
+                />
+                <Text style={[
+                  styles.typeOptionText,
+                  isSelected && styles.selectedTypeOptionText
+                ]}>
+                  {perk.name}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
-}
+
+  return (
+    <View style={styles.stepContent}>
+      <Text style={styles.stepTitle}>Special Perks & Capacity</Text>
+      <Text style={styles.sectionSubtitle}>
+        Add special perks to make your event more attractive and set the maximum capacity
+      </Text>
+
+      {/* Capacity Input */}
+      <View style={{ marginBottom: 32 }}>
+        <Text style={styles.label}>Event Capacity *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Maximum number of attendees"
+          value={eventData.capacity?.toString() || ''}
+          onChangeText={handleCapacityChange}
+          keyboardType="numeric"
+          maxLength={5}
+        />
+      </View>
+
+      {/* Special Perks */}
+      <Text style={styles.label}>Special Perks (Optional)</Text>
+      <Text style={styles.typeOptionDescription}>
+        Select perks that will be available at your event
+      </Text>
+      
+      {Object.entries(perkCategories).map(([categoryName, perks]) =>
+        renderPerkCategory(categoryName, perks)
+      )}
+
+      {/* Selected Perks Summary */}
+      {eventData.specialPerks && eventData.specialPerks.length > 0 && (
+        <View style={[styles.typeOption, { marginTop: 16, backgroundColor: Colors.blue50 }]}>
+          <Text style={[styles.labelText, { color: Colors.primary, marginBottom: 8 }]}>
+            Selected Perks ({eventData.specialPerks.length})
+          </Text>
+          <Text style={styles.typeOptionDescription}>
+            {eventData.specialPerks.map(perkId => {
+              const allPerks = Object.values(perkCategories).flat();
+              const perk = allPerks.find(p => p.id === perkId);
+              return perk?.name;
+            }).filter(Boolean).join(', ')}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+export default EventSpecialPerks;

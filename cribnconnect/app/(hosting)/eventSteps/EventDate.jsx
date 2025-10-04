@@ -14,16 +14,10 @@ if (!DatePicker.displayName) {
 }
 
 export default function EventDate({ styles }) {
-  const { eventData, updateEventNestedData } = useHostingStore();
-  const [selectedDate, setSelectedDate] = useState(
-    eventData.dateTime.date || ""
-  );
-  const [selectedStartTime, setSelectedStartTime] = useState(
-    eventData.dateTime.startTime || ""
-  );
-  const [selectedEndTime, setSelectedEndTime] = useState(
-    eventData.dateTime.endTime || ""
-  );
+  const { eventData, updateEventData } = useHostingStore();
+  const [selectedDate, setSelectedDate] = useState(eventData.date || "");
+  const [selectedTime, setSelectedTime] = useState(eventData.time || "");
+  const [selectedEndTime, setSelectedEndTime] = useState(eventData.endTime || "");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Time state for start time
@@ -38,8 +32,8 @@ export default function EventDate({ styles }) {
 
   // Parse existing time strings when component mounts
   useEffect(() => {
-    if (selectedStartTime) {
-      const parsedTime = parseTimeString(selectedStartTime);
+    if (selectedTime) {
+      const parsedTime = parseTimeString(selectedTime);
       if (parsedTime) {
         setStartHour(parsedTime.hour);
         setStartMinute(parsedTime.minute);
@@ -82,9 +76,9 @@ export default function EventDate({ styles }) {
   // Update start time when components change
   useEffect(() => {
     const timeString = formatTime(startHour, startMinute, startPeriod);
-    if (timeString && timeString !== selectedStartTime) {
-      setSelectedStartTime(timeString);
-      updateEventNestedData("dateTime", "startTime", timeString);
+    if (timeString && timeString !== selectedTime) {
+      setSelectedTime(timeString);
+      updateEventData('time', timeString);
     }
   }, [startHour, startMinute, startPeriod]);
 
@@ -93,14 +87,17 @@ export default function EventDate({ styles }) {
     const timeString = formatTime(endHour, endMinute, endPeriod);
     if (timeString && timeString !== selectedEndTime) {
       setSelectedEndTime(timeString);
-      updateEventNestedData("dateTime", "endTime", timeString);
+      updateEventData('endTime', timeString);
     }
   }, [endHour, endMinute, endPeriod]);
 
-  // Update store when selections change
+  // Update store when date changes
   useEffect(() => {
     if (selectedDate) {
-      updateEventNestedData("dateTime", "date", selectedDate);
+      // Convert YYYY/MM/DD to Date object for backend
+      const [year, month, day] = selectedDate.split('/');
+      const dateObj = new Date(year, month - 1, day);
+      updateEventData('date', dateObj.toISOString());
     }
   }, [selectedDate]);
 
@@ -295,10 +292,10 @@ export default function EventDate({ styles }) {
       )}
 
       {/* Duration Display */}
-      {selectedStartTime && selectedEndTime && (
+      {selectedTime && selectedEndTime && (
         <View className="mt-4">
           <Text style={styles.typeOptionDescription}>
-            Event Duration: {selectedStartTime} - {selectedEndTime}
+            Event Duration: {selectedTime} - {selectedEndTime}
           </Text>
         </View>
       )}
