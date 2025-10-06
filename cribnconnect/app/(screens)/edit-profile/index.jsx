@@ -225,6 +225,7 @@ const EditProfile = () => {
                 setItem({ ...item, accountNumber: text })
               }
               keyboardType="numeric"
+              maxLength={10}
             />
             
             {/* Bank Selection */}
