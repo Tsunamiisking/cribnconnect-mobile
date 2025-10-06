@@ -33,10 +33,23 @@ const EditProfile = () => {
     accountNumber: "",
     accountName: "Douglas Allen Oluwatobi",
     paymentMethod: "",
+    payoutMethod: "", // New field for payout method
+    // Bank Transfer fields
+    bankAccountNumber: "",
+    bankAccountName: "",
+    selectedBank: "",
+    // Mobile Money fields
+    mobileNumber: "",
+    mobileProvider: "",
+    // M-Pesa fields
+    mpesaNumber: "",
+    mpesaName: "",
   });
 
   const [showBankModal, setShowBankModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showMobileProviderModal, setShowMobileProviderModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentSearchTerm, setPaymentSearchTerm] = useState("");
 
@@ -98,6 +111,24 @@ const EditProfile = () => {
     "EFT",
   ];
 
+  // Payout methods for African countries
+  const payoutMethods = [
+    "Bank Transfer",
+    "Mobile Money (Momo)",
+    "M-Pesa",
+  ];
+
+  // Mobile Money providers
+  const mobileProviders = [
+    "MTN Mobile Money",
+    "Airtel Money",
+    "Orange Money",
+    "Vodafone Cash",
+    "Tigo Cash",
+    "Ecobank Mobile",
+    "UBA Mobile Money",
+  ];
+
   // Filter banks based on search term
   const filteredBanks = nigerianBanks.filter(bank =>
     bank.toLowerCase().includes(searchTerm.toLowerCase())
@@ -109,7 +140,7 @@ const EditProfile = () => {
   );
 
   const selectBank = (bankName) => {
-    setItem({ ...item, bankName });
+    setItem({ ...item, selectedBank: bankName });
     setShowBankModal(false);
     setSearchTerm("");
   };
@@ -118,6 +149,29 @@ const EditProfile = () => {
     setItem({ ...item, paymentMethod });
     setShowPaymentModal(false);
     setPaymentSearchTerm("");
+  };
+
+  const selectPayoutMethod = (payoutMethod) => {
+    // Reset relevant fields when changing payout method
+    const updatedItem = {
+      ...item,
+      payoutMethod,
+      // Reset fields
+      bankAccountNumber: "",
+      bankAccountName: "",
+      selectedBank: "",
+      mobileNumber: "",
+      mobileProvider: "",
+      mpesaNumber: "",
+      mpesaName: "",
+    };
+    setItem(updatedItem);
+    setShowPayoutModal(false);
+  };
+
+  const selectMobileProvider = (provider) => {
+    setItem({ ...item, mobileProvider: provider });
+    setShowMobileProviderModal(false);
   };
 
   const saveChanges = () => {
@@ -268,46 +322,118 @@ const EditProfile = () => {
           <View style={{ marginHorizontal: 18, marginTop: 24 }}>
             <Text style={styles.label}>Payouts</Text>
             <Text style={styles.sectionDescription}>
-              Set up your bank account for receiving payments
+              Choose how you want to receive payments
             </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Account Number"
-              placeholderTextColor="#B0B0B0"
-              value={item.accountNumber}
-              onChangeText={(text) =>
-                setItem({ ...item, accountNumber: text })
-              }
-              keyboardType="numeric"
-              maxLength={10}
-            />
             
-            {/* Bank Selection */}
+            {/* Payout Method Selection */}
             <TouchableOpacity
               style={[styles.input, styles.bankSelector]}
-              onPress={() => setShowBankModal(true)}
+              onPress={() => setShowPayoutModal(true)}
             >
               <Text style={[
                 styles.bankSelectorText,
-                !item.bankName && styles.placeholderText
+                !item.payoutMethod && styles.placeholderText
               ]}>
-                {item.bankName || "Select Bank"}
+                {item.payoutMethod || "Select Payout Method"}
               </Text>
               <ChevronDown size={20} color={Colors.gray600} />
             </TouchableOpacity>
 
-            {/* <TextInput
-              style={styles.input}
-              placeholder="Account Name"
-              placeholderTextColor="#B0B0B0"
-              value={item.accountName}
-              onChangeText={(text) =>
-                setItem({ ...item, accountName: text })
-              }
-            /> */}
-            <Text style={[styles.searchInput, { marginTop: 12 }]}>
-              Account Name: <Text style={{ fontFamily: "Sora-Medium" }}>{item.accountName}</Text>
-            </Text>
+            {/* Bank Transfer Fields */}
+            {item.payoutMethod === "Bank Transfer" && (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Account Number"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.bankAccountNumber}
+                  onChangeText={(text) =>
+                    setItem({ ...item, bankAccountNumber: text })
+                  }
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
+                
+                {/* Bank Selection */}
+                <TouchableOpacity
+                  style={[styles.input, styles.bankSelector]}
+                  onPress={() => setShowBankModal(true)}
+                >
+                  <Text style={[
+                    styles.bankSelectorText,
+                    !item.selectedBank && styles.placeholderText
+                  ]}>
+                    {item.selectedBank || "Select Bank"}
+                  </Text>
+                  <ChevronDown size={20} color={Colors.gray600} />
+                </TouchableOpacity>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Account Name"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.bankAccountName}
+                  onChangeText={(text) =>
+                    setItem({ ...item, bankAccountName: text })
+                  }
+                />
+              </>
+            )}
+
+            {/* Mobile Money Fields */}
+            {item.payoutMethod === "Mobile Money (Momo)" && (
+              <>
+                <TouchableOpacity
+                  style={[styles.input, styles.bankSelector]}
+                  onPress={() => setShowMobileProviderModal(true)}
+                >
+                  <Text style={[
+                    styles.bankSelectorText,
+                    !item.mobileProvider && styles.placeholderText
+                  ]}>
+                    {item.mobileProvider || "Select Mobile Provider"}
+                  </Text>
+                  <ChevronDown size={20} color={Colors.gray600} />
+                </TouchableOpacity>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mobile Number (e.g., +233XXXXXXXXX)"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.mobileNumber}
+                  onChangeText={(text) =>
+                    setItem({ ...item, mobileNumber: text })
+                  }
+                  keyboardType="phone-pad"
+                />
+              </>
+            )}
+
+            {/* M-Pesa Fields */}
+            {item.payoutMethod === "M-Pesa" && (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="M-Pesa Number (e.g., +254XXXXXXXXX)"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.mpesaNumber}
+                  onChangeText={(text) =>
+                    setItem({ ...item, mpesaNumber: text })
+                  }
+                  keyboardType="phone-pad"
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Account Name"
+                  placeholderTextColor="#B0B0B0"
+                  value={item.mpesaName}
+                  onChangeText={(text) =>
+                    setItem({ ...item, mpesaName: text })
+                  }
+                />
+              </>
+            )}
           </View>
 
           <TouchableOpacity style={styles.button} onPress={saveChanges}>
@@ -414,6 +540,81 @@ const EditProfile = () => {
                 onPress={() => selectPaymentMethod(method)}
               >
                 <Text style={styles.bankItemText}>{method}</Text>
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+          />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Payout Method Selection Modal */}
+      <Modal
+        visible={showPayoutModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPayoutModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Payout Method</Text>
+            <TouchableOpacity
+              onPress={() => setShowPayoutModal(false)}
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Payout Methods List */}
+          <FlatList
+            data={payoutMethods}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item: method }) => (
+              <TouchableOpacity
+                style={styles.bankItem}
+                onPress={() => selectPayoutMethod(method)}
+              >
+                <Text style={styles.bankItemText}>{method}</Text>
+                <Text style={styles.methodDescription}>
+                  {method === "Bank Transfer" && "Traditional bank account transfer"}
+                  {method === "Mobile Money (Momo)" && "MTN, Airtel, Orange, Vodafone mobile money"}
+                  {method === "M-Pesa" && "Safaricom M-Pesa (Kenya)"}
+                </Text>
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+          />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Mobile Provider Selection Modal */}
+      <Modal
+        visible={showMobileProviderModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowMobileProviderModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Mobile Provider</Text>
+            <TouchableOpacity
+              onPress={() => setShowMobileProviderModal(false)}
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Mobile Providers List */}
+          <FlatList
+            data={mobileProviders}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item: provider }) => (
+              <TouchableOpacity
+                style={styles.bankItem}
+                onPress={() => selectMobileProvider(provider)}
+              >
+                <Text style={styles.bankItemText}>{provider}</Text>
               </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={false}
@@ -557,6 +758,12 @@ const styles = StyleSheet.create({
     color: Colors.gray600,
     marginTop: 4,
     marginBottom: 8,
+  },
+  methodDescription: {
+    fontSize: 11,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+    marginTop: 2,
   },
 });
 
