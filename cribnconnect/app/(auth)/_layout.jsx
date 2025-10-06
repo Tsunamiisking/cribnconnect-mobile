@@ -7,7 +7,7 @@ export default function AuthLayout() {
         name="login" 
         options={{ 
           title: 'Welcome Back',
-          headerShown: true,
+          headerShown: false,
           headerBackTitleVisible: false,
         }} 
       />
@@ -15,7 +15,7 @@ export default function AuthLayout() {
         name="register" 
         options={{ 
           title: 'Join Crib & Connect',
-          headerShown: true,
+          headerShown: false,
           headerBackTitleVisible: false,
         }} 
       />

@@ -1,6 +1,9 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { useState } from 'react';
 import { Link, router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/constants/Colors';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react-native';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -11,305 +14,450 @@ export default function RegisterScreen() {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+    
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     
-    // TODO: Add API integration for registration
-    // Example API call:
-    // try {
-    //   const response = await api.register(formData);
-    //   if (response.success) {
-    //     // Store auth token
-    //     // Navigate to main app or onboarding
-    //     router.replace('/(tabs)');
-    //   }
-    // } catch (error) {
-    //   // Handle registration error
-    // }
-    
-    // Temporary navigation for demo
-    setTimeout(() => {
+    try {
+      // TODO: Add API integration for registration
+      // Example API call:
+      // const response = await api.register(formData);
+      // if (response.success) {
+      //   // Store auth token
+      //   // Navigate to main app or onboarding
+      //   router.replace('/(tabs)');
+      // }
+      
+      // Temporary navigation for demo
+      setTimeout(() => {
+        setIsLoading(false);
+        router.replace('/(tabs)');
+      }, 1000);
+    } catch (error) {
       setIsLoading(false);
-      router.replace('/(tabs)');
-    }, 1000);
+      Alert.alert('Error', 'Registration failed. Please try again.');
+    }
+  };
+
+  const handleGoogleSignUp = () => {
+    // TODO: Implement Google Sign-Up
+    Alert.alert('Google Sign-Up', 'Google Sign-Up will be implemented here');
+  };
+
+  const handleAppleSignUp = () => {
+    // TODO: Implement Apple Sign-Up  
+    Alert.alert('Apple Sign-Up', 'Apple Sign-Up will be implemented here');
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-white"
-    >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.content} className="flex-1 px-6 pt-8">
-          
-          {/* Welcome Message */}
-          <View style={styles.header} className="mb-8">
-            <Text style={styles.welcomeTitle} className="text-2xl font-bold text-gray-900 mb-2">
-              Join Crib & Connect
-            </Text>
-            <Text style={styles.welcomeSubtitle} className="text-base text-gray-600">
-              Create your account to get started
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardView} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Join Crib & Connect</Text>
+            <Text style={styles.subtitle}>
+              Create your account to start hosting and connecting
             </Text>
           </View>
 
           {/* Registration Form */}
-          <View style={styles.form} className="mb-8">
-            <View style={styles.nameRow} className="flex-row space-x-4 mb-4">
-              <View style={styles.nameInput} className="flex-1">
-                <Text style={styles.label} className="text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-                  placeholder="First name"
-                  value={formData.firstName}
-                  onChangeText={(value) => updateField('firstName', value)}
-                  autoComplete="given-name"
-                />
+          <View style={styles.form}>
+            {/* Name Row */}
+            <View style={styles.nameRow}>
+              <View style={styles.nameInputContainer}>
+                <Text style={styles.label}>First Name</Text>
+                <View style={[styles.inputContainer, errors.firstName && styles.inputError]}>
+                  <User size={20} color={Colors.gray600} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="First name"
+                    placeholderTextColor={Colors.gray400}
+                    value={formData.firstName}
+                    onChangeText={(value) => updateField('firstName', value)}
+                    autoComplete="given-name"
+                  />
+                </View>
+                {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
               </View>
 
-              <View style={styles.nameInput} className="flex-1">
-                <Text style={styles.label} className="text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-                  placeholder="Last name"
-                  value={formData.lastName}
-                  onChangeText={(value) => updateField('lastName', value)}
-                  autoComplete="family-name"
-                />
+              <View style={styles.nameInputContainer}>
+                <Text style={styles.label}>Last Name</Text>
+                <View style={[styles.inputContainer, errors.lastName && styles.inputError]}>
+                  <User size={20} color={Colors.gray600} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Last name"
+                    placeholderTextColor={Colors.gray400}
+                    value={formData.lastName}
+                    onChangeText={(value) => updateField('lastName', value)}
+                    autoComplete="family-name"
+                  />
+                </View>
+                {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
               </View>
             </View>
 
-            <View style={styles.inputGroup} className="mb-4">
-              <Text style={styles.label} className="text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </Text>
-              <TextInput
-                style={styles.input}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChangeText={(value) => updateField('email', value)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
+            {/* Email Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={[styles.inputContainer, errors.email && styles.inputError]}>
+                <Mail size={20} color={Colors.gray600} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={Colors.gray400}
+                  value={formData.email}
+                  onChangeText={(value) => updateField('email', value)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                />
+              </View>
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
 
-            <View style={styles.inputGroup} className="mb-4">
-              <Text style={styles.label} className="text-sm font-medium text-gray-700 mb-2">
-                Password
-              </Text>
-              <TextInput
-                style={styles.input}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Create a password"
-                value={formData.password}
-                onChangeText={(value) => updateField('password', value)}
-                secureTextEntry
-                autoComplete="new-password"
-              />
+            {/* Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={[styles.inputContainer, errors.password && styles.inputError]}>
+                <Lock size={20} color={Colors.gray600} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Create a password"
+                  placeholderTextColor={Colors.gray400}
+                  value={formData.password}
+                  onChangeText={(value) => updateField('password', value)}
+                  secureTextEntry={!showPassword}
+                  autoComplete="new-password"
+                />
+                <TouchableOpacity 
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? 
+                    <EyeOff size={20} color={Colors.gray600} /> : 
+                    <Eye size={20} color={Colors.gray600} />
+                  }
+                </TouchableOpacity>
+              </View>
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
-            <View style={styles.inputGroup} className="mb-6">
-              <Text style={styles.label} className="text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </Text>
-              <TextInput
-                style={styles.input}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChangeText={(value) => updateField('confirmPassword', value)}
-                secureTextEntry
-                autoComplete="new-password"
-              />
+            {/* Confirm Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
+                <Lock size={20} color={Colors.gray600} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm your password"
+                  placeholderTextColor={Colors.gray400}
+                  value={formData.confirmPassword}
+                  onChangeText={(value) => updateField('confirmPassword', value)}
+                  secureTextEntry={!showConfirmPassword}
+                  autoComplete="new-password"
+                />
+                <TouchableOpacity 
+                  style={styles.eyeIcon}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? 
+                    <EyeOff size={20} color={Colors.gray600} /> : 
+                    <Eye size={20} color={Colors.gray600} />
+                  }
+                </TouchableOpacity>
+              </View>
+              {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
             </View>
 
+            {/* Terms and Privacy */}
+            <View style={styles.terms}>
+              <Text style={styles.termsText}>
+                By creating an account, you agree to our{' '}
+                <Text style={styles.termsLink}>Terms of Service</Text>
+                {' '}and{' '}
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </Text>
+            </View>
+
+            {/* Register Button */}
             <TouchableOpacity 
-              style={styles.registerButton} 
-              className="bg-blue-600 py-4 rounded-lg mb-4"
+              style={[styles.registerButton, isLoading && styles.registerButtonDisabled]} 
               onPress={handleRegister}
               disabled={isLoading}
             >
-              <Text style={styles.registerButtonText} className="text-white text-center font-semibold text-lg">
+              <Text style={styles.registerButtonText}>
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Terms and Privacy */}
-          <View style={styles.terms} className="mb-8">
-            <Text style={styles.termsText} className="text-center text-gray-500 text-sm leading-5">
-              By creating an account, you agree to our{' '}
-              <Text style={styles.termsLink} className="text-blue-600">Terms of Service</Text>
-              {' '}and{' '}
-              <Text style={styles.termsLink} className="text-blue-600">Privacy Policy</Text>
-            </Text>
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>Or sign up with</Text>
+            <View style={styles.dividerLine} />
           </View>
 
-          {/* Social Registration Options */}
-          <View style={styles.socialLogin} className="mb-8">
-            <Text style={styles.orText} className="text-center text-gray-500 mb-4">
-              Or sign up with
-            </Text>
-            
-            <View style={styles.socialButtons} className="flex-row space-x-4">
-              <TouchableOpacity style={styles.socialButton} className="flex-1 bg-gray-100 py-3 rounded-lg">
-                <Text style={styles.socialButtonText} className="text-center font-medium">
-                  📱 Google
-                </Text>
+          {/* Social Sign Up */}
+          <View style={styles.socialLogin}>
+            <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignUp}>
+              <Text style={styles.socialButtonText}>🔍 Continue with Google</Text>
+            </TouchableOpacity>
+
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignUp}>
+                <Text style={styles.socialButtonText}>🍎 Continue with Apple</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.socialButton} className="flex-1 bg-gray-100 py-3 rounded-lg">
-                <Text style={styles.socialButtonText} className="text-center font-medium">
-                  📘 Facebook
-                </Text>
-              </TouchableOpacity>
-            </View>
+            )}
           </View>
 
           {/* Sign In Link */}
-          <View style={styles.footer} className="flex-row justify-center items-center pb-8">
-            <Text style={styles.footerText} className="text-gray-600">
-              Already have an account? 
-            </Text>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity>
-                <Text style={styles.signInLink} className="text-blue-600 font-semibold ml-1">
-                  Sign In
-                </Text>
+                <Text style={styles.signInLink}>Sign In</Text>
               </TouchableOpacity>
             </Link>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.white,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingBottom: 24,
   },
   header: {
-    marginBottom: 32,
+    paddingTop: 60,
+    paddingBottom: 40,
+    alignItems: 'center',
   },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
+  title: {
+    fontSize: 28,
+    fontFamily: 'Sora-Bold',
+    color: Colors.black,
+    textAlign: 'center',
     marginBottom: 8,
   },
-  welcomeSubtitle: {
+  subtitle: {
     fontSize: 16,
-    color: '#6b7280',
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   form: {
     marginBottom: 32,
   },
   nameRow: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
+    gap: 12,
+    marginBottom: 20,
   },
-  nameInput: {
+  nameInputContainer: {
     flex: 1,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
+    fontFamily: 'Sora-Medium',
+    color: Colors.black,
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#f9fafb',
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray50,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
+    borderColor: Colors.gray200,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: 52,
+  },
+  inputError: {
+    borderColor: Colors.red500,
+    backgroundColor: '#FEF2F2',
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
+    fontFamily: 'Sora-Regular',
+    color: Colors.black,
+    height: '100%',
   },
-  registerButton: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 16,
-    borderRadius: 8,
-    marginBottom: 16,
+  eyeIcon: {
+    padding: 4,
+    marginLeft: 8,
   },
-  registerButtonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 18,
+  errorText: {
+    fontSize: 12,
+    fontFamily: 'Sora-Regular',
+    color: Colors.red500,
+    marginTop: 4,
   },
   terms: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   termsText: {
-    textAlign: 'center',
-    color: '#6b7280',
     fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+    textAlign: 'center',
     lineHeight: 20,
   },
   termsLink: {
-    color: '#2563eb',
+    color: Colors.primary,
+    fontFamily: 'Sora-Medium',
+  },
+  registerButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  registerButtonDisabled: {
+    backgroundColor: Colors.gray300,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  registerButtonText: {
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.white,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 32,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.gray200,
+  },
+  dividerText: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray500,
+    marginHorizontal: 16,
   },
   socialLogin: {
+    gap: 12,
     marginBottom: 32,
   },
-  orText: {
-    textAlign: 'center',
-    color: '#6b7280',
-    marginBottom: 16,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    gap: 16,
-  },
   socialButton: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   socialButtonText: {
-    textAlign: 'center',
-    fontWeight: '500',
+    fontSize: 16,
+    fontFamily: 'Sora-Medium',
+    color: Colors.black,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   footerText: {
-    color: '#6b7280',
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
   },
   signInLink: {
-    color: '#2563eb',
-    fontWeight: '600',
-    marginLeft: 4,
+    fontSize: 14,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.primary,
   },
 });

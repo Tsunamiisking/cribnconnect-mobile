@@ -1,231 +1,336 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { useState } from 'react';
 import { Link, router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/constants/Colors';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    
+    if (!password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async () => {
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     
-    // TODO: Add API integration for login
-    // Example API call:
-    // try {
-    //   const response = await api.login({ email, password });
-    //   if (response.success) {
-    //     // Store auth token
-    //     // Navigate to main app
-    //     router.replace('/(tabs)');
-    //   }
-    // } catch (error) {
-    //   // Handle login error
-    // }
-    
-    // Temporary navigation for demo
-    setTimeout(() => {
+    try {
+      // TODO: Add API integration for login
+      // Example API call:
+      // const response = await api.login({ email, password });
+      // if (response.success) {
+      //   // Store auth token
+      //   // Navigate to main app
+      //   router.replace('/(tabs)');
+      // }
+      
+      // Temporary navigation for demo
+      setTimeout(() => {
+        setIsLoading(false);
+        router.replace('/(tabs)');
+      }, 1000);
+    } catch (error) {
       setIsLoading(false);
-      router.replace('/(tabs)');
-    }, 1000);
+      Alert.alert('Error', 'Login failed. Please try again.');
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    // TODO: Implement Google Sign-In
+    Alert.alert('Google Sign-In', 'Google Sign-In will be implemented here');
+  };
+
+  const handleAppleSignIn = () => {
+    // TODO: Implement Apple Sign-In  
+    Alert.alert('Apple Sign-In', 'Apple Sign-In will be implemented here');
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-white"
-    >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.content} className="flex-1 px-6 pt-8">
-          
-          {/* Welcome Message */}
-          <View style={styles.header} className="mb-8">
-            <Text style={styles.welcomeTitle} className="text-2xl font-bold text-gray-900 mb-2">
-              Welcome back!
-            </Text>
-            <Text style={styles.welcomeSubtitle} className="text-base text-gray-600">
-              Sign in to continue your journey
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardView} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back!</Text>
+            <Text style={styles.subtitle}>
+              Sign in to continue your journey with Crib & Connect
             </Text>
           </View>
 
           {/* Login Form */}
-          <View style={styles.form} className="mb-8">
-            <View style={styles.inputGroup} className="mb-4">
-              <Text style={styles.label} className="text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </Text>
-              <TextInput
-                style={styles.input}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Enter your email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
+          <View style={styles.form}>
+            {/* Email Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={[styles.inputContainer, errors.email && styles.inputError]}>
+                <Mail size={20} color={Colors.gray600} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={Colors.gray400}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (errors.email) {
+                      setErrors(prev => ({ ...prev, email: null }));
+                    }
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                />
+              </View>
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
 
-            <View style={styles.inputGroup} className="mb-6">
-              <Text style={styles.label} className="text-sm font-medium text-gray-700 mb-2">
-                Password
-              </Text>
-              <TextInput
-                style={styles.input}
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-base"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="password"
-              />
+            {/* Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={[styles.inputContainer, errors.password && styles.inputError]}>
+                <Lock size={20} color={Colors.gray600} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor={Colors.gray400}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (errors.password) {
+                      setErrors(prev => ({ ...prev, password: null }));
+                    }
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoComplete="password"
+                />
+                <TouchableOpacity 
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? 
+                    <EyeOff size={20} color={Colors.gray600} /> : 
+                    <Eye size={20} color={Colors.gray600} />
+                  }
+                </TouchableOpacity>
+              </View>
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
+            {/* Forgot Password */}
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            {/* Login Button */}
             <TouchableOpacity 
-              style={styles.loginButton} 
-              className="bg-blue-600 py-4 rounded-lg mb-4"
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
               onPress={handleLogin}
               disabled={isLoading}
             >
-              <Text style={styles.loginButtonText} className="text-white text-center font-semibold text-lg">
+              <Text style={styles.loginButtonText}>
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.forgotPassword} className="items-center">
-              <Text style={styles.forgotPasswordText} className="text-blue-600 text-base">
-                Forgot your password?
-              </Text>
-            </TouchableOpacity>
           </View>
 
-          {/* Social Login Options */}
-          <View style={styles.socialLogin} className="mb-8">
-            <Text style={styles.orText} className="text-center text-gray-500 mb-4">
-              Or continue with
-            </Text>
-            
-            <View style={styles.socialButtons} className="flex-row space-x-4">
-              <TouchableOpacity style={styles.socialButton} className="flex-1 bg-gray-100 py-3 rounded-lg">
-                <Text style={styles.socialButtonText} className="text-center font-medium">
-                  📱 Google
-                </Text>
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>Or continue with</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Social Login */}
+          <View style={styles.socialLogin}>
+            <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignIn}>
+              <Text style={styles.socialButtonText}>🔍 Continue with Google</Text>
+            </TouchableOpacity>
+
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignIn}>
+                <Text style={styles.socialButtonText}>🍎 Continue with Apple</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.socialButton} className="flex-1 bg-gray-100 py-3 rounded-lg">
-                <Text style={styles.socialButtonText} className="text-center font-medium">
-                  📘 Facebook
-                </Text>
-              </TouchableOpacity>
-            </View>
+            )}
           </View>
 
           {/* Sign Up Link */}
-          <View style={styles.footer} className="flex-row justify-center items-center">
-            <Text style={styles.footerText} className="text-gray-600">
-              Don't have an account? 
-            </Text>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don't have an account? </Text>
             <Link href="/(auth)/register" asChild>
               <TouchableOpacity>
-                <Text style={styles.signUpLink} className="text-blue-600 font-semibold ml-1">
-                  Sign Up
-                </Text>
+                <Text style={styles.signUpLink}>Sign Up</Text>
               </TouchableOpacity>
             </Link>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.white,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 40,
+    paddingBottom: 32,
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 40,
+    alignItems: 'center',
   },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
+  title: {
+    fontSize: 28,
+    fontFamily: 'Sora-Bold',
+    color: Colors.primary,
     marginBottom: 8,
+    textAlign: 'center',
   },
-  welcomeSubtitle: {
+  subtitle: {
     fontSize: 16,
-    color: '#6b7280',
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   form: {
     marginBottom: 32,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.primary,
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#f9fafb',
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
+    borderColor: Colors.borderColor,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: Platform.OS === 'ios' ? 50 : 60,
+  },
+  inputError: {
+    borderColor: Colors.warning,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
+    fontFamily: 'Sora-Regular',
+    color: Colors.primary,
   },
-  loginButton: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 16,
-    borderRadius: 8,
-    marginBottom: 16,
+  eyeIcon: {
+    padding: 4,
   },
-  loginButtonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 18,
+  errorText: {
+    fontSize: 12,
+    fontFamily: 'Sora-Regular',
+    color: Colors.warning,
+    marginTop: 4,
   },
   forgotPassword: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
+    marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#2563eb',
+    fontSize: 14,
+    fontFamily: 'Sora-Medium',
+    color: Colors.primary,
+  },
+  loginButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
+  loginButtonText: {
     fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.white,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.borderColor,
+  },
+  dividerText: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+    marginHorizontal: 16,
   },
   socialLogin: {
     marginBottom: 32,
-  },
-  orText: {
-    textAlign: 'center',
-    color: '#6b7280',
-    marginBottom: 16,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    gap: 16,
+    gap: 12,
   },
   socialButton: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-    paddingVertical: 12,
-    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+    borderRadius: 12,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
   },
   socialButtonText: {
-    textAlign: 'center',
-    fontWeight: '500',
+    fontSize: 16,
+    fontFamily: 'Sora-Medium',
+    color: Colors.primary,
   },
   footer: {
     flexDirection: 'row',
@@ -233,11 +338,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#6b7280',
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
   },
   signUpLink: {
-    color: '#2563eb',
-    fontWeight: '600',
-    marginLeft: 4,
+    fontSize: 14,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.primary,
   },
 });
