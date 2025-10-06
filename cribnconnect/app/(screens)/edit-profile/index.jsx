@@ -32,10 +32,13 @@ const EditProfile = () => {
     bankName: "",
     accountNumber: "",
     accountName: "Douglas Allen Oluwatobi",
+    paymentMethod: "",
   });
 
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [paymentSearchTerm, setPaymentSearchTerm] = useState("");
 
   // List of Nigerian banks
   const nigerianBanks = [
@@ -81,15 +84,40 @@ const EditProfile = () => {
     "Rand Merchant Bank",
   ];
 
+  // Paystack payment methods
+  const paystackPaymentMethods = [
+    "Card (Visa, Mastercard, Verve)",
+    "Bank Transfer",
+    "USSD",
+    "Mobile Money",
+    "QR Code",
+    "Apple Pay",
+    "Google Pay",
+    "Bank Branch",
+    "POS",
+    "EFT",
+  ];
+
   // Filter banks based on search term
   const filteredBanks = nigerianBanks.filter(bank =>
     bank.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Filter payment methods based on search term
+  const filteredPaymentMethods = paystackPaymentMethods.filter(method =>
+    method.toLowerCase().includes(paymentSearchTerm.toLowerCase())
   );
 
   const selectBank = (bankName) => {
     setItem({ ...item, bankName });
     setShowBankModal(false);
     setSearchTerm("");
+  };
+
+  const selectPaymentMethod = (paymentMethod) => {
+    setItem({ ...item, paymentMethod });
+    setShowPaymentModal(false);
+    setPaymentSearchTerm("");
   };
 
   const saveChanges = () => {
@@ -214,8 +242,34 @@ const EditProfile = () => {
               </View>
             </View>
           </View>
-          <View style={{ marginHorizontal: 18, marginTop: 10 }}>
-            <Text style={styles.label}>Payment and Privacy</Text>
+          
+          {/* Payment Methods Section */}
+          <View style={{ marginHorizontal: 18, marginTop: 24 }}>
+            <Text style={styles.label}>Payment Methods</Text>
+            <Text style={styles.sectionDescription}>
+              Choose your preferred payment method for transactions
+            </Text>
+            
+            {/* Payment Method Selection */}
+            <TouchableOpacity
+              style={[styles.input, styles.bankSelector]}
+              onPress={() => setShowPaymentModal(true)}
+            >
+              <Text style={[
+                styles.bankSelectorText,
+                !item.paymentMethod && styles.placeholderText
+              ]}>
+                {item.paymentMethod || "Select Payment Method"}
+              </Text>
+              <ChevronDown size={20} color={Colors.gray600} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ marginHorizontal: 18, marginTop: 24 }}>
+            <Text style={styles.label}>Payouts</Text>
+            <Text style={styles.sectionDescription}>
+              Set up your bank account for receiving payments
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="Account Number"
@@ -313,6 +367,53 @@ const EditProfile = () => {
                 onPress={() => selectBank(bank)}
               >
                 <Text style={styles.bankItemText}>{bank}</Text>
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+          />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Payment Method Selection Modal */}
+      <Modal
+        visible={showPaymentModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPaymentModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Payment Method</Text>
+            <TouchableOpacity
+              onPress={() => setShowPaymentModal(false)}
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Search Input */}
+          <View style={styles.searchContainer}>
+            <Search size={20} color={Colors.gray600} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search payment methods..."
+              placeholderTextColor="#B0B0B0"
+              value={paymentSearchTerm}
+              onChangeText={setPaymentSearchTerm}
+            />
+          </View>
+
+          {/* Payment Methods List */}
+          <FlatList
+            data={filteredPaymentMethods}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item: method }) => (
+              <TouchableOpacity
+                style={styles.bankItem}
+                onPress={() => selectPaymentMethod(method)}
+              >
+                <Text style={styles.bankItemText}>{method}</Text>
               </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={false}
@@ -449,6 +550,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Sora-Regular",
     color: Colors.primary,
+  },
+  sectionDescription: {
+    fontSize: 12,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+    marginTop: 4,
+    marginBottom: 8,
   },
 });
 
