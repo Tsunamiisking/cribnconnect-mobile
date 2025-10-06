@@ -1,9 +1,9 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { useState } from 'react';
-import { Link, router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react-native';
+import { Link, router } from 'expo-router';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react-native';
+import { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
