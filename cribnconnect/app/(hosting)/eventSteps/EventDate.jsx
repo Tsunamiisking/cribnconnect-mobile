@@ -15,7 +15,33 @@ if (!DatePicker.displayName) {
 
 export default function EventDate({ styles }) {
   const { eventData, updateEventData } = useHostingStore();
-  const [selectedDate, setSelectedDate] = useState(eventData.date || "");
+  
+  // Helper function to convert ISO string to date picker format (YYYY/MM/DD)
+  const formatDateForPicker = (dateValue) => {
+    if (!dateValue) return "";
+    
+    try {
+      // If it's already in YYYY/MM/DD format, return as is
+      if (typeof dateValue === 'string' && dateValue.match(/^\d{4}\/\d{2}\/\d{2}$/)) {
+        return dateValue;
+      }
+      
+      // If it's an ISO string, convert it
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return "";
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}/${month}/${day}`;
+    } catch (error) {
+      console.warn('Error formatting date for picker:', error);
+      return "";
+    }
+  };
+  
+  const [selectedDate, setSelectedDate] = useState(formatDateForPicker(eventData.date));
   const [selectedTime, setSelectedTime] = useState(eventData.time || "");
   const [selectedEndTime, setSelectedEndTime] = useState(eventData.endTime || "");
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -52,6 +78,20 @@ export default function EventDate({ styles }) {
       }
     }
   }, []);
+
+  // Sync with store data when navigating back to this step
+  useEffect(() => {
+    const formattedDate = formatDateForPicker(eventData.date);
+    if (formattedDate !== selectedDate) {
+      setSelectedDate(formattedDate);
+    }
+    if (eventData.time !== selectedTime) {
+      setSelectedTime(eventData.time || "");
+    }
+    if (eventData.endTime !== selectedEndTime) {
+      setSelectedEndTime(eventData.endTime || "");
+    }
+  }, [eventData.date, eventData.time, eventData.endTime]);
 
   // Helper function to parse time string like "2:30 PM"
   const parseTimeString = (timeStr) => {
@@ -94,10 +134,33 @@ export default function EventDate({ styles }) {
   // Update store when date changes
   useEffect(() => {
     if (selectedDate) {
-      // Convert YYYY/MM/DD to Date object for backend
-      const [year, month, day] = selectedDate.split('/');
-      const dateObj = new Date(year, month - 1, day);
-      updateEventData('date', dateObj.toISOString());
+      try {
+        // Convert YYYY/MM/DD to Date object for backend
+        const [year, month, day] = selectedDate.split('/');
+        
+        // Validate date components
+        const yearNum = parseInt(year);
+        const monthNum = parseInt(month);
+        const dayNum = parseInt(day);
+        
+        if (isNaN(yearNum) || isNaN(monthNum) || isNaN(dayNum) || 
+            monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
+          console.warn('Invalid date components:', { year: yearNum, month: monthNum, day: dayNum });
+          return;
+        }
+        
+        const dateObj = new Date(yearNum, monthNum - 1, dayNum);
+        
+        // Check if the date is valid
+        if (isNaN(dateObj.getTime())) {
+          console.warn('Invalid date object created:', dateObj);
+          return;
+        }
+        
+        updateEventData('date', dateObj.toISOString());
+      } catch (error) {
+        console.error('Error processing date:', error, 'selectedDate:', selectedDate);
+      }
     }
   }, [selectedDate]);
 
@@ -237,7 +300,22 @@ export default function EventDate({ styles }) {
               onMonthYearChange={handleMonthYearChange}
               onDateChange={handleOnDateChange}
               selected={selectedDate}
-              current={selectedDate || new Date().toISOString().split("T")[0].replace(/-/g, "/")}
+              current={(() => {
+                try {
+                  if (selectedDate) {
+                    // Validate the selectedDate format
+                    const [year, month, day] = selectedDate.split('/');
+                    if (year && month && day && !isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                      return selectedDate;
+                    }
+                  }
+                  // Fallback to current date if selectedDate is invalid
+                  return new Date().toISOString().split("T")[0].replace(/-/g, "/");
+                } catch (error) {
+                  console.warn('Error with date formatting:', error);
+                  return new Date().toISOString().split("T")[0].replace(/-/g, "/");
+                }
+              })()}
               mode="calendar"
               isGregorian={true}
               minimumDate={new Date()

@@ -172,7 +172,7 @@ export default function EventTicket({ styles }) {
             {/* Add Predefined Ticket Types */}
             {getAvailablePredefinedTypes().length > 0 && (
               <View style={{ marginTop: 16 }}>
-                <Text style={styles.label}>Quick Add Ticket Types</Text>
+                {/* <Text style={styles.label}>Quick Add Ticket Types</Text> */}
                 <View style={styles.verticalOptions}>
                   {getAvailablePredefinedTypes().map((type) => (
                     <TouchableOpacity
@@ -182,7 +182,7 @@ export default function EventTicket({ styles }) {
                     >
                       <View style={styles.typeOptionRow}>
                         <Plus size={20} color={Colors.primary} />
-                        <Text style={styles.typeOptionText}>Add {type.name} Ticket</Text>
+                        <Text style={styles.labelText}>Add {type.name} Ticket</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -199,7 +199,7 @@ export default function EventTicket({ styles }) {
                 >
                   <View style={styles.typeOptionRow}>
                     <Plus size={20} color={Colors.primary} />
-                    <Text style={styles.typeOptionText}>Add Custom Ticket Type</Text>
+                    <Text style={styles.labelText}>Add Custom Ticket Type</Text>
                   </View>
                 </TouchableOpacity>
               ) : (

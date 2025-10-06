@@ -61,7 +61,7 @@ const EventSpecialPerks = ({ styles }) => {
   };
 
   const renderPerkCategory = (categoryName, perks) => (
-    <View key={categoryName} style={{ marginBottom: 24 }}>
+    <View key={categoryName}style={{ marginVertical: 10 }}>
       <Text style={[styles.label, { marginBottom: 12 }]}>
         {categoryName}
       </Text>
@@ -85,7 +85,7 @@ const EventSpecialPerks = ({ styles }) => {
                   color={isSelected ? Colors.primary : Colors.gray600} 
                 />
                 <Text style={[
-                  styles.typeOptionText,
+                  styles.labelText,
                   isSelected && styles.selectedTypeOptionText
                 ]}>
                   {perk.name}

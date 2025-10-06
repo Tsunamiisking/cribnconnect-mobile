@@ -107,7 +107,7 @@ export default function EventType({ styles }) {
 
       <View className="mt-6">
         {Object.entries(eventCategories).map(([category, subtypes]) => (
-          <View key={category} style={{ marginBottom: 24 }}>
+          <View key={category} style={{ marginBottom: 10 }}>
             <TouchableOpacity
               onPress={() => selectCategory(category)}
               style={[
@@ -117,7 +117,7 @@ export default function EventType({ styles }) {
               ]}
             >
               <Text style={[
-                styles.labelText,
+                styles.typeOptionText,
                 selectedCategory === category && styles.selectedTypeOptionText
               ]}>
                 {category}

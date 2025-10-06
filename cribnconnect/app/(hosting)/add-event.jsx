@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     fontSize: 16,
-    fontFamily: "Sora-SemiBold",
+    fontFamily: "Sora-Regular",
     alignItems: "center",
     paddingVertical: 12,
     paddingLeft: 12,
@@ -274,8 +274,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.primary,
     fontFamily: "Sora-Regular",
-    width: "100%",
-    flexWrap: "wrap",
   },
   uploadContainer: {
     borderWidth: 1,
