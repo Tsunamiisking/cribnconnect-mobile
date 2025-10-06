@@ -241,7 +241,7 @@ const EditProfile = () => {
               <ChevronDown size={20} color={Colors.gray600} />
             </TouchableOpacity>
 
-            <TextInput
+            {/* <TextInput
               style={styles.input}
               placeholder="Account Name"
               placeholderTextColor="#B0B0B0"
@@ -249,7 +249,10 @@ const EditProfile = () => {
               onChangeText={(text) =>
                 setItem({ ...item, accountName: text })
               }
-            />
+            /> */}
+            <Text style={[styles.searchInput, { marginTop: 12 }]}>
+              Account Name: <Text style={{ fontFamily: "Sora-Medium" }}>{item.accountName}</Text>
+            </Text>
           </View>
 
           <TouchableOpacity style={styles.button} onPress={saveChanges}>
