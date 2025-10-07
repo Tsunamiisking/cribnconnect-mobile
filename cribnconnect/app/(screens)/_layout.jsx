@@ -9,6 +9,7 @@ export default function ScreensLayout() {
         options={{
           title: "Apartment Details",
           // headerBackTitle: "Back",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -16,6 +17,7 @@ export default function ScreensLayout() {
         options={{
           title: "Event Details",
           // headerBackTitle: "Back",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -31,6 +33,7 @@ export default function ScreensLayout() {
         options={{
           title: "Profile",
           // headerBackTitle: "Back",
+          headerShown: false,
         }}
       />
       <Stack.Screen
