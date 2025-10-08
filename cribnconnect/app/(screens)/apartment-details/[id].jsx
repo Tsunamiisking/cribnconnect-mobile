@@ -24,9 +24,10 @@ import {
   X,
   ZoomIn
 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Alert,
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -126,14 +127,66 @@ const ApartmentDetailsScreen = () => {
   const fullScreenFlatListRef = React.useRef(null);
   const mainFlatListRef = React.useRef(null);
 
+  // Shimmer animation
+  const shimmerAnimation = useRef(new Animated.Value(0)).current;
+
   // Mock apartment data - in real app, fetch based on id
   useEffect(() => {
+    // Start shimmer animation
+    const shimmerLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(shimmerAnimation, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    shimmerLoop.start();
+
     // Simulate API call
     setTimeout(() => {
       setApartment(mockApartmentData);
       setLoading(false);
+      shimmerLoop.stop();
     }, 1000);
+
+    return () => shimmerLoop.stop();
   }, [id]);
+
+  // Shimmer component
+  const ShimmerView = ({ style, children }) => {
+    const shimmerOpacity = shimmerAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.3, 0.8],
+    });
+
+    const shimmerTranslateX = shimmerAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-100, 100],
+    });
+
+    return (
+      <View style={[styles.skeleton, style]}>
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              opacity: shimmerOpacity,
+              transform: [{ translateX: shimmerTranslateX }],
+              backgroundColor: Colors.white,
+            },
+          ]}
+        />
+        {children}
+      </View>
+    );
+  };
 
   const handleShare = () => {
     Alert.alert('Share', 'Share functionality will be implemented here');
@@ -355,8 +408,101 @@ const ApartmentDetailsScreen = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading apartment details...</Text>
+        {/* Header Skeleton */}
+        <View style={styles.header}>
+          <ShimmerView style={styles.headerButton} />
+          <View style={styles.headerActions}>
+            <ShimmerView style={styles.headerButton} />
+            <ShimmerView style={styles.headerButton} />
+          </View>
+        </View>
+
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Media Skeleton */}
+          <View style={styles.mediaSection}>
+            <ShimmerView style={styles.mediaContainer} />
+          </View>
+
+          {/* Content Skeleton */}
+          <View style={styles.infoSection}>
+            {/* Title Skeleton */}
+            <View style={styles.titleSection}>
+              <View style={styles.titleRow}>
+                <ShimmerView style={styles.skeletonTitle} />
+                <ShimmerView style={styles.skeletonType} />
+              </View>
+              <ShimmerView style={styles.skeletonSubtitle} />
+            </View>
+
+            {/* Location Skeleton */}
+            <View style={styles.locationSection}>
+              <ShimmerView style={styles.skeletonIcon} />
+              <ShimmerView style={styles.skeletonLocation} />
+            </View>
+
+            {/* Rating Skeleton */}
+            <View style={styles.ratingSection}>
+              <ShimmerView style={styles.skeletonIcon} />
+              <ShimmerView style={styles.skeletonRating} />
+            </View>
+
+            {/* Room Details Skeleton */}
+            <View style={styles.roomSection}>
+              <View style={styles.roomRow}>
+                {[1, 2, 3, 4].map((item) => (
+                  <View key={item} style={styles.roomItem}>
+                    <ShimmerView style={styles.skeletonIcon} />
+                    <ShimmerView style={styles.skeletonRoomText} />
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Price Skeleton */}
+            <View style={styles.pricingSection}>
+              <ShimmerView style={styles.skeletonPrice} />
+              <ShimmerView style={styles.skeletonWeeklyPrice} />
+            </View>
+
+            {/* Description Skeleton */}
+            <View style={styles.descriptionSection}>
+              <ShimmerView style={styles.skeletonSectionTitle} />
+              <ShimmerView style={styles.skeletonDescriptionLine} />
+              <ShimmerView style={styles.skeletonDescriptionLine} />
+              <ShimmerView style={styles.skeletonDescriptionLineShort} />
+            </View>
+
+            {/* Amenities Skeleton */}
+            <View style={styles.amenitiesSection}>
+              <ShimmerView style={styles.skeletonSectionTitle} />
+              <View style={styles.amenitiesGrid}>
+                {[1, 2, 3, 4, 5, 6].map((item) => (
+                  <ShimmerView key={item} style={styles.skeletonAmenity} />
+                ))}
+              </View>
+            </View>
+
+            {/* Host Skeleton */}
+            <View style={styles.hostSection}>
+              <ShimmerView style={styles.skeletonSectionTitle} />
+              <View style={styles.hostInfo}>
+                <ShimmerView style={styles.skeletonHostAvatar} />
+                <View style={styles.hostDetails}>
+                  <ShimmerView style={styles.skeletonHostName} />
+                  <ShimmerView style={styles.skeletonHostJoined} />
+                  <ShimmerView style={styles.skeletonHostRating} />
+                </View>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Bottom Bar Skeleton */}
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomPricing}>
+            <ShimmerView style={styles.skeletonBottomPrice} />
+          </View>
+          <ShimmerView style={styles.skeletonBookButton} />
         </View>
       </SafeAreaView>
     );
@@ -1325,6 +1471,118 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Sora-SemiBold',
     color: Colors.white,
+  },
+  // Skeleton Styles
+  skeleton: {
+    backgroundColor: Colors.gray200,
+    borderRadius: 4,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  skeletonTitle: {
+    height: 28,
+    flex: 1,
+    marginRight: 16,
+    borderRadius: 6,
+  },
+  skeletonType: {
+    height: 32,
+    width: 80,
+    borderRadius: 8,
+  },
+  skeletonSubtitle: {
+    height: 20,
+    width: '60%',
+    borderRadius: 4,
+  },
+  skeletonIcon: {
+    height: 16,
+    width: 16,
+    borderRadius: 8,
+  },
+  skeletonLocation: {
+    height: 16,
+    flex: 1,
+    marginLeft: 8,
+    borderRadius: 4,
+  },
+  skeletonRating: {
+    height: 16,
+    width: 120,
+    marginLeft: 4,
+    borderRadius: 4,
+  },
+  skeletonRoomText: {
+    height: 14,
+    width: 50,
+    marginLeft: 4,
+    borderRadius: 4,
+  },
+  skeletonPrice: {
+    height: 32,
+    width: 200,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  skeletonWeeklyPrice: {
+    height: 16,
+    width: 150,
+    borderRadius: 4,
+  },
+  skeletonSectionTitle: {
+    height: 20,
+    width: 150,
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  skeletonDescriptionLine: {
+    height: 16,
+    width: '100%',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonDescriptionLineShort: {
+    height: 16,
+    width: '70%',
+    borderRadius: 4,
+  },
+  skeletonAmenity: {
+    height: 40,
+    width: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  skeletonHostAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  skeletonHostName: {
+    height: 20,
+    width: 120,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonHostJoined: {
+    height: 16,
+    width: 100,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonHostRating: {
+    height: 14,
+    width: 80,
+    borderRadius: 4,
+  },
+  skeletonBottomPrice: {
+    height: 20,
+    width: 150,
+    borderRadius: 4,
+  },
+  skeletonBookButton: {
+    height: 48,
+    width: 120,
+    borderRadius: 12,
   },
 });
 
