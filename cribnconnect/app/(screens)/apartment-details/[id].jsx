@@ -6,7 +6,10 @@ import {
   Bed,
   Building2,
   Caravan,
+  ChevronLeft,
+  ChevronRight,
   Container,
+  Grid3X3,
   Heart,
   Hotel,
   House,
@@ -17,7 +20,9 @@ import {
   Star,
   Tent,
   Trees,
-  Users
+  Users,
+  X,
+  ZoomIn
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -25,7 +30,9 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Modal,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -111,6 +118,13 @@ const ApartmentDetailsScreen = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [apartment, setApartment] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showFullScreenMedia, setShowFullScreenMedia] = useState(false);
+  const [fullScreenIndex, setFullScreenIndex] = useState(0);
+  const [showAllPhotos, setShowAllPhotos] = useState(false);
+  
+  // Create refs for FlatLists
+  const fullScreenFlatListRef = React.useRef(null);
+  const mainFlatListRef = React.useRef(null);
 
   // Mock apartment data - in real app, fetch based on id
   useEffect(() => {
@@ -127,6 +141,182 @@ const ApartmentDetailsScreen = () => {
 
   const handleBooking = () => {
     Alert.alert('Booking', 'Booking functionality will be implemented here');
+  };
+
+  const openFullScreenMedia = (index) => {
+    setFullScreenIndex(index);
+    setShowFullScreenMedia(true);
+    // Scroll to the correct index after modal opens
+    setTimeout(() => {
+      if (fullScreenFlatListRef.current) {
+        fullScreenFlatListRef.current.scrollToIndex({
+          index: index,
+          animated: false,
+        });
+      }
+    }, 100);
+  };
+
+  const openAllPhotos = () => {
+    setShowAllPhotos(true);
+  };
+
+  const closeFullScreenMedia = () => {
+    setShowFullScreenMedia(false);
+  };
+
+  const closeAllPhotos = () => {
+    setShowAllPhotos(false);
+  };
+
+  // Navigate to previous image
+  const goToPrevious = () => {
+    if (fullScreenIndex > 0 && fullScreenFlatListRef.current) {
+      const newIndex = fullScreenIndex - 1;
+      try {
+        fullScreenFlatListRef.current.scrollToIndex({
+          index: newIndex,
+          animated: true,
+        });
+        setFullScreenIndex(newIndex);
+      } catch (error) {
+        console.log('Error scrolling to previous:', error);
+        // Fallback: scroll by offset
+        fullScreenFlatListRef.current.scrollToOffset({
+          offset: newIndex * screenWidth,
+          animated: true,
+        });
+        setFullScreenIndex(newIndex);
+      }
+    }
+  };
+
+  // Navigate to next image
+  const goToNext = () => {
+    if (fullScreenIndex < apartment.media.length - 1 && fullScreenFlatListRef.current) {
+      const newIndex = fullScreenIndex + 1;
+      try {
+        fullScreenFlatListRef.current.scrollToIndex({
+          index: newIndex,
+          animated: true,
+        });
+        setFullScreenIndex(newIndex);
+      } catch (error) {
+        console.log('Error scrolling to next:', error);
+        // Fallback: scroll by offset
+        fullScreenFlatListRef.current.scrollToOffset({
+          offset: newIndex * screenWidth,
+          animated: true,
+        });
+        setFullScreenIndex(newIndex);
+      }
+    }
+  };
+
+  // Get image dimensions and determine if it's portrait/landscape
+  const getImageAspectRatio = (item) => {
+    // Default to landscape if no dimensions available
+    if (!item.width || !item.height) return 'landscape';
+    const ratio = item.width / item.height;
+    if (ratio > 1.3) return 'landscape';
+    if (ratio < 0.75) return 'portrait';
+    return 'square';
+  };
+
+  // Enhanced media rendering with improved layout
+  const renderEnhancedMediaItem = ({ item, index }) => {
+    const aspectRatio = getImageAspectRatio(item);
+    const isPortrait = aspectRatio === 'portrait';
+    
+    return (
+      <TouchableOpacity 
+        style={[styles.mediaContainer, isPortrait && styles.portraitMediaContainer]}
+        onPress={() => openFullScreenMedia(index)}
+        activeOpacity={0.9}
+      >
+        {item.resource_type === 'video' ? (
+          <View style={styles.videoContainer}>
+            <Image 
+              source={{ uri: item.localThumbnail || item.localUri }} 
+              style={[
+                styles.mediaImage,
+                isPortrait ? styles.portraitImage : styles.landscapeImage
+              ]}
+              resizeMode={isPortrait ? "contain" : "cover"}
+            />
+            <View style={styles.playButton}>
+              <Play size={24} color={Colors.white} />
+            </View>
+            <View style={styles.videoLabel}>
+              <Play size={16} color={Colors.white} />
+              <Text style={styles.videoLabelText}>Video</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.imageContainer}>
+            <Image 
+              source={{ uri: item.localUri || item.url }} 
+              style={[
+                styles.mediaImage,
+                isPortrait ? styles.portraitImage : styles.landscapeImage
+              ]}
+              resizeMode={isPortrait ? "contain" : "cover"}
+            />
+            <View style={styles.zoomIndicator}>
+              <ZoomIn size={16} color={Colors.white} />
+            </View>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  // Grid view for all photos modal
+  const renderGridItem = ({ item, index }) => (
+    <TouchableOpacity 
+      style={styles.gridItem}
+      onPress={() => {
+        closeAllPhotos();
+        openFullScreenMedia(index);
+      }}
+    >
+      <Image 
+        source={{ uri: item.localThumbnail || item.localUri || item.url }} 
+        style={styles.gridImage}
+        resizeMode="cover"
+      />
+      {item.resource_type === 'video' && (
+        <View style={styles.gridVideoIndicator}>
+          <Play size={16} color={Colors.white} />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
+  // Full-screen media viewer
+  const renderFullScreenMedia = ({ item, index }) => {
+    return (
+      <View style={styles.fullScreenContainer} key={`fullscreen-${index}`}>
+        {item.resource_type === 'video' ? (
+          <TouchableOpacity style={styles.fullScreenVideoContainer}>
+            <Image 
+              source={{ uri: item.localThumbnail || item.localUri }} 
+              style={styles.fullScreenImage}
+              resizeMode="contain"
+            />
+            <View style={styles.fullScreenPlayButton}>
+              <Play size={40} color={Colors.white} />
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <Image 
+            source={{ uri: item.localUri || item.url }} 
+            style={styles.fullScreenImage}
+            resizeMode="contain"
+          />
+        )}
+      </View>
+    );
   };
 
   const renderMediaItem = ({ item, index }) => (
@@ -217,8 +407,9 @@ const ApartmentDetailsScreen = () => {
           <View style={styles.mediaSection}>
             <FlatList
               data={apartment.media}
-              renderItem={renderMediaItem}
+              renderItem={renderEnhancedMediaItem}
               keyExtractor={(item, index) => index.toString()}
+              ref={mainFlatListRef}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
@@ -233,6 +424,15 @@ const ApartmentDetailsScreen = () => {
                   {currentImageIndex + 1} / {apartment.media.length}
                 </Text>
               </View>
+            )}
+            {apartment.media.length > 1 && (
+              <TouchableOpacity 
+                style={styles.viewAllButton}
+                onPress={openAllPhotos}
+              >
+                <Grid3X3 size={16} color={Colors.white} />
+                <Text style={styles.viewAllText}>View all</Text>
+              </TouchableOpacity>
             )}
           </View>
         )}
@@ -369,6 +569,138 @@ const ApartmentDetailsScreen = () => {
           <Text style={styles.bookButtonText}>Reserve</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Full Screen Media Modal */}
+      <Modal
+        visible={showFullScreenMedia}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeFullScreenMedia}
+        onShow={() => {
+          // Ensure the FlatList scrolls to the correct position when modal opens
+          setTimeout(() => {
+            if (fullScreenFlatListRef.current && fullScreenIndex < apartment.media.length) {
+              fullScreenFlatListRef.current.scrollToIndex({
+                index: fullScreenIndex,
+                animated: false,
+              });
+            }
+          }, 100);
+        }}
+      >
+        <View style={styles.fullScreenModal}>
+          <StatusBar hidden />
+          
+          {/* Header */}
+          <View style={styles.fullScreenHeader}>
+            <TouchableOpacity 
+              style={styles.fullScreenCloseButton}
+              onPress={closeFullScreenMedia}
+            >
+              <X size={24} color={Colors.white} />
+            </TouchableOpacity>
+            <Text style={styles.fullScreenCounter}>
+              {fullScreenIndex + 1} / {apartment.media.length}
+            </Text>
+          </View>
+
+          {/* Media Content */}
+          <FlatList
+            data={apartment.media}
+            renderItem={renderFullScreenMedia}
+            keyExtractor={(item, index) => `fullscreen-${index}`}
+            ref={fullScreenFlatListRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={fullScreenIndex}
+            getItemLayout={(data, index) => ({
+              length: screenWidth,
+              offset: screenWidth * index,
+              index,
+            })}
+            onMomentumScrollEnd={(event) => {
+              const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+              if (index >= 0 && index < apartment.media.length) {
+                setFullScreenIndex(index);
+              }
+            }}
+            onScrollToIndexFailed={(info) => {
+              // Handle scroll to index failure with better error recovery
+              console.log('Scroll to index failed:', info);
+              const wait = new Promise(resolve => setTimeout(resolve, 500));
+              wait.then(() => {
+                if (fullScreenFlatListRef.current && info.index < apartment.media.length) {
+                  fullScreenFlatListRef.current.scrollToOffset({
+                    offset: info.index * screenWidth,
+                    animated: false,
+                  });
+                }
+              });
+            }}
+            removeClippedSubviews={false}
+            maxToRenderPerBatch={3}
+            windowSize={3}
+            initialNumToRender={3}
+          />
+
+          {/* Navigation Arrows */}
+          {apartment.media.length > 1 && (
+            <>
+              {fullScreenIndex > 0 && (
+                <TouchableOpacity 
+                  style={[styles.fullScreenNavButton, styles.fullScreenPrevButton]}
+                  onPress={goToPrevious}
+                >
+                  <ChevronLeft size={32} color={Colors.white} />
+                </TouchableOpacity>
+              )}
+              
+              {fullScreenIndex < apartment.media.length - 1 && (
+                <TouchableOpacity 
+                  style={[styles.fullScreenNavButton, styles.fullScreenNextButton]}
+                  onPress={goToNext}
+                >
+                  <ChevronRight size={32} color={Colors.white} />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
+      </Modal>
+
+      {/* All Photos Grid Modal */}
+      <Modal
+        visible={showAllPhotos}
+        animationType="slide"
+        onRequestClose={closeAllPhotos}
+      >
+        <SafeAreaView style={styles.allPhotosModal}>
+          {/* Header */}
+          <View style={styles.allPhotosHeader}>
+            <TouchableOpacity 
+              style={styles.allPhotosCloseButton}
+              onPress={closeAllPhotos}
+            >
+              <X size={24} color={Colors.black} />
+            </TouchableOpacity>
+            <Text style={styles.allPhotosTitle}>
+              All Photos ({apartment.media.length})
+            </Text>
+            <View style={{ width: 40 }} />
+          </View>
+
+          {/* Grid */}
+          <FlatList
+            data={apartment.media}
+            renderItem={renderGridItem}
+            keyExtractor={(item, index) => `grid-${index}`}
+            numColumns={2}
+            contentContainerStyle={styles.gridContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -409,15 +741,33 @@ const mockApartmentData = {
     {
       resource_type: "image",
       localUri: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+      width: 2340,
+      height: 1560,
     },
     {
       resource_type: "image", 
       localUri: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+      width: 2340,
+      height: 1560,
+    },
+    {
+      resource_type: "image", 
+      localUri: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      width: 1000,
+      height: 1500,
     },
     {
       resource_type: "video",
       localUri: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       localThumbnail: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2341&q=80",
+      width: 1280,
+      height: 720,
+    },
+    {
+      resource_type: "image", 
+      localUri: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      width: 1000,
+      height: 1333,
     },
   ],
   houseRules: ["No smoking inside the apartment. Quiet hours from 10 PM to 7 AM. Please keep the space clean and tidy."],
@@ -462,7 +812,23 @@ const styles = StyleSheet.create({
     width: screenWidth,
     height: 250,
   },
+  portraitMediaContainer: {
+    height: 300, // Slightly taller for portrait images
+  },
   mediaImage: {
+    width: '100%',
+    height: '100%',
+  },
+  portraitImage: {
+    width: '100%',
+    height: '100%',
+  },
+  landscapeImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageContainer: {
+    position: 'relative',
     width: '100%',
     height: '100%',
   },
@@ -483,6 +849,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  videoLabel: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  videoLabelText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontFamily: 'Sora-Medium',
+  },
+  zoomIndicator: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 6,
+    borderRadius: 8,
+  },
   mediaIndicator: {
     position: 'absolute',
     bottom: 16,
@@ -496,6 +887,148 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 12,
     fontFamily: 'Sora-Medium',
+  },
+  viewAllButton: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 6,
+  },
+  viewAllText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontFamily: 'Sora-Medium',
+  },
+  // Full Screen Modal Styles
+  fullScreenModal: {
+    flex: 1,
+    backgroundColor: Colors.black,
+  },
+  fullScreenHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  fullScreenCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenCounter: {
+    color: Colors.white,
+    fontSize: 16,
+    fontFamily: 'Sora-Medium',
+  },
+  fullScreenContainer: {
+    width: screenWidth,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenImage: {
+    width: screenWidth,
+    height: '100%',
+  },
+  fullScreenVideoContainer: {
+    width: screenWidth,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenPlayButton: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenNavButton: {
+    position: 'absolute',
+    top: '50%',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    transform: [{ translateY: -25 }],
+  },
+  fullScreenPrevButton: {
+    left: 20,
+  },
+  fullScreenNextButton: {
+    right: 20,
+  },
+  // All Photos Grid Modal Styles
+  allPhotosModal: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  allPhotosHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  allPhotosCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.gray100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  allPhotosTitle: {
+    fontSize: 18,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.black,
+  },
+  gridContainer: {
+    padding: 16,
+  },
+  gridItem: {
+    width: (screenWidth - 48) / 2,
+    height: 150,
+    marginHorizontal: 8,
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  gridImage: {
+    width: '100%',
+    height: '100%',
+  },
+  gridVideoIndicator: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 4,
+    borderRadius: 6,
   },
   infoSection: {
     padding: 20,
