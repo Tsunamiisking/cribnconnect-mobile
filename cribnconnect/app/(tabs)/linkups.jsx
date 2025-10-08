@@ -1,24 +1,64 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  FlatList,
-  Platform,
-  ScrollView,
-  TextInput,
-} from "react-native";
-import { useState } from "react";
-import { router } from "expo-router";
-import LinkupCard from "@/components/LinkupCard";
-import PeopleCarousel from "@/components/PeopleCarousel";
-import { SafeAreaView } from "react-native-safe-area-context";
+import LinkupsTab from "@/components/LinkupsTab";
 import NormalHeader from "@/components/NormalHeader";
+import PeopleTab from "@/components/PeopleTab";
+import TabSelector from "@/components/TabSelector";
 import { Colors } from "@/constants/Colors";
-import { Plus, Search } from "lucide-react-native";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-// Mock data - TODO: Replace with API integration
+// Mock data for people
+const PEOPLE_DATA = [
+  {
+    id: "1",
+    name: "Sarah Wilson",
+    age: 24,
+    bio: "Adventure seeker, coffee lover, and part-time photographer. Always looking for new experiences and great conversations!",
+    interests: ["Photography", "Travel", "Coffee", "Hiking"],
+    location: "Lagos, Nigeria",
+    distance: "2 km away",
+    images: [
+      "https://images.unsplash.com/photo-1494790108755-2616b612b5bc?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+    ],
+    isOnline: true,
+    lastSeen: "Active now",
+  },
+  {
+    id: "2",
+    name: "David Chen",
+    age: 28,
+    bio: "Tech enthusiast and fitness junkie. Building the future one line of code at a time. Let's grab some healthy food!",
+    interests: ["Tech", "Fitness", "Coding", "Healthy Living"],
+    location: "Victoria Island, Lagos",
+    distance: "5 km away",
+    images: [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+    ],
+    isOnline: false,
+    lastSeen: "2 hours ago",
+  },
+  {
+    id: "3",
+    name: "Emma Rodriguez",
+    age: 26,
+    bio: "Artist, dreamer, and foodie. Love exploring local art galleries and trying new restaurants. Life's too short for boring conversations!",
+    interests: ["Art", "Food", "Museums", "Creative Writing"],
+    location: "Lekki, Lagos",
+    distance: "8 km away",
+    images: [
+      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
+    ],
+    isOnline: true,
+    lastSeen: "Active now",
+  },
+];
+
+// Mock data for linkups (keeping existing data)
 const ACTIVE_LINKUPS = [
   {
     id: "1",
@@ -105,13 +145,14 @@ const LINKUP_CATEGORIES = [
 ];
 
 export default function LinkupsScreen() {
+  const [activeTab, setActiveTab] = useState("people");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const onRefresh = () => {
     setRefreshing(true);
-    // TODO: Refresh linkups data from API
+    // TODO: Refresh data from API
     setTimeout(() => setRefreshing(false), 1000);
   };
 
@@ -126,300 +167,69 @@ export default function LinkupsScreen() {
     return matchesCategory && matchesSearch;
   });
 
-  const renderCategoryChip = ({ item: category }) => (
-    <TouchableOpacity
-      style={[
-        styles.categoryChip,
-        selectedCategory === category && styles.activeCategoryChip
-      ]}
-      onPress={() => setSelectedCategory(category)}
-    >
-      <Text style={[
-        styles.categoryText,
-        selectedCategory === category && styles.activeCategoryText
-      ]}>
-        {category}
-      </Text>
-    </TouchableOpacity>
-  );
+  // Filter people based on search query
+  const filteredPeople = PEOPLE_DATA.filter(person => {
+    return searchQuery === "" || 
+      person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      person.interests.some(interest => 
+        interest.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  });
 
-  const handleCreateLinkup = () => {
-    // Navigate to simplified create linkup flow
-    router.push("/(screens)/create-linkup");
+  const handleSearchChange = (text) => {
+    setSearchQuery(text);
   };
 
   const clearSearch = () => {
     setSearchQuery("");
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchQuery(""); // Clear search when switching tabs
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container}>
       <NormalHeader title="Linkups" />
       
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {/* People Close to You Carousel */}
-        <PeopleCarousel />
+      <TabSelector activeTab={activeTab} onTabChange={handleTabChange} />
 
-        {/* Create Linkup Button */}
-        <View style={styles.createSection}>
-          <TouchableOpacity 
-            style={styles.createButton}
-            onPress={handleCreateLinkup}
-          >
-            <Plus size={20} color={Colors.white} />
-            <Text style={styles.createButtonText}>Create New Linkup</Text>
-          </TouchableOpacity>
-          <Text style={styles.createHint}>
-            Start your own community around shared interests
-          </Text>
-        </View>
-
-        {/* Categories Filter */}
-        <View style={styles.categoriesContainer}>
-          <FlatList
-            data={LINKUP_CATEGORIES}
-            renderItem={renderCategoryChip}
-            keyExtractor={(item) => item}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContent}
+      <View style={styles.tabContentContainer}>
+        {activeTab === "people" ? (
+          <PeopleTab
+            filteredPeople={filteredPeople}
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onClearSearch={clearSearch}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
-        </View>
-
-        {/* Search Input */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Search size={20} color={Colors.gray500} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search linkups, interests..."
-              placeholderTextColor={Colors.gray500}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={clearSearch}>
-                <Text style={styles.clearButton}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Section Header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {searchQuery ? `Search Results (${filteredLinkups.length})` : "Discover Linkups Near You"}
-          </Text>
-          {searchQuery && (
-            <TouchableOpacity onPress={clearSearch}>
-              <Text style={styles.clearSearchText}>Clear Search</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Linkups List */}
-        <View style={styles.linkupsContainer}>
-          {filteredLinkups.length > 0 ? (
-            filteredLinkups.map((item) => (
-              <View key={item.id} style={styles.linkupCardContainer}>
-                <LinkupCard
-                  imageUri={item.imageUri}
-                  title={item.title}
-                  interest={item.interest}
-                  location={item.location}
-                  schedule={item.schedule}
-                  memberCount={item.memberCount}
-                  privacy={item.privacy}
-                  host={item.host}
-                  liked={false}
-                  onLikeToggle={(liked) => {
-                    console.log("Linkup saved:", item.id, liked);
-                  }}
-                  onPress={() => {
-                    router.push(`/(screens)/linkup-details/${item.id}`);
-                  }}
-                />
-              </View>
-            ))
-          ) : (
-            <View style={styles.noResultsContainer}>
-              <Text style={styles.noResultsTitle}>No linkups found</Text>
-              <Text style={styles.noResultsText}>
-                {searchQuery 
-                  ? `No linkups match "${searchQuery}". Try a different search term or browse categories above.`
-                  : "No linkups available in this category. Try selecting a different category or create your own linkup!"
-                }
-              </Text>
-              {searchQuery && (
-                <TouchableOpacity style={styles.clearSearchButton} onPress={clearSearch}>
-                  <Text style={styles.clearSearchButtonText}>Clear Search</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
-
-        {/* Bottom spacing for tab bar */}
-        <View style={styles.bottomSpacing} />
-      </ScrollView>
+        ) : (
+          <LinkupsTab
+            filteredLinkups={filteredLinkups}
+            categories={LINKUP_CATEGORIES}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onClearSearch={clearSearch}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  createSection: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-  },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    marginBottom: 8,
-    elevation: 2,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  createButtonText: {
-    fontFamily: 'Sora-SemiBold',
-    fontSize: 16,
-    color: Colors.white,
-    marginLeft: 8,
-  },
-  createHint: {
-    fontFamily: 'Sora-Regular',
-    fontSize: 14,
-    color: Colors.gray500,
-    textAlign: 'center',
-  },
-  categoriesContainer: {
-    paddingVertical: 16,
-    backgroundColor: Colors.white,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-  categoriesContent: {
-    paddingHorizontal: 16,
-  },
-  categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: Colors.lightBackground,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  activeCategoryChip: {
-    backgroundColor: Colors.primary,
-  },
-  categoryText: {
-    fontFamily: 'Sora-Medium',
-    fontSize: 14,
-    color: Colors.gray500,
-  },
-  activeCategoryText: {
-    color: Colors.white,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: Colors.white,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 48,
-    paddingHorizontal: 16,
-    backgroundColor: Colors.lightBackground,
-    borderRadius: 24,
-  },
-  searchInput: {
+  container: {
     flex: 1,
-    fontFamily: 'Sora-Regular',
-    fontSize: 16,
-    color: Colors.gray900,
-    marginLeft: 12,
-  },
-  clearButton: {
-    fontSize: 18,
-    color: Colors.gray500,
-    paddingHorizontal: 8,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
     backgroundColor: Colors.white,
   },
-  sectionTitle: {
-    fontFamily: 'Urbanist-Bold',
-    fontSize: 20,
-    color: Colors.gray900,
+  tabContentContainer: {
     flex: 1,
-  },
-  clearSearchText: {
-    fontFamily: 'Sora-Medium',
-    fontSize: 14,
-    color: Colors.primary,
-  },
-  linkupsContainer: {
-    paddingHorizontal: 16,
     backgroundColor: Colors.white,
-  },
-  linkupCardContainer: {
-    marginBottom: 16,
-  },
-  noResultsContainer: {
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  noResultsTitle: {
-    fontFamily: 'Urbanist-Bold',
-    fontSize: 18,
-    color: Colors.gray900,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  noResultsText: {
-    fontFamily: 'Sora-Regular',
-    fontSize: 16,
-    color: Colors.gray500,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 16,
-  },
-  clearSearchButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  clearSearchButtonText: {
-    fontFamily: 'Sora-SemiBold',
-    fontSize: 14,
-    color: Colors.white,
-  },
-  bottomSpacing: {
-    height: Platform.OS === 'ios' ? 85 : 60,
   },
 });
