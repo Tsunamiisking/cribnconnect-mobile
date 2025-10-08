@@ -1,458 +1,1041 @@
-import { ScrollView, View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { Colors } from '@/constants/Colors';
+import { router, useLocalSearchParams } from 'expo-router';
+import {
+  ArrowLeft,
+  Calendar,
+  Camera,
+  Car,
+  Coffee,
+  Gift,
+  Heart,
+  MapPin,
+  Music,
+  Share2,
+  Sparkles,
+  Star,
+  Ticket,
+  Users,
+  Utensils,
+  Wifi,
+  Wine,
+  Zap
+} from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function EventDetailsScreen() {
+const { width: screenWidth } = Dimensions.get('window');
+
+// Event category icons mapping
+const eventCategoryIcons = {
+  "Concerts & Live Music": Music,
+  "Club Night / Rave": Zap,
+  "House Party": Users,
+  "Karaoke Night": Music,
+  "Comedy Show": Star,
+  "Open Mic": Music,
+  "Tech Conference": Users,
+  "Networking Event": Users,
+  "Workshops & Training": Star,
+  "Startup Pitch Event": Star,
+  "Career Fair": Users,
+  "Art Exhibition": Star,
+  "Poetry Slams": Star,
+  "Cultural Festival": Star,
+  "Photography Show": Camera,
+  "Football Match / Viewing Party": Users,
+  "Marathons & Runs": Star,
+  "Fitness Bootcamp": Star,
+  "Yoga / Wellness Sessions": Star,
+  "Esports Tournament": Zap,
+  "Food & Drink": Utensils,
+  "Wine / Cocktail Tasting": Wine,
+  "Cooking Classes": Utensils,
+  "Pop-up Restaurants": Utensils,
+  "Wedding": Heart,
+  "Birthday": Gift,
+  "Anniversary": Heart,
+  "Fashion show": Star,
+  "Charity Gala": Star,
+  "Book Club": Star,
+  "Gaming Meetup": Zap,
+  "Dance Classes": Music,
+  "Language Exchange": Users,
+  "Travel and Adventure trips": Star,
+};
+
+// Event perks icons mapping
+const eventPerksIcons = {
+  "live_music": Music,
+  "photography": Camera,
+  "live_dj": Zap,
+  "games": Star,
+  "catering": Utensils,
+  "bar_service": Wine,
+  "coffee_station": Coffee,
+  "welcome_drinks": Gift,
+  "vip_access": Star,
+  "meet_greet": Users,
+  "exclusive_content": Sparkles,
+  "networking": Users,
+  "wifi": Wifi,
+  "parking": Car,
+  "accessibility": Star,
+  "coat_check": Gift,
+};
+
+const EventDetailsScreen = () => {
   const { id } = useLocalSearchParams();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
   const [event, setEvent] = useState(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isAttending, setIsAttending] = useState(false);
+  
+  // Shimmer animation
+  const shimmerAnimation = useRef(new Animated.Value(0)).current;
 
+  // Mock event data - in real app, fetch based on id
   useEffect(() => {
-    // TODO: Fetch event details from API
-    // Example API call:
-    // const fetchEvent = async () => {
-    //   try {
-    //     const response = await api.getEvent(id);
-    //     setEvent(response.data);
-    //     setIsBookmarked(response.data.isBookmarked);
-    //     setIsAttending(response.data.isAttending);
-    //   } catch (error) {
-    //     console.error('Error fetching event:', error);
-    //   }
-    // };
-    // fetchEvent();
+    // Start shimmer animation
+    const shimmerLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(shimmerAnimation, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    shimmerLoop.start();
 
-    // Mock data for now
-    setEvent({
-      id: id,
-      title: 'Summer Rooftop Party',
-      description: 'Join us for an amazing sunset rooftop party with great music, drinks, and city views. This will be an unforgettable night with DJs, photo booths, and networking opportunities.',
-      category: 'Party',
-      date: '2024-07-15',
-      startTime: '7:00 PM',
-      endTime: '11:00 PM',
-      venue: 'Sky Lounge NYC',
-      address: '123 Manhattan Ave, New York, NY 10001',
-      organizer: 'Sarah Johnson',
-      ticketPrice: 25,
-      capacity: 150,
-      attendeesCount: 87,
-      ageRestriction: '21+',
-      dressCode: 'Cocktail',
-      requirements: ['ID Required', 'RSVP Required'],
-      images: [
-        'https://via.placeholder.com/400x300?text=Event+Photo+1',
-        'https://via.placeholder.com/400x300?text=Event+Photo+2',
-      ],
-      amenities: ['Photography Allowed', 'Coat Check', 'Rooftop Access'],
-      contactEmail: 'sarah@events.com',
-      contactPhone: '(555) 123-4567',
-    });
+    // Simulate API call
+    setTimeout(() => {
+      setEvent(mockEventData);
+      setLoading(false);
+      shimmerLoop.stop();
+    }, 1000);
+
+    return () => shimmerLoop.stop();
   }, [id]);
 
-  const handleRSVP = () => {
-    // TODO: Add API integration for RSVP
-    // Example API call:
-    // try {
-    //   const response = await api.rsvpEvent(id, !isAttending);
-    //   setIsAttending(!isAttending);
-    // } catch (error) {
-    //   console.error('Error updating RSVP:', error);
-    // }
-    
-    setIsAttending(!isAttending);
-  };
+  // Shimmer component
+  const ShimmerView = ({ style, children }) => {
+    const shimmerOpacity = shimmerAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.3, 0.8],
+    });
 
-  const handleBookmark = () => {
-    // TODO: Add API integration for bookmarking
-    // Example API call:
-    // try {
-    //   const response = await api.bookmarkEvent(id, !isBookmarked);
-    //   setIsBookmarked(!isBookmarked);
-    // } catch (error) {
-    //   console.error('Error updating bookmark:', error);
-    // }
-    
-    setIsBookmarked(!isBookmarked);
-  };
+    const shimmerTranslateX = shimmerAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-100, 100],
+    });
 
-  const handleContactOrganizer = () => {
-    // TODO: Navigate to messaging or contact options
-    router.push(`/(screens)/chat/${event?.organizer || 'organizer'}`);
+    return (
+      <View style={[styles.skeleton, style]}>
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              opacity: shimmerOpacity,
+              transform: [{ translateX: shimmerTranslateX }],
+              backgroundColor: Colors.white,
+            },
+          ]}
+        />
+        {children}
+      </View>
+    );
   };
 
   const handleShare = () => {
-    // TODO: Implement sharing functionality
-    console.log('Share event:', event?.title);
+    Alert.alert('Share', 'Share functionality will be implemented here');
   };
 
-  if (!event) {
+  const handleRSVP = () => {
+    setIsAttending(!isAttending);
+    Alert.alert('RSVP', isAttending ? 'RSVP cancelled' : 'RSVP confirmed!');
+  };
+
+  const handleContactOrganizer = () => {
+    Alert.alert('Contact', 'Contact organizer functionality will be implemented here');
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const formatPrice = (price) => {
+    if (!price || price === "0") return "Free";
+    return `₦${parseInt(price).toLocaleString()}`;
+  };
+
+  const renderPerk = (perkId) => {
+    const IconComponent = eventPerksIcons[perkId];
+    const perkNames = {
+      "live_music": "Live Music",
+      "photography": "Professional Photography", 
+      "live_dj": "Live DJ",
+      "games": "Games & Activities",
+      "catering": "Catering Service",
+      "bar_service": "Bar Service",
+      "coffee_station": "Coffee Station",
+      "welcome_drinks": "Welcome Drinks",
+      "vip_access": "VIP Access",
+      "meet_greet": "Meet & Greet",
+      "exclusive_content": "Exclusive Content",
+      "networking": "Networking Session",
+      "wifi": "Free WiFi",
+      "parking": "Parking Available",
+      "accessibility": "Wheelchair Accessible",
+      "coat_check": "Coat Check",
+    };
+
     return (
-      <View style={styles.loadingContainer} className="flex-1 justify-center items-center bg-white">
-        <Text style={styles.loadingText} className="text-gray-500">Loading event details...</Text>
+      <View key={perkId} style={styles.perkItem}>
+        {IconComponent && <IconComponent size={24} color={Colors.primary} />}
+        <Text style={styles.perkText}>{perkNames[perkId] || perkId}</Text>
       </View>
     );
-  }
+  };
 
-  return (
-    <View style={styles.container} className="flex-1 bg-white">
-      <ScrollView style={styles.content} className="flex-1">
-        {/* Event Images */}
-        <View style={styles.imageContainer} className="h-64 bg-gray-200">
-          <Image 
-            source={{ uri: event.images[0] }}
-            style={styles.eventImage}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-          <View style={styles.imageOverlay} className="absolute bottom-4 right-4">
-            <TouchableOpacity 
-              style={styles.bookmarkButton}
-              className={`p-2 rounded-full ${isBookmarked ? 'bg-purple-600' : 'bg-white'}`}
-              onPress={handleBookmark}
-            >
-              <Text style={styles.bookmarkIcon} className={isBookmarked ? 'text-white' : 'text-purple-600'}>
-                {isBookmarked ? '★' : '☆'}
-              </Text>
-            </TouchableOpacity>
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {/* Header Skeleton */}
+        <View style={styles.header}>
+          <ShimmerView style={styles.headerButton} />
+          <View style={styles.headerActions}>
+            <ShimmerView style={styles.headerButton} />
+            <ShimmerView style={styles.headerButton} />
           </View>
         </View>
 
-        <View style={styles.detailsContainer} className="px-6 py-6">
-          {/* Header Info */}
-          <View style={styles.header} className="mb-6">
-            <View style={styles.categoryBadge} className="bg-purple-100 px-3 py-1 rounded-full self-start mb-3">
-              <Text style={styles.categoryText} className="text-purple-700 text-sm font-medium">
-                {event.category}
-              </Text>
-            </View>
-            
-            <Text style={styles.title} className="text-2xl font-bold text-gray-900 mb-2">
-              {event.title}
-            </Text>
-            
-            <Text style={styles.organizer} className="text-gray-600 mb-4">
-              Hosted by {event.organizer}
-            </Text>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Media Skeleton */}
+          <View style={styles.mediaSection}>
+            <ShimmerView style={styles.mediaContainer} />
           </View>
 
-          {/* Key Details */}
-          <View style={styles.keyDetails} className="mb-6">
-            <View style={styles.detailRow} className="flex-row items-center mb-3">
-              <Text style={styles.detailIcon} className="text-xl mr-3">📅</Text>
-              <View>
-                <Text style={styles.detailLabel} className="text-gray-600 text-sm">Date & Time</Text>
-                <Text style={styles.detailValue} className="text-gray-900 font-medium">
-                  {event.date} • {event.startTime} - {event.endTime}
+          {/* Content Skeleton */}
+          <View style={styles.infoSection}>
+            {/* Title Skeleton */}
+            <View style={styles.titleSection}>
+              <View style={styles.titleRow}>
+                <ShimmerView style={styles.skeletonTitle} />
+                <ShimmerView style={styles.skeletonCategory} />
+              </View>
+              <ShimmerView style={styles.skeletonSubtitle} />
+            </View>
+
+            {/* Event Details Skeleton */}
+            <View style={styles.detailsSection}>
+              {[1, 2, 3, 4].map((item) => (
+                <View key={item} style={styles.detailRow}>
+                  <ShimmerView style={styles.skeletonIcon} />
+                  <View style={styles.detailContent}>
+                    <ShimmerView style={styles.skeletonDetailLabel} />
+                    <ShimmerView style={styles.skeletonDetailValue} />
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            {/* Description Skeleton */}
+            <View style={styles.descriptionSection}>
+              <ShimmerView style={styles.skeletonSectionTitle} />
+              <ShimmerView style={styles.skeletonDescriptionLine} />
+              <ShimmerView style={styles.skeletonDescriptionLine} />
+              <ShimmerView style={styles.skeletonDescriptionLineShort} />
+            </View>
+
+            {/* Tickets Skeleton */}
+            <View style={styles.ticketsSection}>
+              <ShimmerView style={styles.skeletonSectionTitle} />
+              {[1, 2].map((item) => (
+                <ShimmerView key={item} style={styles.skeletonTicket} />
+              ))}
+            </View>
+
+            {/* Perks Skeleton */}
+            <View style={styles.perksSection}>
+              <ShimmerView style={styles.skeletonSectionTitle} />
+              <View style={styles.perksGrid}>
+                {[1, 2, 3, 4, 5, 6].map((item) => (
+                  <ShimmerView key={item} style={styles.skeletonPerk} />
+                ))}
+              </View>
+            </View>
+
+            {/* Organizer Skeleton */}
+            <View style={styles.organizerSection}>
+              <ShimmerView style={styles.skeletonSectionTitle} />
+              <View style={styles.organizerInfo}>
+                <ShimmerView style={styles.skeletonOrganizerAvatar} />
+                <View style={styles.organizerDetails}>
+                  <ShimmerView style={styles.skeletonOrganizerName} />
+                  <ShimmerView style={styles.skeletonOrganizerContact} />
+                </View>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Bottom Bar Skeleton */}
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomPricing}>
+            <ShimmerView style={styles.skeletonBottomPrice} />
+          </View>
+          <ShimmerView style={styles.skeletonRSVPButton} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!event) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Event not found</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const EventTypeIcon = eventCategoryIcons[event.eventType];
+  const minPrice = event.ticketTypes?.length > 0 
+    ? Math.min(...event.ticketTypes.map(t => parseFloat(t.price) || 0).filter(p => p > 0))
+    : 0;
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+          <ArrowLeft size={24} color={Colors.black} />
+        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
+            <Share2 size={24} color={Colors.black} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => setIsLiked(!isLiked)} 
+            style={styles.headerButton}
+          >
+            <Heart 
+              size={24} 
+              color={isLiked ? Colors.primary : Colors.black}
+              fill={isLiked ? Colors.primary : 'transparent'}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Event Images */}
+        {event.images && event.images.length > 0 && (
+          <View style={styles.mediaSection}>
+            <Image 
+              source={{ uri: event.images[0] }} 
+              style={styles.mediaImage}
+              resizeMode="cover"
+            />
+            {event.images.length > 1 && (
+              <View style={styles.mediaIndicator}>
+                <Text style={styles.mediaIndicatorText}>
+                  1 / {event.images.length}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Event Info */}
+        <View style={styles.infoSection}>
+          {/* Title and Category */}
+          <View style={styles.titleSection}>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{event.title}</Text>
+              <View style={styles.categoryContainer}>
+                {EventTypeIcon && (
+                  <EventTypeIcon size={20} color={Colors.primary} />
+                )}
+                <Text style={styles.categoryText}>{event.category}</Text>
+              </View>
+            </View>
+            <Text style={styles.eventType}>{event.eventType}</Text>
+          </View>
+
+          {/* Event Details */}
+          <View style={styles.detailsSection}>
+            {/* Date & Time */}
+            <View style={styles.detailRow}>
+              <Calendar size={20} color={Colors.gray600} />
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Date & Time</Text>
+                <Text style={styles.detailValue}>
+                  {formatDate(event.date)}
+                </Text>
+                <Text style={styles.detailSubtext}>
+                  {event.time} - {event.endTime}
                 </Text>
               </View>
             </View>
 
-            <View style={styles.detailRow} className="flex-row items-center mb-3">
-              <Text style={styles.detailIcon} className="text-xl mr-3">📍</Text>
-              <View className="flex-1">
-                <Text style={styles.detailLabel} className="text-gray-600 text-sm">Location</Text>
-                <Text style={styles.detailValue} className="text-gray-900 font-medium">
-                  {event.venue}
+            {/* Location */}
+            <View style={styles.detailRow}>
+              <MapPin size={20} color={Colors.gray600} />
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Location</Text>
+                <Text style={styles.detailValue}>
+                  {event.location.venue}
                 </Text>
-                <Text style={styles.detailSubtext} className="text-gray-500 text-sm">
-                  {event.address}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.detailRow} className="flex-row items-center mb-3">
-              <Text style={styles.detailIcon} className="text-xl mr-3">💰</Text>
-              <View>
-                <Text style={styles.detailLabel} className="text-gray-600 text-sm">Price</Text>
-                <Text style={styles.detailValue} className="text-gray-900 font-medium">
-                  {event.ticketPrice === 0 ? 'Free' : `$${event.ticketPrice}`}
+                <Text style={styles.detailSubtext}>
+                  {event.location.street}, {event.location.city}, {event.location.state}
                 </Text>
               </View>
             </View>
 
-            <View style={styles.detailRow} className="flex-row items-center mb-3">
-              <Text style={styles.detailIcon} className="text-xl mr-3">👥</Text>
-              <View>
-                <Text style={styles.detailLabel} className="text-gray-600 text-sm">Attendance</Text>
-                <Text style={styles.detailValue} className="text-gray-900 font-medium">
-                  {event.attendeesCount} of {event.capacity} attending
+            {/* Capacity */}
+            <View style={styles.detailRow}>
+              <Users size={20} color={Colors.gray600} />
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Capacity</Text>
+                <Text style={styles.detailValue}>
+                  {event.capacity} attendees maximum
+                </Text>
+              </View>
+            </View>
+
+            {/* Price */}
+            <View style={styles.detailRow}>
+              <Ticket size={20} color={Colors.gray600} />
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Price</Text>
+                <Text style={styles.detailValue}>
+                  {event.isFree ? "Free Event" : `From ${formatPrice(minPrice.toString())}`}
                 </Text>
               </View>
             </View>
           </View>
 
           {/* Description */}
-          <View style={styles.descriptionSection} className="mb-6">
-            <Text style={styles.sectionTitle} className="text-lg font-semibold text-gray-900 mb-3">
-              About This Event
-            </Text>
-            <Text style={styles.description} className="text-gray-700 leading-6">
-              {event.description}
-            </Text>
-          </View>
+          {event.description && (
+            <View style={styles.descriptionSection}>
+              <Text style={styles.sectionTitle}>About This Event</Text>
+              <Text style={styles.description}>{event.description}</Text>
+            </View>
+          )}
 
-          {/* Event Requirements */}
-          {event.requirements && event.requirements.length > 0 && (
-            <View style={styles.requirementsSection} className="mb-6">
-              <Text style={styles.sectionTitle} className="text-lg font-semibold text-gray-900 mb-3">
-                Requirements
-              </Text>
-              <View style={styles.requirementsList}>
-                {event.requirements.map((requirement, index) => (
-                  <View key={index} style={styles.requirementItem} className="flex-row items-center mb-2">
-                    <Text style={styles.requirementIcon} className="text-purple-600 mr-2">•</Text>
-                    <Text style={styles.requirementText} className="text-gray-700">{requirement}</Text>
-                  </View>
-                ))}
-                {event.ageRestriction && (
-                  <View style={styles.requirementItem} className="flex-row items-center mb-2">
-                    <Text style={styles.requirementIcon} className="text-purple-600 mr-2">•</Text>
-                    <Text style={styles.requirementText} className="text-gray-700">
-                      Age Restriction: {event.ageRestriction}
+          {/* Ticket Types */}
+          {!event.isFree && event.ticketTypes && event.ticketTypes.length > 0 && (
+            <View style={styles.ticketsSection}>
+              <Text style={styles.sectionTitle}>Ticket Types</Text>
+              {event.ticketTypes.map((ticket, index) => (
+                <View key={ticket.id || index} style={styles.ticketItem}>
+                  <View style={styles.ticketInfo}>
+                    <Text style={styles.ticketName}>{ticket.name}</Text>
+                    <Text style={styles.ticketPrice}>
+                      {formatPrice(ticket.price)}
                     </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Special Perks */}
+          {event.specialPerks && event.specialPerks.length > 0 && (
+            <View style={styles.perksSection}>
+              <Text style={styles.sectionTitle}>Special Perks</Text>
+              <View style={styles.perksGrid}>
+                {event.specialPerks.map(renderPerk)}
+              </View>
+            </View>
+          )}
+
+          {/* Safety Tips / House Rules */}
+          {event.safetyTips && event.safetyTips.length > 0 && (
+            <View style={styles.rulesSection}>
+              <Text style={styles.sectionTitle}>House Rules</Text>
+              <Text style={styles.rulesText}>{event.safetyTips[0]}</Text>
+            </View>
+          )}
+
+          {/* Ticket Policies */}
+          {event.ticketPolicies && (
+            <View style={styles.policiesSection}>
+              <Text style={styles.sectionTitle}>Ticket Policies</Text>
+              <View style={styles.policiesList}>
+                {event.ticketPolicies.refundable && (
+                  <View style={styles.policyItem}>
+                    <Text style={styles.policyIcon}>✓</Text>
+                    <Text style={styles.policyText}>Refundable tickets</Text>
                   </View>
                 )}
-                {event.dressCode && (
-                  <View style={styles.requirementItem} className="flex-row items-center mb-2">
-                    <Text style={styles.requirementIcon} className="text-purple-600 mr-2">•</Text>
-                    <Text style={styles.requirementText} className="text-gray-700">
-                      Dress Code: {event.dressCode}
-                    </Text>
+                {event.ticketPolicies.upgradable && (
+                  <View style={styles.policyItem}>
+                    <Text style={styles.policyIcon}>✓</Text>
+                    <Text style={styles.policyText}>Upgradable tickets</Text>
+                  </View>
+                )}
+                {event.ticketPolicies.transferable && (
+                  <View style={styles.policyItem}>
+                    <Text style={styles.policyIcon}>✓</Text>
+                    <Text style={styles.policyText}>Transferable tickets</Text>
                   </View>
                 )}
               </View>
             </View>
           )}
 
-          {/* Contact Section */}
-          <View style={styles.contactSection} className="mb-6">
-            <Text style={styles.sectionTitle} className="text-lg font-semibold text-gray-900 mb-3">
-              Contact Organizer
-            </Text>
-            <TouchableOpacity 
-              style={styles.contactButton}
-              className="bg-gray-50 p-4 rounded-lg flex-row justify-between items-center"
-              onPress={handleContactOrganizer}
-            >
-              <View>
-                <Text style={styles.contactName} className="text-gray-900 font-medium">{event.organizer}</Text>
-                <Text style={styles.contactInfo} className="text-gray-600 text-sm">Tap to message</Text>
+          {/* Organizer Info */}
+          <View style={styles.organizerSection}>
+            <Text style={styles.sectionTitle}>Event Organizer</Text>
+            <TouchableOpacity style={styles.organizerInfo} onPress={handleContactOrganizer}>
+              <View style={styles.organizerAvatar}>
+                <Text style={styles.organizerInitial}>EO</Text>
               </View>
-              <Text style={styles.contactArrow} className="text-gray-400">→</Text>
+              <View style={styles.organizerDetails}>
+                <Text style={styles.organizerName}>Event Organizer</Text>
+                <Text style={styles.organizerContact}>Tap to contact</Text>
+                <View style={styles.organizerRating}>
+                  <Star size={14} color={Colors.amber} fill={Colors.amber} />
+                  <Text style={styles.organizerRatingText}>4.8 (32 reviews)</Text>
+                </View>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
 
       {/* Bottom Action Bar */}
-      <View style={styles.actionBar} className="px-6 py-4 bg-white border-t border-gray-200">
-        <View style={styles.actionButtons} className="flex-row space-x-3">
-          <TouchableOpacity 
-            style={styles.shareButton}
-            className="flex-1 bg-gray-100 py-3 rounded-lg"
-            onPress={handleShare}
-          >
-            <Text style={styles.shareButtonText} className="text-center text-gray-700 font-medium">
-              Share
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.rsvpButton, isAttending && styles.attendingButton]}
-            className={`flex-2 py-3 rounded-lg ${isAttending ? 'bg-green-600' : 'bg-purple-600'}`}
-            onPress={handleRSVP}
-          >
-            <Text style={styles.rsvpButtonText} className="text-center text-white font-medium">
-              {isAttending ? 'Attending ✓' : 'RSVP'}
-            </Text>
-          </TouchableOpacity>
+      <View style={styles.bottomBar}>
+        <View style={styles.bottomPricing}>
+          <Text style={styles.bottomPrice}>
+            {event.isFree ? "Free Event" : `From ${formatPrice(minPrice.toString())}`}
+          </Text>
         </View>
+        <TouchableOpacity 
+          style={[styles.rsvpButton, isAttending && styles.attendingButton]} 
+          onPress={handleRSVP}
+        >
+          <Text style={styles.rsvpButtonText}>
+            {isAttending ? 'Attending ✓' : 'RSVP Now'}
+          </Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
-}
+};
+
+// Mock data matching the event steps structure
+const mockEventData = {
+  category: "Entertainment & Nightlife",
+  eventType: "House Party",
+  title: "Summer Rooftop Celebration",
+  description: "Join us for an amazing sunset rooftop party with great music, drinks, and city views. This will be an unforgettable night with DJs, photo booths, and networking opportunities. Experience the best of nightlife with stunning panoramic views and premium entertainment.",
+  date: "2024-12-15T00:00:00.000Z",
+  time: "7:00 PM",
+  endTime: "11:00 PM",
+  location: {
+    street: "123 Manhattan Avenue",
+    city: "Lagos",
+    state: "Lagos",
+    zip: "100001",
+    country: "Nigeria",
+    venue: "Sky Lounge Lagos"
+  },
+  capacity: 150,
+  isFree: false,
+  ticketTypes: [
+    { id: 'regular', name: 'Regular', price: '15000' },
+    { id: 'vip', name: 'VIP', price: '25000' },
+    { id: 'vvip', name: 'VVIP', price: '40000' }
+  ],
+  specialPerks: ["live_music", "photography", "bar_service", "vip_access", "wifi", "parking"],
+  safetyTips: ["Please arrive on time. Dress code: Smart casual. Valid ID required for entry. No outside food or drinks allowed."],
+  ticketPolicies: {
+    refundable: true,
+    transferable: false,
+    upgradable: true,
+    termsAccepted: true
+  },
+  images: [
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+  ],
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: Colors.white,
   },
-  loadingContainer: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.gray100,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
   },
-  loadingText: {
-    color: '#6b7280',
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
   },
   content: {
     flex: 1,
   },
-  imageContainer: {
-    height: 256,
-    backgroundColor: '#e5e7eb',
+  mediaSection: {
     position: 'relative',
   },
-  eventImage: {
-    width: '100%',
-    height: '100%',
+  mediaContainer: {
+    width: screenWidth,
+    height: 250,
   },
-  imageOverlay: {
+  mediaImage: {
+    width: '100%',
+    height: 250,
+  },
+  mediaIndicator: {
     position: 'absolute',
     bottom: 16,
     right: 16,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  bookmarkButton: {
-    padding: 8,
-    borderRadius: 50,
+  mediaIndicatorText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontFamily: 'Sora-Medium',
   },
-  bookmarkIcon: {
-    fontSize: 20,
+  infoSection: {
+    padding: 20,
   },
-  detailsContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-  header: {
+  titleSection: {
     marginBottom: 24,
   },
-  categoryBadge: {
-    backgroundColor: '#f3e8ff',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 50,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
-  },
-  categoryText: {
-    color: '#7c3aed',
-    fontSize: 14,
-    fontWeight: '500',
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 8,
+    fontFamily: 'Sora-Bold',
+    color: Colors.black,
+    flex: 1,
+    marginRight: 16,
   },
-  organizer: {
-    color: '#6b7280',
-    marginBottom: 16,
+  categoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray100,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
   },
-  keyDetails: {
+  categoryText: {
+    fontSize: 12,
+    fontFamily: 'Sora-Medium',
+    color: Colors.primary,
+  },
+  eventType: {
+    fontSize: 16,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+  },
+  detailsSection: {
     marginBottom: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 20,
+    gap: 12,
   },
-  detailIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    marginTop: 2,
+  detailContent: {
+    flex: 1,
   },
   detailLabel: {
-    color: '#6b7280',
     fontSize: 14,
+    fontFamily: 'Sora-Medium',
+    color: Colors.gray600,
+    marginBottom: 4,
   },
   detailValue: {
-    color: '#111827',
-    fontWeight: '500',
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.black,
+    marginBottom: 2,
   },
   detailSubtext: {
-    color: '#9ca3af',
     fontSize: 14,
-  },
-  descriptionSection: {
-    marginBottom: 24,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray500,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.black,
     marginBottom: 12,
   },
+  descriptionSection: {
+    marginBottom: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
   description: {
-    color: '#374151',
+    fontSize: 16,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray700,
     lineHeight: 24,
   },
-  requirementsSection: {
+  ticketsSection: {
     marginBottom: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
   },
-  requirementsList: {},
-  requirementItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  requirementIcon: {
-    color: '#7c3aed',
-    marginRight: 8,
-  },
-  requirementText: {
-    color: '#374151',
-  },
-  contactSection: {
-    marginBottom: 24,
-  },
-  contactButton: {
-    backgroundColor: '#f9fafb',
+  ticketItem: {
+    backgroundColor: Colors.gray50,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  ticketInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  contactName: {
-    color: '#111827',
-    fontWeight: '500',
+  ticketName: {
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.black,
   },
-  contactInfo: {
-    color: '#6b7280',
-    fontSize: 14,
+  ticketPrice: {
+    fontSize: 16,
+    fontFamily: 'Sora-Bold',
+    color: Colors.primary,
   },
-  contactArrow: {
-    color: '#9ca3af',
-    fontSize: 18,
+  perksSection: {
+    marginBottom: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
   },
-  actionBar: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  actionButtons: {
+  perksGrid: {
     flexDirection: 'row',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: 16,
   },
-  shareButton: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-    paddingVertical: 12,
+  perkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray50,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
+    gap: 8,
+    marginBottom: 8,
   },
-  shareButtonText: {
-    textAlign: 'center',
-    color: '#374151',
-    fontWeight: '500',
+  perkText: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray700,
+  },
+  rulesSection: {
+    marginBottom: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  rulesText: {
+    fontSize: 16,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray700,
+    lineHeight: 24,
+  },
+  policiesSection: {
+    marginBottom: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  policiesList: {
+    gap: 8,
+  },
+  policyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  policyIcon: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: 'Sora-Bold',
+  },
+  policyText: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray700,
+  },
+  organizerSection: {
+    marginBottom: 24,
+  },
+  organizerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray50,
+    padding: 16,
+    borderRadius: 12,
+    gap: 16,
+  },
+  organizerAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  organizerInitial: {
+    fontSize: 20,
+    fontFamily: 'Sora-Bold',
+    color: Colors.white,
+  },
+  organizerDetails: {
+    flex: 1,
+  },
+  organizerName: {
+    fontSize: 18,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.black,
+    marginBottom: 4,
+  },
+  organizerContact: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+    marginBottom: 4,
+  },
+  organizerRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  organizerRatingText: {
+    fontSize: 12,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: Colors.white,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray200,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  bottomPricing: {
+    flex: 1,
+  },
+  bottomPrice: {
+    fontSize: 18,
+    fontFamily: 'Sora-Bold',
+    color: Colors.primary,
   },
   rsvpButton: {
-    flex: 2,
-    backgroundColor: '#7c3aed',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  attendingButton: {
+    backgroundColor: Colors.emerald,
+  },
+  rsvpButtonText: {
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.white,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.gray700,
+    marginBottom: 20,
+  },
+  backButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
   },
-  attendingButton: {
-    backgroundColor: '#059669',
+  backButtonText: {
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.white,
   },
-  rsvpButtonText: {
-    textAlign: 'center',
-    color: 'white',
-    fontWeight: '500',
+  // Skeleton Styles
+  skeleton: {
+    backgroundColor: Colors.gray200,
+    borderRadius: 4,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  skeletonTitle: {
+    height: 28,
+    flex: 1,
+    marginRight: 16,
+    borderRadius: 6,
+  },
+  skeletonCategory: {
+    height: 32,
+    width: 100,
+    borderRadius: 8,
+  },
+  skeletonSubtitle: {
+    height: 20,
+    width: '60%',
+    borderRadius: 4,
+  },
+  skeletonIcon: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+  },
+  skeletonDetailLabel: {
+    height: 16,
+    width: 80,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonDetailValue: {
+    height: 18,
+    width: '100%',
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  skeletonSectionTitle: {
+    height: 20,
+    width: 150,
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  skeletonDescriptionLine: {
+    height: 16,
+    width: '100%',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonDescriptionLineShort: {
+    height: 16,
+    width: '70%',
+    borderRadius: 4,
+  },
+  skeletonTicket: {
+    height: 60,
+    width: '100%',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  skeletonPerk: {
+    height: 40,
+    width: 120,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  skeletonOrganizerAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  skeletonOrganizerName: {
+    height: 20,
+    width: 120,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonOrganizerContact: {
+    height: 16,
+    width: 100,
+    borderRadius: 4,
+  },
+  skeletonBottomPrice: {
+    height: 20,
+    width: 150,
+    borderRadius: 4,
+  },
+  skeletonRSVPButton: {
+    height: 48,
+    width: 120,
+    borderRadius: 12,
   },
 });
+
+export default EventDetailsScreen;
