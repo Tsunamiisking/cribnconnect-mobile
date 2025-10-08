@@ -566,7 +566,7 @@ const ApartmentDetailsScreen = () => {
           </Text>
         </View>
         <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
-          <Text style={styles.bookButtonText}>Reserve</Text>
+          <Text style={styles.bookButtonText}>Check Availability</Text>
         </TouchableOpacity>
       </View>
 
