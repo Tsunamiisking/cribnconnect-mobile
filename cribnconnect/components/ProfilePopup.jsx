@@ -68,7 +68,7 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
     {
       id: 'host',
       title: 'Host',
-      subtitle: 'List your apartment or create events',
+      subtitle: 'Everything Apartments, Events',
       icon: Home,
       route: '/(hosting)',
       showAlways: true,
