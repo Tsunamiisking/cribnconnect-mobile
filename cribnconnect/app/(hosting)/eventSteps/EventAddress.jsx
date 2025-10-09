@@ -37,22 +37,6 @@ export default function EventAddress({ styles }) {
             onChangeText={(value) => handleLocationChange('city', value)}
           />
         </View>
-        <View className="flex-row">
-          <TextInput
-            style={styles.input}
-            placeholder="Zip Code"
-            placeholderTextColor="#B0B0B0"
-            value={eventData.location.zip}
-            onChangeText={(value) => handleLocationChange('zip', value)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Country"
-            placeholderTextColor="#B0B0B0"
-            value={eventData.location.country}
-            onChangeText={(value) => handleLocationChange('country', value)}
-          />
-        </View>
 
         <View className="mt-6">
           <Text style={styles.label}>Venue Name</Text>

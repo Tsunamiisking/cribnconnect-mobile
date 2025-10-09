@@ -56,8 +56,6 @@ const initialEventData = {
     city: "",
     state: "",
     venue: "",
-    zip: "", // Keep for frontend validation, don't send to backend
-    country: "", // Keep for frontend validation, don't send to backend
   },
   date: null, // Changed from dateTime.date to match backend
   time: "", // Changed from dateTime.startTime to match backend
@@ -67,10 +65,8 @@ const initialEventData = {
   isFree: false, // Changed from ticket.isFree to match backend
   ticketTypes: [], // New field for multiple ticket types
   media: [],
-  tags: [],
-  specialPerks: [],
-  safetyTips: [], // Keep for frontend, optional backend field
-  // Remove ticketPolicies as it's not in backend schema
+  eventSpecialPerks: [], // Changed from specialPerks to match backend
+  eventSafetyTips: [], // Changed from safetyTips to match backend
 };
 
 const useHostingStore = create(
@@ -495,11 +491,12 @@ const useHostingStore = create(
           switch (step) {
             case 1: return Boolean(data.category && data.eventType);
             case 2: return Boolean(data.title && data.description);
-            case 3: return Boolean(data.location.street && data.location.city && data.location.state);
-            case 4: return Boolean(data.isFree || data.ticketPrice);
-            case 5: return Boolean(data.date && data.time);
-            case 6: return Boolean(data.capacity); // Special perks step - capacity is required
-            case 7: return true; // Safety tips are optional
+            case 3: return Boolean(data.date && data.time);
+            case 4: return Boolean(data.location.street && data.location.city && data.location.state);
+            case 5: return Boolean(data.isFree || data.ticketPrice);
+            case 6: return Boolean(data.capacity); // EventSpecialPerks step - capacity is required
+            case 7: return true; // EventSafetyTips are optional
+            case 8: return true; // EventMedia are optional
             default: return false;
           }
         }
@@ -546,8 +543,8 @@ const useHostingStore = create(
           capacity: parseInt(eventData.capacity) || 0,
           isFree: eventData.isFree,
           ticketTypes: eventData.ticketTypes, // Include ticket types for frontend reference
-          tags: eventData.tags,
-          specialPerks: eventData.specialPerks,
+          eventSpecialPerks: eventData.eventSpecialPerks, // Updated field name
+          eventSafetyTips: eventData.eventSafetyTips, // Updated field name
           isPublished: true, // Set based on your app logic
         };
       },

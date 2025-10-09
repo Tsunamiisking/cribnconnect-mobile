@@ -35,12 +35,12 @@ const EventSpecialPerks = ({ styles }) => {
   };
 
   const togglePerk = (perkId) => {
-    const currentPerks = eventData.specialPerks || [];
+    const currentPerks = eventData.eventSpecialPerks || [];
     const updatedPerks = currentPerks.includes(perkId)
       ? currentPerks.filter(id => id !== perkId)
       : [...currentPerks, perkId];
     
-    updateEventData('specialPerks', updatedPerks);
+    updateEventData('eventSpecialPerks', updatedPerks);
   };
 
   const handleCapacityChange = (value) => {
@@ -67,7 +67,7 @@ const EventSpecialPerks = ({ styles }) => {
       </Text>
       <View style={styles.verticalOptions}>
         {perks.map((perk) => {
-          const isSelected = eventData.specialPerks?.includes(perk.id);
+          const isSelected = eventData.eventSpecialPerks?.includes(perk.id);
           const IconComponent = perk.icon;
           
           return (
@@ -129,13 +129,13 @@ const EventSpecialPerks = ({ styles }) => {
       )}
 
       {/* Selected Perks Summary */}
-      {eventData.specialPerks && eventData.specialPerks.length > 0 && (
+      {eventData.eventSpecialPerks && eventData.eventSpecialPerks.length > 0 && (
         <View style={[styles.typeOption, { marginTop: 16, backgroundColor: Colors.blue50 }]}>
           <Text style={[styles.labelText, { color: Colors.primary, marginBottom: 8 }]}>
-            Selected Perks ({eventData.specialPerks.length})
+            Selected Perks ({eventData.eventSpecialPerks.length})
           </Text>
           <Text style={styles.typeOptionDescription}>
-            {eventData.specialPerks.map(perkId => {
+            {eventData.eventSpecialPerks.map(perkId => {
               const allPerks = Object.values(perkCategories).flat();
               const perk = allPerks.find(p => p.id === perkId);
               return perk?.name;
