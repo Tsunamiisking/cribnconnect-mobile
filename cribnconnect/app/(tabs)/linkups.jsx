@@ -18,7 +18,6 @@ const PEOPLE_DATA = [
     location: "Lagos, Nigeria",
     distance: "2 km away",
     images: [
-      "https://images.unsplash.com/photo-1494790108755-2616b612b5bc?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
       "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&w=400&h=600&fit=crop",
     ],
