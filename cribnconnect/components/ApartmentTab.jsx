@@ -67,7 +67,20 @@ const ApartmentCard = ({ apartment }) => {
   };
 
   const handleEditPress = () => {
-    router.push(`/(hosting)/edit-apartment/${apartment.id}`);
+    // Determine which step to redirect to based on apartment completion status
+    const getEditStep = () => {
+      if (!apartment.title || !apartment.description) return 1; // Basic Info
+      if (!apartment.location || !apartment.address) return 2; // Location
+      if (!apartment.amenities || apartment.amenities.length === 0) return 3; // Amenities
+      if (!apartment.images || apartment.images.length === 0) return 4; // Photos
+      if (!apartment.price || !apartment.category) return 5; // Pricing & Category
+      if (!apartment.rules || apartment.rules.length === 0) return 6; // House Rules
+      if (!apartment.safetyFeatures || apartment.safetyFeatures.length === 0) return 7; // Safety
+      return 8; // Review (final step)
+    };
+
+    const step = getEditStep();
+    router.push(`/(hosting)/add-apartment?step=${step}&editId=${apartment.id}`);
   };
 
   return (

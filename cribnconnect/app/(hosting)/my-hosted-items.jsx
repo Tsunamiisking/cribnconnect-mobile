@@ -121,6 +121,15 @@ const APARTMENT_CATEGORIES = [
   "Suspended"
 ];
 
+// Event status categories
+const EVENT_CATEGORIES = [
+  "All",
+  "Upcoming",
+  "Completed", 
+  "Draft",
+  "Cancelled"
+];
+
 // Mock data for hosted events
 const HOSTED_EVENTS = [
   {
@@ -207,11 +216,23 @@ const getStatusMapping = (backendStatus) => {
   }
 };
 
+// Map event status to frontend display
+const getEventStatusMapping = (backendStatus) => {
+  switch (backendStatus) {
+    case "upcoming": return "Upcoming";
+    case "completed": return "Completed";
+    case "draft": return "Draft";
+    case "cancelled": return "Cancelled";
+    default: return "Upcoming";
+  }
+};
+
 export default function MyHostedItemsScreen() {
   const [activeTab, setActiveTab] = useState("apartments");
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApartmentCategory, setSelectedApartmentCategory] = useState("All");
+  const [selectedEventCategory, setSelectedEventCategory] = useState("All");
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -231,12 +252,17 @@ export default function MyHostedItemsScreen() {
     return matchesSearch && matchesCategory;
   });
 
-  // Filter events based on search query
+  // Filter events based on search query and status
   const filteredEvents = HOSTED_EVENTS.filter(event => {
-    return searchQuery === "" || 
+    const matchesSearch = searchQuery === "" || 
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.category.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedEventCategory === "All" || 
+      getEventStatusMapping(event.status) === selectedEventCategory;
+    
+    return matchesSearch && matchesCategory;
   });
 
   const handleSearchChange = (text) => {
@@ -252,6 +278,8 @@ export default function MyHostedItemsScreen() {
     setSearchQuery(""); // Clear search when switching tabs
     if (tab === "apartments") {
       setSelectedApartmentCategory("All"); // Reset apartment category when switching to apartments
+    } else if (tab === "events") {
+      setSelectedEventCategory("All"); // Reset event category when switching to events
     }
   };
 
@@ -277,6 +305,9 @@ export default function MyHostedItemsScreen() {
         ) : (
           <EventTab
             filteredEvents={filteredEvents}
+            categories={EVENT_CATEGORIES}
+            selectedCategory={selectedEventCategory}
+            onSelectCategory={setSelectedEventCategory}
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
             onClearSearch={clearSearch}

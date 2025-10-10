@@ -1,64 +1,74 @@
+import CategoryFilter from "@/components/CategoryFilter";
 import SearchInput from "@/components/SearchInput";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
-    Calendar,
-    DollarSign,
-    Eye,
-    MapPin,
-    Plus,
-    TrendingUp,
-    Users
+  Calendar,
+  Eye,
+  MapPin,
+  Plus,
+  TrendingUp,
+  Users,
 } from "lucide-react-native";
 import React from "react";
 import {
-    FlatList,
-    Image,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  FlatList,
+  Image,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const EventCard = ({ event }) => {
   const getStatusColor = (status) => {
     switch (status) {
-      case 'upcoming': return Colors.primary;
-      case 'completed': return Colors.success;
-      case 'cancelled': return Colors.error;
-      case 'draft': return Colors.warning;
-      default: return Colors.gray500;
+      case "upcoming":
+        return Colors.primary;
+      case "completed":
+        return Colors.success;
+      case "cancelled":
+        return Colors.error;
+      case "draft":
+        return Colors.warning;
+      default:
+        return Colors.gray500;
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'upcoming': return 'Upcoming';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      case 'draft': return 'Draft';
-      default: return 'Unknown';
+      case "upcoming":
+        return "Upcoming";
+      case "completed":
+        return "Completed";
+      case "cancelled":
+        return "Cancelled";
+      case "draft":
+        return "Draft";
+      default:
+        return "Unknown";
     }
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const formatTime = (timeString) => {
-    const [hours, minutes] = timeString.split(':');
+    const [hours, minutes] = timeString.split(":");
     const time = new Date();
     time.setHours(parseInt(hours), parseInt(minutes));
-    return time.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
+    return time.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -67,30 +77,55 @@ const EventCard = ({ event }) => {
   };
 
   const handleEditPress = () => {
-    router.push(`/(hosting)/edit-event/${event.id}`);
+    // Determine which step to redirect to based on event completion status
+    const getEditStep = () => {
+      if (!event.title || !event.description) return 1; // Basic Info
+      if (!event.category || !event.eventType) return 2; // Category & Type
+      if (!event.date || !event.time || !event.location) return 3; // Date, Time & Location
+      if (!event.capacity || !event.price) return 4; // Capacity & Pricing
+      if (!event.eventSpecialPerks || event.eventSpecialPerks.length === 0)
+        return 5; // Special Perks
+      if (!event.eventSafetyTips || event.eventSafetyTips.length === 0)
+        return 6; // Safety Tips
+      if (!event.images || event.images.length === 0) return 7; // Photos
+      return 8; // Review (final step)
+    };
+
+    const step = getEditStep();
+    router.push(`/(hosting)/add-event?step=${step}&editId=${event.id}`);
   };
 
   return (
-    <TouchableOpacity 
-      style={styles.eventCard} 
+    <TouchableOpacity
+      style={styles.eventCard}
       onPress={handleCardPress}
       activeOpacity={0.9}
     >
       <Image source={{ uri: event.images[0] }} style={styles.eventImage} />
-      
+
       <View style={styles.eventContent}>
         <View style={styles.eventHeader}>
           <View style={styles.eventTitleRow}>
             <Text style={styles.eventTitle} numberOfLines={2}>
               {event.title}
             </Text>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(event.status) + '20' }]}>
-              <Text style={[styles.statusText, { color: getStatusColor(event.status) }]}>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(event.status) + "20" },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: getStatusColor(event.status) },
+                ]}
+              >
                 {getStatusText(event.status)}
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.eventLocationRow}>
             <MapPin size={14} color={Colors.gray600} />
             <Text style={styles.eventLocation} numberOfLines={1}>
@@ -106,7 +141,7 @@ const EventCard = ({ event }) => {
               {formatDate(event.date)} at {formatTime(event.time)}
             </Text>
           </View>
-          
+
           <View style={styles.detailRow}>
             <Users size={16} color={Colors.gray600} />
             <Text style={styles.detailText}>
@@ -122,7 +157,7 @@ const EventCard = ({ event }) => {
               {event.price === "Free" ? "Free" : event.price}
             </Text>
           </View>
-          
+
           <View style={styles.statItem}>
             <TrendingUp size={16} color={Colors.success} />
             <Text style={styles.statText}>Revenue: {event.revenue}</Text>
@@ -135,11 +170,8 @@ const EventCard = ({ event }) => {
               {event.category} • {event.eventType}
             </Text>
           </View>
-          
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={handleEditPress}
-          >
+
+          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
             <Text style={styles.editButtonText}>Edit</Text>
           </TouchableOpacity>
         </View>
@@ -149,7 +181,7 @@ const EventCard = ({ event }) => {
 };
 
 const CreateEventButton = () => (
-  <TouchableOpacity 
+  <TouchableOpacity
     style={styles.createButton}
     onPress={() => router.push("/(hosting)/add-event")}
     activeOpacity={0.8}
@@ -157,39 +189,47 @@ const CreateEventButton = () => (
     <View style={styles.createButtonContent}>
       <Plus size={24} color={Colors.primary} />
       <Text style={styles.createButtonText}>Create New Event</Text>
-      <Text style={styles.createButtonSubtext}>Host a party, meetup, or gathering</Text>
+      <Text style={styles.createButtonSubtext}>
+        Host a party, meetup, or gathering
+      </Text>
     </View>
   </TouchableOpacity>
 );
 
 const NoEvents = () => (
-  <View style={styles.noResultsContainer}>
-    <View style={styles.noResultsIconContainer}>
-      <Calendar size={48} color={Colors.gray400} />
+  <>
+    <View style={styles.noResultsContainer}>
+      <View style={styles.noResultsIconContainer}>
+        <Calendar size={48} color={Colors.gray400} />
+      </View>
+      <Text style={styles.noResultsTitle}>No Events Found</Text>
+      <Text style={styles.noResultsText}>
+        You haven't hosted any events yet. Create your first event today!
+      </Text>
     </View>
-    <Text style={styles.noResultsTitle}>No Events Found</Text>
-    <Text style={styles.noResultsText}>
-      You haven't hosted any events yet. Create your first event today!
-    </Text>
-    <CreateEventButton />
-  </View>
+
+    <View style={{ width: "100%" }}>
+      <CreateEventButton />
+    </View>
+  </>
 );
 
 export default function EventTab({
   filteredEvents,
+  categories,
+  selectedCategory,
+  onSelectCategory,
   searchQuery,
   onSearchChange,
   onClearSearch,
   refreshing,
   onRefresh,
 }) {
-  const renderEvent = ({ item }) => (
-    <EventCard event={item} />
-  );
+  const renderEvent = ({ item }) => <EventCard event={item} />;
 
   const getTotalRevenue = () => {
     return filteredEvents.reduce((sum, event) => {
-      const revenue = event.revenue.replace(/[₦,]/g, '');
+      const revenue = event.revenue.replace(/[₦,]/g, "");
       return sum + parseInt(revenue || 0);
     }, 0);
   };
@@ -202,17 +242,21 @@ export default function EventTab({
         placeholder="Search your events..."
         onClear={onClearSearch}
       />
-      
+
       {filteredEvents.length > 0 && (
         <View style={styles.summaryContainer}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryNumber}>{filteredEvents.length}</Text>
-              <Text style={styles.summaryLabel}>Events</Text>
+              <Text style={styles.summaryLabel}>
+                {!selectedCategory || selectedCategory === "All"
+                  ? "Events"
+                  : selectedCategory}
+              </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryNumber}>
-                {filteredEvents.filter(e => e.status === 'upcoming').length}
+                {filteredEvents.filter((e) => e.status === "upcoming").length}
               </Text>
               <Text style={styles.summaryLabel}>Upcoming</Text>
             </View>
@@ -231,8 +275,16 @@ export default function EventTab({
           </View>
         </View>
       )}
-      
+
       <CreateEventButton />
+
+      {categories && categories.length > 0 && (
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={onSelectCategory}
+        />
+      )}
     </View>
   );
 
@@ -257,7 +309,9 @@ export default function EventTab({
             searchQuery !== "" ? (
               <View style={styles.noSearchResultsContainer}>
                 <Eye size={48} color={Colors.gray400} />
-                <Text style={styles.noSearchResultsTitle}>No Results Found</Text>
+                <Text style={styles.noSearchResultsTitle}>
+                  No Results Found
+                </Text>
                 <Text style={styles.noSearchResultsText}>
                   Try adjusting your search terms
                 </Text>
@@ -289,35 +343,35 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginBottom: 12,
   },
   summaryItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   summaryNumber: {
     fontSize: 24,
-    fontFamily: 'Sora-Bold',
+    fontFamily: "Sora-Bold",
     color: Colors.primary,
     marginBottom: 4,
   },
   summaryLabel: {
     fontSize: 12,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
   },
   revenueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: Colors.gray200,
   },
   revenueText: {
     fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.success,
     marginLeft: 8,
   },
@@ -327,21 +381,21 @@ const styles = StyleSheet.create({
     padding: 16,
     marginVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.primary + '20',
-    borderStyle: 'dashed',
+    borderColor: Colors.primary + "20",
+    borderStyle: "dashed",
   },
   createButtonContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   createButtonText: {
     fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.primary,
     marginTop: 8,
   },
   createButtonSubtext: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
     marginTop: 4,
   },
@@ -358,7 +412,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderColor,
   },
   eventImage: {
-    width: '100%',
+    width: "100%",
     height: 180,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
@@ -370,15 +424,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   eventTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 8,
   },
   eventTitle: {
     flex: 1,
     fontSize: 18,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.primary,
     marginRight: 12,
   },
@@ -389,15 +443,15 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontFamily: 'Sora-Medium',
+    fontFamily: "Sora-Medium",
   },
   eventLocationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   eventLocation: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
     marginLeft: 4,
     flex: 1,
@@ -406,54 +460,54 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   detailText: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray700,
     marginLeft: 8,
   },
   eventStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: Colors.gray200,
   },
   statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   statValue: {
     fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.primary,
     marginLeft: 4,
   },
   statText: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
     marginLeft: 4,
   },
   eventFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   categoryRow: {
     flex: 1,
   },
   categoryText: {
     fontSize: 12,
-    fontFamily: 'Sora-Medium',
+    fontFamily: "Sora-Medium",
     color: Colors.gray600,
-    textTransform: 'capitalize',
+    textTransform: "capitalize",
   },
   editButton: {
     backgroundColor: Colors.primary,
@@ -463,58 +517,58 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: 14,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.white,
   },
   emptyStateContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 32,
   },
   noResultsContainer: {
-    alignItems: 'center',
-    paddingVertical: 48,
+    alignItems: "center",
+    // paddingVertical: 48,
   },
   noResultsIconContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
     backgroundColor: Colors.gray100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   noResultsTitle: {
     fontSize: 20,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.primary,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   noResultsText: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
     marginBottom: 24,
   },
   noSearchResultsContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 48,
   },
   noSearchResultsTitle: {
     fontSize: 18,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.primary,
     marginTop: 16,
     marginBottom: 8,
   },
   noSearchResultsText: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
