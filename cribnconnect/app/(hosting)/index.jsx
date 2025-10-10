@@ -2,7 +2,7 @@ import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import useHostingStore from "@/stores/hostingStore";
 import { router } from "expo-router";
-import { Building2, FileText, List, Tickets } from "lucide-react-native";
+import { Building2, List, Tickets } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -39,34 +39,25 @@ export default function HostTypeScreen() {
       </View>
 
       <View style={styles.optionsContainer}>
-        <View style={{ alignItems: "flex-end", width: "100%" }}>
-          {drafts.length > 0 && (
-            <TouchableOpacity
-              style={styles.draftsContainer}
-              onPress={handleViewDrafts}
-            >
-              <FileText size={20} color={Colors.primary} />
-              <Text style={styles.draftsText}>
-                {drafts.length} Draft{drafts.length !== 1 ? "s" : ""} saved
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
         <TouchableOpacity
-          style={[styles.optionCard, styles.managementCard]}
+          style={[styles.optionCard, styles.dashboardCard]}
           activeOpacity={0.85}
           onPress={handleViewHostedItems}
         >
           <View className="mr-4">
-            <List size={24} color={Colors.success} />
+            <List size={24} color={Colors.primary} />
           </View>
           <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>My Hosted Items</Text>
+            <Text style={styles.optionTitle}>Host Dashboard</Text>
             <Text style={styles.optionDesc}>
-              View and manage your apartments & events
+              Manage your listings, bookings, and drafts
             </Text>
           </View>
+          {drafts.length > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.badgeText}>{drafts.length}</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -161,6 +152,28 @@ const styles = StyleSheet.create({
     borderLeftWidth: 6,
     borderLeftColor: Colors.success,
   },
+  dashboardCard: {
+    borderLeftWidth: 6,
+    borderLeftColor: Colors.primary,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: Colors.error,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  badgeText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontFamily: 'Sora-SemiBold',
+  },
   optionIcon: {
     fontSize: 32,
     marginRight: 18,
@@ -178,29 +191,5 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
     fontSize: 13,
     color: Colors.darkgray,
-  },
-  draftsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    // backgroundColor: Colors.cardBackground,
-    backgroundColor: Colors.blue50,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: Colors.borderColor,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-    maxWidth: 150,
-  },
-  draftsText: {
-    marginLeft: 8,
-    color: Colors.primary,
-    fontFamily: "Sora-Medium",
-    fontSize: 14,
   },
 });

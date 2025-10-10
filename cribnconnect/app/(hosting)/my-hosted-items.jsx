@@ -94,14 +94,31 @@ const HOSTED_APARTMENTS = [
     lastBooked: "2024-10-07",
     earnings: "₦385,000",
   },
+  {
+    id: "6",
+    title: "Penthouse - Marina District",
+    location: "Marina, Lagos Island",
+    price: "₦120,000/night",
+    status: "suspended",
+    category: "whole-space",
+    bookings: 0,
+    rating: 0,
+    reviews: 0,
+    images: [
+      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&h=300&fit=crop",
+    ],
+    dateCreated: "2024-09-15",
+    lastBooked: null,
+    earnings: "₦0",
+  },
 ];
 
-// Apartment categories
+// Apartment status categories
 const APARTMENT_CATEGORIES = [
   "All",
-  "Entire Place", 
-  "Private Room",
-  "Shared Room"
+  "Active", 
+  "Inactive",
+  "Suspended"
 ];
 
 // Mock data for hosted events
@@ -180,13 +197,13 @@ const HOSTED_EVENTS = [
   },
 ];
 
-// Map backend category to frontend display
-const getCategoryMapping = (backendCategory) => {
-  switch (backendCategory) {
-    case "whole-space": return "Entire Place";
-    case "private-room": return "Private Room";
-    case "shared-room": return "Shared Room";
-    default: return "Entire Place";
+// Map backend status to frontend display
+const getStatusMapping = (backendStatus) => {
+  switch (backendStatus) {
+    case "active": return "Active";
+    case "inactive": return "Inactive";
+    case "suspended": return "Suspended";
+    default: return "Active";
   }
 };
 
@@ -202,14 +219,14 @@ export default function MyHostedItemsScreen() {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  // Filter apartments based on search query and category
+  // Filter apartments based on search query and status
   const filteredApartments = HOSTED_APARTMENTS.filter(apartment => {
     const matchesSearch = searchQuery === "" || 
       apartment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apartment.location.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCategory = selectedApartmentCategory === "All" || 
-      getCategoryMapping(apartment.category) === selectedApartmentCategory;
+      getStatusMapping(apartment.status) === selectedApartmentCategory;
     
     return matchesSearch && matchesCategory;
   });
@@ -240,7 +257,7 @@ export default function MyHostedItemsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <BackHeader title="My Hosted Items" showUser={false} />
+      <BackHeader title="Host Dashboard" showUser={false} />
       
       <HostedTabSelector activeTab={activeTab} onTabChange={handleTabChange} />
 
