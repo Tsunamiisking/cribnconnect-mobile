@@ -35,6 +35,14 @@ export default function HostingLayout() {
             headerShown: false,
           }}
         />
+
+        <Stack.Screen
+          name="my-hosted-items"
+          options={{
+            title: "My Hosted Items",
+            headerShown: false,
+          }}
+        />
       </Stack>
     </GestureHandlerRootView>
   );

@@ -2,7 +2,7 @@ import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import useHostingStore from "@/stores/hostingStore";
 import { router } from "expo-router";
-import { Building2, FileText, Tickets } from "lucide-react-native";
+import { Building2, FileText, List, Tickets } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +23,10 @@ export default function HostTypeScreen() {
   const handleViewDrafts = () => {
     // TODO: Create a drafts screen
     router.push("/(hosting)/drafts");
+  };
+
+  const handleViewHostedItems = () => {
+    router.push("/(hosting)/my-hosted-items");
   };
 
   return (
@@ -48,6 +52,22 @@ export default function HostTypeScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        <TouchableOpacity
+          style={[styles.optionCard, styles.managementCard]}
+          activeOpacity={0.85}
+          onPress={handleViewHostedItems}
+        >
+          <View className="mr-4">
+            <List size={24} color={Colors.success} />
+          </View>
+          <View style={styles.optionContent}>
+            <Text style={styles.optionTitle}>My Hosted Items</Text>
+            <Text style={styles.optionDesc}>
+              View and manage your apartments & events
+            </Text>
+          </View>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.optionCard]}
@@ -136,6 +156,10 @@ const styles = StyleSheet.create({
   eventCard: {
     borderLeftWidth: 6,
     borderLeftColor: Colors.emerald,
+  },
+  managementCard: {
+    borderLeftWidth: 6,
+    borderLeftColor: Colors.success,
   },
   optionIcon: {
     fontSize: 32,
