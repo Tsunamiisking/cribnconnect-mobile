@@ -31,152 +31,206 @@ export default function HostTypeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* <StatusBar barStyle="dark-content" backgroundColor="white" /> */}
-      <BackHeader title="Host" showUser={true} />
-      <View style={styles.headerSection}>
-        <Text style={styles.title}>Host on CribnConnect</Text>
-        <Text style={styles.subtitle}>Choose what you want to host</Text>
-      </View>
-
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity
-          style={[styles.optionCard, styles.dashboardCard]}
-          activeOpacity={0.85}
-          onPress={handleViewHostedItems}
-        >
-          <View className="mr-4">
-            <List size={24} color={Colors.primary} />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>Host Dashboard</Text>
-            <Text style={styles.optionDesc}>
-              Manage your listings, bookings, and drafts
-            </Text>
-          </View>
-          {drafts.length > 0 && (
-            <View style={styles.notificationBadge}>
-              <Text style={styles.badgeText}>{drafts.length}</Text>
+      <BackHeader title="Host" showUser={false} />
+      
+      {/* Main Content Container */}
+      <View style={styles.mainContainer}>
+        <View style={styles.headerSection}>
+          <Text style={styles.title}>Host on CribnConnect</Text>
+          <Text style={styles.subtitle}>Choose what you want to host</Text>
+          
+          {/* Host Dashboard Bar */}
+          <TouchableOpacity
+            style={styles.dashboardBar}
+            onPress={handleViewHostedItems}
+            activeOpacity={0.7}
+          >
+            <View style={styles.dashboardContent}>
+              <View style={styles.dashboardIconContainer}>
+                <List size={16} color={Colors.primary} />
+              </View>
+              <Text style={styles.dashboardText}>Host Dashboard</Text>
             </View>
-          )}
-        </TouchableOpacity>
+            {drafts.length > 0 && (
+              <View style={styles.dashboardBadge}>
+                <Text style={styles.dashboardBadgeText}>{drafts.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={[styles.optionCard]}
-          activeOpacity={0.85}
-          onPress={handleNewApartment}
-        >
-          <View className="mr-4">
-            <Building2 />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>Apartment</Text>
-            <Text style={styles.optionDesc}>List a place for rent or stay</Text>
-          </View>
-        </TouchableOpacity>
+        {/* Hosting Options */}
+        <View style={styles.optionsContainer}>
+          <Text style={styles.optionsTitle}>Start Hosting</Text>
+          
+          <TouchableOpacity
+            style={[styles.optionCard, styles.apartmentCard]}
+            activeOpacity={0.85}
+            onPress={handleNewApartment}
+          >
+            <View style={styles.optionIconContainer}>
+              <Building2 size={24} color={Colors.primary} />
+            </View>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle}>List an Apartment</Text>
+              <Text style={styles.optionDesc}>Share your space for short or long-term stays</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.optionCard]}
-          activeOpacity={0.85}
-          onPress={handleNewEvent}
-        >
-          <View className="mr-4">
-            <Tickets />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>Event</Text>
-            <Text style={styles.optionDesc}>
-              Host a party, meetup, or gathering
-            </Text>
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.optionCard, styles.eventCard]}
+            activeOpacity={0.85}
+            onPress={handleNewEvent}
+          >
+            <View style={styles.optionIconContainer}>
+              <Tickets size={24} color={Colors.emerald} />
+            </View>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle}>Host an Event</Text>
+              <Text style={styles.optionDesc}>Create memorable experiences and bring people together</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: Colors.white,
   },
   headerSection: {
-    marginTop: 24,
-    marginBottom: 16,
-    marginLeft: 16,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray100,
   },
   title: {
     color: Colors.primary,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
     fontFamily: "Urbanist-Bold",
     textAlign: "left",
+    marginBottom: 6,
   },
   subtitle: {
-    color: Colors.darkgray,
-    fontSize: 16,
+    color: Colors.gray600,
+    fontSize: 15,
     fontFamily: "Sora-Regular",
-    fontWeight: "500",
-    marginTop: 4,
     textAlign: "left",
+    marginBottom: 20,
+    lineHeight: 22,
   },
-  optionsContainer: {
-    flex: 1,
-    justifyContent: "center",
-    // marginTop: 60,
-    gap: 18,
-    marginHorizontal: 12,
-  },
-  optionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.cardBackground,
+  dashboardBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.blue50,
     borderRadius: 16,
-    padding: 20,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: Colors.borderColor,
+    borderColor: Colors.primary + '12',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  apartmentCard: {
-    borderLeftWidth: 6,
-    borderLeftColor: Colors.primary,
+  dashboardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  eventCard: {
-    borderLeftWidth: 6,
-    borderLeftColor: Colors.emerald,
+  dashboardIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  managementCard: {
-    borderLeftWidth: 6,
-    borderLeftColor: Colors.success,
+  dashboardText: {
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.primary,
+    letterSpacing: -0.2,
   },
-  dashboardCard: {
-    borderLeftWidth: 6,
-    borderLeftColor: Colors.primary,
-    position: 'relative',
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
+  dashboardBadge: {
     backgroundColor: Colors.error,
     borderRadius: 12,
-    minWidth: 24,
-    height: 24,
+    minWidth: 22,
+    height: 22,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 8,
   },
-  badgeText: {
+  dashboardBadgeText: {
     color: Colors.white,
-    fontSize: 12,
-    fontFamily: 'Sora-SemiBold',
+    fontSize: 11,
+    fontFamily: 'Sora-Bold',
   },
-  optionIcon: {
-    fontSize: 32,
+  optionsContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 40,
+    backgroundColor: Colors.white,
+  },
+  optionsTitle: {
+    fontSize: 20,
+    fontFamily: 'Sora-Bold',
+    color: Colors.primary,
+    marginBottom: 24,
+    letterSpacing: -0.3,
+  },
+  optionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    borderRadius: 18,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: Colors.gray400,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+  },
+  apartmentCard: {
+    backgroundColor: Colors.white,
+    borderColor: Colors.gray200,
+    borderWidth: 1,
+  },
+  eventCard: {
+    backgroundColor: Colors.white,
+    borderColor: Colors.gray200,
+    borderWidth: 1,
+  },
+  optionIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: Colors.blue50,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 18,
+    shadowColor: 'rgba(0, 0, 0, 0.05)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 1,
   },
   optionContent: {
     flex: 1,
@@ -185,11 +239,14 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-SemiBold",
     fontSize: 18,
     color: Colors.primary,
-    marginBottom: 2,
+    marginBottom: 6,
+    letterSpacing: -0.2,
   },
   optionDesc: {
     fontFamily: "Sora-Regular",
-    fontSize: 13,
-    color: Colors.darkgray,
+    fontSize: 14,
+    color: Colors.gray600,
+    lineHeight: 21,
+    letterSpacing: -0.1,
   },
 });
