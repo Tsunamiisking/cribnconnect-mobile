@@ -75,8 +75,8 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
     },
     {
       id: 'profile',
-      title: 'Create Profile',
-      subtitle: 'Set up your profile information',
+      title: 'Public Profile',
+      subtitle: 'Set up your Public Profile information',
       icon: UserPlus,
       route: '/(screens)/create-profile',
       showAlways: true,
@@ -84,7 +84,7 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
     {
       id: 'notifications',
       title: 'Notifications',
-      subtitle: 'Manage your notification preferences',
+      subtitle: 'Check All Notifications Alerts',
       icon: Bell,
       route: '/(screens)/notifications',
       showWhenLoggedIn: true,
