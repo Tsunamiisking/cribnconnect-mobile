@@ -15,6 +15,7 @@ const HOSTED_APARTMENTS = [
     location: "Victoria Island, Lagos",
     price: "₦50,000/night",
     status: "active",
+    category: "whole-space",
     bookings: 15,
     rating: 4.8,
     reviews: 12,
@@ -31,6 +32,7 @@ const HOSTED_APARTMENTS = [
     location: "Lekki Phase 1, Lagos",
     price: "₦80,000/night",
     status: "active",
+    category: "whole-space",
     bookings: 8,
     rating: 4.9,
     reviews: 7,
@@ -47,6 +49,7 @@ const HOSTED_APARTMENTS = [
     location: "Ikeja GRA, Lagos",
     price: "₦25,000/night",
     status: "inactive",
+    category: "private-room",
     bookings: 3,
     rating: 4.5,
     reviews: 3,
@@ -57,6 +60,48 @@ const HOSTED_APARTMENTS = [
     lastBooked: "2024-09-15",
     earnings: "₦75,000",
   },
+  {
+    id: "4",
+    title: "Shared Duplex in Surulere",
+    location: "Surulere, Lagos",
+    price: "₦18,000/night",
+    status: "active",
+    category: "shared-room",
+    bookings: 22,
+    rating: 4.3,
+    reviews: 18,
+    images: [
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop",
+    ],
+    dateCreated: "2024-06-12",
+    lastBooked: "2024-10-09",
+    earnings: "₦396,000",
+  },
+  {
+    id: "5",
+    title: "Executive Suite - High-rise Building", 
+    location: "Ikoyi Towers, Lagos",
+    price: "₦35,000/night",
+    status: "active",
+    category: "private-room",
+    bookings: 11,
+    rating: 4.7,
+    reviews: 9,
+    images: [
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop",
+    ],
+    dateCreated: "2024-07-28",
+    lastBooked: "2024-10-07",
+    earnings: "₦385,000",
+  },
+];
+
+// Apartment categories
+const APARTMENT_CATEGORIES = [
+  "All",
+  "Entire Place", 
+  "Private Room",
+  "Shared Room"
 ];
 
 // Mock data for hosted events
@@ -135,10 +180,21 @@ const HOSTED_EVENTS = [
   },
 ];
 
+// Map backend category to frontend display
+const getCategoryMapping = (backendCategory) => {
+  switch (backendCategory) {
+    case "whole-space": return "Entire Place";
+    case "private-room": return "Private Room";
+    case "shared-room": return "Shared Room";
+    default: return "Entire Place";
+  }
+};
+
 export default function MyHostedItemsScreen() {
   const [activeTab, setActiveTab] = useState("apartments");
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedApartmentCategory, setSelectedApartmentCategory] = useState("All");
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -146,11 +202,16 @@ export default function MyHostedItemsScreen() {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  // Filter apartments based on search query
+  // Filter apartments based on search query and category
   const filteredApartments = HOSTED_APARTMENTS.filter(apartment => {
-    return searchQuery === "" || 
+    const matchesSearch = searchQuery === "" || 
       apartment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apartment.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedApartmentCategory === "All" || 
+      getCategoryMapping(apartment.category) === selectedApartmentCategory;
+    
+    return matchesSearch && matchesCategory;
   });
 
   // Filter events based on search query
@@ -172,6 +233,9 @@ export default function MyHostedItemsScreen() {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchQuery(""); // Clear search when switching tabs
+    if (tab === "apartments") {
+      setSelectedApartmentCategory("All"); // Reset apartment category when switching to apartments
+    }
   };
 
   return (
@@ -184,6 +248,9 @@ export default function MyHostedItemsScreen() {
         {activeTab === "apartments" ? (
           <ApartmentTab
             filteredApartments={filteredApartments}
+            categories={APARTMENT_CATEGORIES}
+            selectedCategory={selectedApartmentCategory}
+            onSelectCategory={setSelectedApartmentCategory}
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
             onClearSearch={clearSearch}

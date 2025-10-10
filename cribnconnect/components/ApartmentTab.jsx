@@ -1,25 +1,25 @@
+import CategoryFilter from "@/components/CategoryFilter";
 import SearchInput from "@/components/SearchInput";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
-  Building2,
-  Calendar,
-  DollarSign,
-  Eye,
-  MapPin,
-  Plus,
-  Star,
-  TrendingUp,
+    Building2,
+    Calendar,
+    Eye,
+    MapPin,
+    Plus,
+    Star,
+    TrendingUp
 } from "lucide-react-native";
 import React from "react";
 import {
-  FlatList,
-  Image,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    FlatList,
+    Image,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const ApartmentCard = ({ apartment }) => {
@@ -46,6 +46,19 @@ const ApartmentCard = ({ apartment }) => {
         return "Suspended";
       default:
         return "Unknown";
+    }
+  };
+
+  const getCategoryDisplay = (category) => {
+    switch (category) {
+      case "whole-space":
+        return "Entire Place";
+      case "private-room":
+        return "Private Room";
+      case "shared-room":
+        return "Shared Room";
+      default:
+        return "Entire Place";
     }
   };
 
@@ -119,9 +132,14 @@ const ApartmentCard = ({ apartment }) => {
         </View>
 
         <View style={styles.apartmentFooter}>
-          <View style={styles.earningsRow}>
-            <TrendingUp size={16} color={Colors.success} />
-            <Text style={styles.earningsText}>Total: {apartment.earnings}</Text>
+          <View style={styles.footerLeftSection}>
+            <View style={styles.earningsRow}>
+              <TrendingUp size={16} color={Colors.success} />
+              <Text style={styles.earningsText}>Total: {apartment.earnings}</Text>
+            </View>
+            <Text style={styles.categoryText}>
+              {getCategoryDisplay(apartment.category)}
+            </Text>
           </View>
 
           <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
@@ -166,6 +184,9 @@ const NoApartments = () => (
 
 export default function ApartmentTab({
   filteredApartments,
+  categories,
+  selectedCategory,
+  onSelectCategory,
   searchQuery,
   onSearchChange,
   onClearSearch,
@@ -190,7 +211,9 @@ export default function ApartmentTab({
               <Text style={styles.summaryNumber}>
                 {filteredApartments.length}
               </Text>
-              <Text style={styles.summaryLabel}>Properties</Text>
+              <Text style={styles.summaryLabel}>
+                {!selectedCategory || selectedCategory === "All" ? "Properties" : selectedCategory}
+              </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryNumber}>
@@ -209,6 +232,14 @@ export default function ApartmentTab({
       )}
 
       <CreateApartmentButton />
+
+      {categories && categories.length > 0 && (
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={onSelectCategory}
+        />
+      )}
     </View>
   );
 
@@ -396,15 +427,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  footerLeftSection: {
+    flex: 1,
+  },
   earningsRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 4,
   },
   earningsText: {
     fontSize: 14,
     fontFamily: "Sora-SemiBold",
     color: Colors.success,
     marginLeft: 4,
+  },
+  categoryText: {
+    fontSize: 12,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray600,
   },
   editButton: {
     backgroundColor: Colors.primary,
