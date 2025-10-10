@@ -101,7 +101,7 @@ const ApartmentCard = ({ apartment }) => {
 
         <View style={styles.apartmentStats}>
           <View style={styles.statItem}>
-            <DollarSign size={16} color={Colors.primary} />
+            {/* <DollarSign size={16} color={Colors.primary} /> */}
             <Text style={styles.statValue}>{apartment.price}</Text>
           </View>
 

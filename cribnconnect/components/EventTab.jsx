@@ -117,7 +117,7 @@ const EventCard = ({ event }) => {
 
         <View style={styles.eventStats}>
           <View style={styles.statItem}>
-            <DollarSign size={16} color={Colors.primary} />
+            {/* <DollarSign size={16} color={Colors.primary} /> */}
             <Text style={styles.statValue}>
               {event.price === "Free" ? "Free" : event.price}
             </Text>
