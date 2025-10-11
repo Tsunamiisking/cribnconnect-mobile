@@ -75,14 +75,14 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
       route: "/(screens)/create-profile",
       showAlways: true,
     },
-    {
-      id: "notifications",
-      title: "Notifications",
-      subtitle: "Check All Notifications Alerts",
-      icon: Bell,
-      route: "/(screens)/notifications",
-      showWhenLoggedIn: true,
-    },
+    // {
+    //   id: "notifications",
+    //   title: "Notifications",
+    //   subtitle: "Check All Notifications Alerts",
+    //   icon: Bell,
+    //   route: "/(screens)/notifications",
+    //   showWhenLoggedIn: true,
+    // },
     {
       id: "settings",
       title: "Settings",

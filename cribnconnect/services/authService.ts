@@ -9,8 +9,8 @@ import {
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 
-// const MONGO_URL = "https://cribnconnect-api.onrender.com";
-const MONGO_URL = "http://localhost:5000";
+const MONGO_URL = "https://cribnconnect-api.onrender.com";
+// const MONGO_URL = "http://localhost:5000";
 
 // User registration
 export const registerUser = async (userData: any) => {
