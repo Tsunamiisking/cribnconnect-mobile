@@ -1,22 +1,18 @@
+import axios from "axios";
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail,
-  updateProfile,
-  User,
+  updateProfile
 } from "firebase/auth";
-import axios from "axios";
-import { useToast } from "react-native-toast-notifications";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 
 const MONGO_URL = "https://cribnconnect-api.onrender.com";
 
 // User registration
 export const registerUser = async (userData: any) => {
-  const toast = useToast();
-
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -26,49 +22,69 @@ export const registerUser = async (userData: any) => {
     const user = userCredential.user;
 
     // Update the user's display name
-    if (userData.name) {
+    const fullName = `${userData.firstName} ${userData.lastName}`.trim();
+    if (fullName) {
       await updateProfile(user, {
-        displayName: userData.name,
+        displayName: fullName,
       });
     }
 
     // Create user document in Firestore
-    await setDoc(doc(db, "Users", user.uid), {
+    await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       email: user.email,
       firstName: userData.firstName || "",
       lastName: userData.lastName || "",
+      displayName: fullName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }).then(() => {
-      console.log("User document created in Firestore");
-      toast.show("User registered successfully", { type: "success" });
-    }).catch((err) => {
-      toast.show("Error creating user document in Firestore", { type: "danger" });
-      console.error("Firestore error:", err);
     });
 
-    // Send user data to MongoDB via external API
+    console.log("User document created in Firestore");
 
-    await axios
-      .post(MONGO_URL, {
+    // Send user data to MongoDB via external API
+    try {
+      const mongoResponse = await axios.post(MONGO_URL, {
         uid: user.uid,
         email: user.email,
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
-      })
-      .then((res) => {
-        console.log("MongoDB response:", res.data);
-        toast.show("User saved to MongoDB", { type: "success" });
-      })
-      .catch((err) => {
-        toast.show("Error saving user to MongoDB", { type: "danger" });
-        console.error("MongoDB error:", err);
+        displayName: fullName,
       });
+      console.log("MongoDB response:", mongoResponse.data);
+    } catch (mongoError) {
+      console.error("MongoDB error:", mongoError);
+      // Don't fail registration if MongoDB fails
+      // Log the error but continue
+    }
 
-    return { user, error: null };
+    return { 
+      user, 
+      error: null,
+      success: true,
+      message: "Account created successfully!"
+    };
   } catch (error: any) {
-    return { user: null, error: error.message };
+    console.error("Registration error:", error);
+    
+    // Provide user-friendly error messages
+    let errorMessage = "Registration failed. Please try again.";
+    
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = "An account with this email already exists.";
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = "Password is too weak. Please choose a stronger password.";
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = "Please enter a valid email address.";
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = "Network error. Please check your connection and try again.";
+    }
+    
+    return { 
+      user: null, 
+      error: errorMessage,
+      success: false
+    };
   }
 };
 
@@ -80,9 +96,38 @@ export const loginUser = async (email: string, password: string) => {
       email,
       password
     );
-    return { user: userCredential.user, error: null };
+    
+    return { 
+      user: userCredential.user, 
+      error: null,
+      success: true,
+      message: "Login successful!"
+    };
   } catch (error: any) {
-    return { user: null, error: error.message };
+    console.error("Login error:", error);
+    
+    // Provide user-friendly error messages
+    let errorMessage = "Login failed. Please try again.";
+    
+    if (error.code === 'auth/user-not-found') {
+      errorMessage = "No account found with this email address.";
+    } else if (error.code === 'auth/wrong-password') {
+      errorMessage = "Incorrect password. Please try again.";
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = "Please enter a valid email address.";
+    } else if (error.code === 'auth/user-disabled') {
+      errorMessage = "This account has been disabled.";
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = "Too many failed attempts. Please try again later.";
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = "Network error. Please check your connection and try again.";
+    }
+    
+    return { 
+      user: null, 
+      error: errorMessage,
+      success: false
+    };
   }
 };
 

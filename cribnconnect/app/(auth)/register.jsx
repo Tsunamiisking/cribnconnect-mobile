@@ -4,7 +4,8 @@ import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {registerUser} from '../../services/authService';
+import { useToast } from 'react-native-toast-notifications';
+import { registerUser } from '../../services/authService';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const toast = useToast();
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -68,14 +70,24 @@ export default function RegisterScreen() {
     try {
       const response = await registerUser(formData);
       
-      // Temporary navigation for demo
-      setTimeout(() => {
+      if (response.success) {
+        // Show success message
+        toast.show(response.message, { type: "success" });
+        
+        // Navigate to main app after successful registration
+        setTimeout(() => {
+          setIsLoading(false);
+          router.replace('/(tabs)');
+        }, 1500); // Give time for success message to show
+      } else {
+        // Handle registration error
         setIsLoading(false);
-        router.replace('/(tabs)');
-      }, 1000);
+        toast.show(response.error, { type: "danger" });
+      }
     } catch (error) {
       setIsLoading(false);
-      Alert.alert('Error', 'Registration failed. Please try again.');
+      console.error('Registration error:', error);
+      toast.show('An unexpected error occurred. Please try again.', { type: "danger" });
     }
   };
 
