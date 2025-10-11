@@ -40,9 +40,11 @@ export const registerUser = async (email: string, password: string, userData: an
       email: user.email,
       firstName: userData.firstName || '',
       lastName: userData.lastName || '',
+    }).then(res => res).catch(err => {
+      console.error('Error connecting to MongoDB:', err);
     });
-    
-    console.log('MongoDB response:', req.data);
+
+    console.log('MongoDB response:', req?.data);
 
     return { user, error: null };
   } catch (error: any) {
