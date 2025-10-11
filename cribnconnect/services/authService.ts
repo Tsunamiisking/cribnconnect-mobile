@@ -1,50 +1,59 @@
-import { 
+import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
   updateProfile,
-  User
-} from 'firebase/auth';
-import axios from 'axios';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+  User,
+} from "firebase/auth";
+import axios from "axios";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../config/firebase";
 
-const MONGO_URL  = 'https://cribnconnect-api.onrender.com'; 
+const MONGO_URL = "https://cribnconnect-api.onrender.com";
 
 // User registration
-export const registerUser = async (email: string, password: string, userData: any) => {
+export const registerUser = async (
+  email: string,
+  password: string,
+  userData: any
+) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
     const user = userCredential.user;
 
     // Update the user's display name
     if (userData.name) {
       await updateProfile(user, {
-        displayName: userData.name
+        displayName: userData.name,
       });
     }
 
     // Create user document in Firestore
-    await setDoc(doc(db, 'users', user.uid), {
+    await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       email: user.email,
-      firstName: userData.firstName || '',
-      lastName: userData.lastName || '',
+      firstName: userData.firstName || "",
+      lastName: userData.lastName || "",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
-    const req = await axios.post( MONGO_URL, {
-      uid: user.uid,
-      email: user.email,
-      firstName: userData.firstName || '',
-      lastName: userData.lastName || '',
-    }).then(res => res).catch(err => {
-      console.error('Error connecting to MongoDB:', err);
-    });
-
-    console.log('MongoDB response:', req?.data);
+    await axios
+      .post(MONGO_URL, {
+        uid: user.uid,
+        email: user.email,
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+      })
+      .then((res) => console.log("MongoDB response:", res.data))
+      .catch((err) => {
+        console.error("Error connecting to MongoDB:", err);
+      });
 
     return { user, error: null };
   } catch (error: any) {
@@ -55,7 +64,11 @@ export const registerUser = async (email: string, password: string, userData: an
 // User login
 export const loginUser = async (email: string, password: string) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
     return { user: userCredential.user, error: null };
   } catch (error: any) {
     return { user: null, error: error.message };
@@ -85,11 +98,11 @@ export const resetPassword = async (email: string) => {
 // Get user data from Firestore
 export const getUserData = async (uid: string) => {
   try {
-    const userDoc = await getDoc(doc(db, 'users', uid));
+    const userDoc = await getDoc(doc(db, "users", uid));
     if (userDoc.exists()) {
       return { userData: userDoc.data(), error: null };
     } else {
-      return { userData: null, error: 'User document not found' };
+      return { userData: null, error: "User document not found" };
     }
   } catch (error: any) {
     return { userData: null, error: error.message };
@@ -99,7 +112,7 @@ export const getUserData = async (uid: string) => {
 // Update user data in Firestore
 export const updateUserData = async (uid: string, userData: any) => {
   try {
-    await updateDoc(doc(db, 'users', uid), {
+    await updateDoc(doc(db, "users", uid), {
       ...userData,
       updatedAt: new Date().toISOString(),
     });
