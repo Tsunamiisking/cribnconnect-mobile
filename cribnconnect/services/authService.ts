@@ -6,8 +6,11 @@ import {
   updateProfile,
   User
 } from 'firebase/auth';
+import axios from 'axios';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+
+const MONGO_URL  = 'https://cribnconnect-api.onrender.com'; 
 
 // User registration
 export const registerUser = async (email: string, password: string, userData: any) => {
@@ -26,14 +29,20 @@ export const registerUser = async (email: string, password: string, userData: an
     await setDoc(doc(db, 'users', user.uid), {
       uid: user.uid,
       email: user.email,
-      name: userData.name || '',
-      age: userData.age || null,
-      bio: userData.bio || '',
-      interests: userData.interests || [],
-      profileImage: userData.profileImage || null,
+      firstName: userData.firstName || '',
+      lastName: userData.lastName || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+
+    const req = await axios.post( MONGO_URL, {
+      uid: user.uid,
+      email: user.email,
+      firstName: userData.firstName || '',
+      lastName: userData.lastName || '',
+    });
+    
+    console.log('MongoDB response:', req.data);
 
     return { user, error: null };
   } catch (error: any) {
