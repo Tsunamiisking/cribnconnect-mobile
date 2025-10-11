@@ -57,9 +57,9 @@ export default function RootLayout() {
           dangerColor={Colors.danger}
           warningColor={Colors.warning}
           normalColor={Colors.primary}
-          successIcon={"🍾"}
-          dangerIcon={"🚫"}
-          warningIcon={"⚠️"}
+          // successIcon={"🍾"}
+          // dangerIcon={"🚫"}
+          // warningIcon={"⚠️"}
           textStyle={{ fontSize: 16 }}
           swipeEnabled={true}
         >

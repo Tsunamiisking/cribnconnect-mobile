@@ -9,7 +9,8 @@ import {
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 
-const MONGO_URL = "https://cribnconnect-api.onrender.com";
+// const MONGO_URL = "https://cribnconnect-api.onrender.com";
+const MONGO_URL = "http://localhost:5000";
 
 // User registration
 export const registerUser = async (userData: any) => {
@@ -44,18 +45,38 @@ export const registerUser = async (userData: any) => {
 
     // Send user data to MongoDB via external API
     try {
-      const mongoResponse = await axios.post(MONGO_URL, {
+      const mongoPayload = {
         uid: user.uid,
         email: user.email,
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
         displayName: fullName,
+      };
+
+      const mongoResponse = await axios.post(`${MONGO_URL}/api/auth/register`, mongoPayload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-      console.log("MongoDB response:", mongoResponse.data);
-    } catch (mongoError) {
-      console.error("MongoDB error:", mongoError);
+      
+      console.log("✅ MongoDB sync successful:", mongoResponse.data);
+    } catch (mongoError: any) {
+      console.error("❌ MongoDB sync failed:");
+      console.error("Error status:", mongoError.response?.status);
+      console.error("Error message:", mongoError.message);
+      console.error("Error data:", mongoError.response?.data);
+      
+      if (mongoError.response?.status === 404) {
+        console.warn("MongoDB endpoint not found - check if your API is deployed and the URL is correct");
+      } else if (mongoError.code === 'ECONNREFUSED') {
+        console.warn("MongoDB API server is not running");
+      } else if (mongoError.code === 'ENOTFOUND') {
+        console.warn("MongoDB API URL is not reachable");
+      }
+      
       // Don't fail registration if MongoDB fails
-      // Log the error but continue
+      // The user account is already created in Firebase
+      console.warn("⚠️ Registration completed in Firebase, but MongoDB sync failed. This is non-critical.");
     }
 
     return { 
