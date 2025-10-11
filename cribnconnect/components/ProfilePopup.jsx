@@ -1,44 +1,39 @@
-import React from 'react';
+import { Colors } from "@/constants/Colors";
+import { useAuth } from '@/contexts/AuthContext';
+import { logoutUser } from "@/services/authService";
+import { router } from "expo-router";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Pressable,
-  Dimensions,
-} from 'react-native';
-import { router } from 'expo-router';
-import { Colors } from '@/constants/Colors';
-import { 
-  User, 
-  Settings, 
-  Bell, 
-  Home, 
-  UserPlus, 
+  Bell,
+  Home,
   LogIn,
   LogOut,
   Mail,
+  Settings,
+  UserPlus,
   X
-} from 'lucide-react-native';
-// Uncomment when you implement the AuthContext
-// import { useAuth } from '@/contexts/AuthContext';
-// import { logoutUser } from '@/services/authService';
+} from "lucide-react-native";
+import React from "react";
+import {
+  Dimensions,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function ProfilePopup({ visible, onClose, user = null }) {
-  // Uncomment these lines when you implement the AuthContext:
-  // const { user: authUser, isAuthenticated } = useAuth();
-  // const currentUser = authUser || user;
-  
-  // For now, using mock data - TODO: Replace with actual user data from Firebase
-  const isAuthenticated = false; // Change this based on your auth state
-  const currentUser = user || {
-    name: "Guest User",
-    email: null, // null if not logged in
-    isLoggedIn: isAuthenticated,
-  };
+  // Use the AuthContext to get current user and authentication state
+  const { user: authUser, isAuthenticated, loading } = useAuth();
+  const currentUser = authUser || user;
+
+  // Don't render anything while loading auth state
+  if (loading) {
+    return null;
+  }
 
   const handleNavigation = (route) => {
     onClose(); // Close popup first
@@ -49,66 +44,65 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
 
   const handleLogout = async () => {
     try {
-      // Uncomment when implementing Firebase auth:
-      // const result = await logoutUser();
-      // if (result.success) {
-      //   onClose();
-      //   router.push('/(auth)/login');
-      // }
-      
-      // For now, just log and close
-      console.log('Logout clicked');
-      onClose();
+      const result = await logoutUser();
+      if (result.success) {
+        console.log("Logout successful");
+        onClose();
+        router.replace("/(tabs)"); // Redirect to home after logout
+      } else {
+        console.error("Logout error:", result.error);
+        // You could show a toast notification here
+      }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
   const menuItems = [
     {
-      id: 'host',
-      title: 'Host',
-      subtitle: 'Everything Apartments, Events',
+      id: "host",
+      title: "Host",
+      subtitle: "Everything Apartments, Events",
       icon: Home,
-      route: '/(hosting)',
+      route: "/(hosting)",
       showAlways: true,
     },
     {
-      id: 'profile',
-      title: 'Public Profile',
-      subtitle: 'Set up your Public Profile',
+      id: "profile",
+      title: "Public Profile",
+      subtitle: "Set up your Public Profile",
       icon: UserPlus,
-      route: '/(screens)/create-profile',
+      route: "/(screens)/create-profile",
       showAlways: true,
     },
     {
-      id: 'notifications',
-      title: 'Notifications',
-      subtitle: 'Check All Notifications Alerts',
+      id: "notifications",
+      title: "Notifications",
+      subtitle: "Check All Notifications Alerts",
       icon: Bell,
-      route: '/(screens)/notifications',
+      route: "/(screens)/notifications",
       showWhenLoggedIn: true,
     },
     {
-      id: 'settings',
-      title: 'Settings',
-      subtitle: 'Account and app preferences',
+      id: "settings",
+      title: "Settings",
+      subtitle: "Account and app preferences",
       icon: Settings,
-      route: '/(screens)/settings',
+      route: "/(screens)/settings",
       showAlways: true,
     },
     {
-      id: 'login',
-      title: 'Login',
-      subtitle: 'Sign in to your account',
+      id: "login",
+      title: "Login",
+      subtitle: "Sign in to your account",
       icon: LogIn,
-      route: '/(auth)/login',
+      route: "/(auth)/login",
       showWhenLoggedOut: true,
     },
     {
-      id: 'logout',
-      title: 'Logout',
-      subtitle: 'Sign out of your account',
+      id: "logout",
+      title: "Logout",
+      subtitle: "Sign out of your account",
       icon: LogOut,
       action: handleLogout,
       showWhenLoggedIn: true,
@@ -116,7 +110,7 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
   ];
 
   // Filter menu items based on login status
-  const visibleMenuItems = menuItems.filter(item => {
+  const visibleMenuItems = menuItems.filter((item) => {
     if (item.showAlways) return true;
     if (item.showWhenLoggedIn && isAuthenticated) return true;
     if (item.showWhenLoggedOut && !isAuthenticated) return true;
@@ -145,14 +139,25 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  {currentUser?.displayName
+                    ? currentUser.displayName.split(" ").map((n) => n[0]).join("").toUpperCase()
+                    : currentUser?.name
+                    ? currentUser.name.split(" ").map((n) => n[0]).join("").toUpperCase()
+                    : currentUser?.firstName && currentUser?.lastName
+                    ? `${currentUser.firstName[0]}${currentUser.lastName[0]}`.toUpperCase()
+                    : currentUser?.email
+                    ? currentUser.email[0].toUpperCase()
+                    : "G"}
                 </Text>
               </View>
             </View>
-            
+
             <View style={styles.userInfo}>
               <Text style={styles.userName}>
-                {currentUser?.displayName || currentUser?.name || "Guest User"}
+                {currentUser?.displayName || 
+                 currentUser?.name || 
+                 `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() ||
+                 "Guest User"}
               </Text>
               {currentUser?.email ? (
                 <View style={styles.emailContainer}>
@@ -176,7 +181,9 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
                 <TouchableOpacity
                   key={item.id}
                   style={styles.menuItem}
-                  onPress={() => item.action ? item.action() : handleNavigation(item.route)}
+                  onPress={() =>
+                    item.action ? item.action() : handleNavigation(item.route)
+                  }
                   activeOpacity={0.7}
                 >
                   <View style={styles.menuIconContainer}>
@@ -202,9 +209,9 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
     paddingTop: 64, // Account for header height
     paddingRight: 16,
   },
@@ -223,16 +230,16 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   popupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightBackground,
   },
   popupTitle: {
-    fontFamily: 'Urbanist-Bold',
+    fontFamily: "Urbanist-Bold",
     fontSize: 18,
     color: Colors.gray900,
   },
@@ -240,8 +247,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   userSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 20,
   },
@@ -253,38 +260,38 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarText: {
     color: Colors.white,
-    fontFamily: 'Sora-Bold',
+    fontFamily: "Sora-Bold",
     fontSize: 18,
   },
   userInfo: {
     flex: 1,
   },
   userName: {
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     fontSize: 16,
     color: Colors.gray900,
     marginBottom: 4,
   },
   emailContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   userEmail: {
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     fontSize: 14,
     color: Colors.gray500,
     marginLeft: 6,
   },
   userStatus: {
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     fontSize: 14,
     color: Colors.gray500,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   divider: {
     height: 1,
@@ -295,8 +302,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     activeOpacity: 0.7,
@@ -306,21 +313,21 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: Colors.lightBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 16,
   },
   menuTextContainer: {
     flex: 1,
   },
   menuTitle: {
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     fontSize: 16,
     color: Colors.gray900,
     marginBottom: 2,
   },
   menuSubtitle: {
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     fontSize: 13,
     color: Colors.gray500,
     lineHeight: 18,
@@ -331,6 +338,6 @@ const styles = StyleSheet.create({
   arrowText: {
     fontSize: 20,
     color: Colors.gray400,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

@@ -4,10 +4,11 @@ import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import "../global.css";
-import { Colors } from "../constants/Colors";
-import useHostingStore from "../stores/hostingStore";
 import { ToastProvider } from "react-native-toast-notifications";
+import { Colors } from "../constants/Colors";
+import { AuthProvider } from "../contexts/AuthContext";
+import "../global.css";
+import useHostingStore from "../stores/hostingStore";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -46,40 +47,42 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ToastProvider
-        placement="top"
-        duration={3000}
-        animationType="slide-in | zoom-in"
-        animationDuration={250}
-        successColor={Colors.green}
-        dangerColor={Colors.danger}
-        warningColor={Colors.warning}
-        normalColor={Colors.primary}
-        successIcon={"🍾"}
-        dangerIcon={"🚫"}
-        warningIcon={"⚠️"}
-        textStyle={{ fontSize: 16 }}
-        swipeEnabled={true}
-      >
-        <Stack>
-          {/* Auth Flow - Welcome, Login, Register */}
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <AuthProvider>
+        <ToastProvider
+          placement="top"
+          duration={3000}
+          animationType="slide-in | zoom-in"
+          animationDuration={250}
+          successColor={Colors.green}
+          dangerColor={Colors.danger}
+          warningColor={Colors.warning}
+          normalColor={Colors.primary}
+          successIcon={"🍾"}
+          dangerIcon={"🚫"}
+          warningIcon={"⚠️"}
+          textStyle={{ fontSize: 16 }}
+          swipeEnabled={true}
+        >
+          <Stack>
+            {/* Auth Flow - Welcome, Login, Register */}
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
 
-          {/* Main App - Tab Navigator */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            {/* Main App - Tab Navigator */}
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-          {/* Detail Screens */}
-          <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+            {/* Detail Screens */}
+            <Stack.Screen name="(screens)" options={{ headerShown: false }} />
 
-          {/* Hosting Flows */}
-          <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
+            {/* Hosting Flows */}
+            <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
 
-          {/* 404 Screen */}
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar barStyle="dark-content" backgroundColor="white" />
-      </ToastProvider>
+            {/* 404 Screen */}
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar barStyle="dark-content" backgroundColor="white" />
+        </ToastProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }
