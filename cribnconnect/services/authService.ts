@@ -33,14 +33,22 @@ export const registerUser = async (userData: any) => {
     }
 
     // Create user document in Firestore
-    await setDoc(doc(db, "users", user.uid), {
+    await setDoc(doc(db, "Users", user.uid), {
       uid: user.uid,
       email: user.email,
       firstName: userData.firstName || "",
       lastName: userData.lastName || "",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+    }).then(() => {
+      console.log("User document created in Firestore");
+      toast.show("User registered successfully", { type: "success" });
+    }).catch((err) => {
+      toast.show("Error creating user document in Firestore", { type: "danger" });
+      console.error("Firestore error:", err);
     });
+
+    // Send user data to MongoDB via external API
 
     await axios
       .post(MONGO_URL, {
