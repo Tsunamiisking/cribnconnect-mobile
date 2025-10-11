@@ -5,7 +5,9 @@ import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
+import { Colors } from "../constants/Colors";
 import useHostingStore from "../stores/hostingStore";
+import { ToastProvider } from "react-native-toast-notifications";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -30,7 +32,7 @@ export default function RootLayout() {
 
   // Initialize hosting store and run cleanup
   const { initialize } = useHostingStore();
-  
+
   useEffect(() => {
     if (loaded) {
       // Initialize hosting store cleanup on app start
@@ -43,7 +45,22 @@ export default function RootLayout() {
   }
 
   return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ToastProvider
+        placement="top"
+        duration={3000}
+        animationType="slide-in | zoom-in"
+        animationDuration={250}
+        successColor={Colors.green}
+        dangerColor={Colors.danger}
+        warningColor={Colors.warning}
+        normalColor={Colors.primary}
+        successIcon={"🍾"}
+        dangerIcon={"🚫"}
+        warningIcon={"⚠️"}
+        textStyle={{ fontSize: 16 }}
+        swipeEnabled={true}
+      >
         <Stack>
           {/* Auth Flow - Welcome, Login, Register */}
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -61,8 +78,8 @@ export default function RootLayout() {
           {/* 404 Screen */}
           <Stack.Screen name="+not-found" />
         </Stack>
-              <StatusBar barStyle="dark-content" backgroundColor="white" />
-
-      </GestureHandlerRootView>
+        <StatusBar barStyle="dark-content" backgroundColor="white" />
+      </ToastProvider>
+    </GestureHandlerRootView>
   );
 }
