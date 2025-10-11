@@ -125,7 +125,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder="First name"
-                    placeholderTextColor={Colors.gray400}
+                    placeholderTextColor={Colors.gray300}
                     value={formData.firstName}
                     onChangeText={(value) => updateField('firstName', value)}
                     autoComplete="given-name"
@@ -141,7 +141,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder="Last name"
-                    placeholderTextColor={Colors.gray400}
+                    placeholderTextColor={Colors.gray300}
                     value={formData.lastName}
                     onChangeText={(value) => updateField('lastName', value)}
                     autoComplete="family-name"
@@ -159,7 +159,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
-                  placeholderTextColor={Colors.gray400}
+                  placeholderTextColor={Colors.gray300}
                   value={formData.email}
                   onChangeText={(value) => updateField('email', value)}
                   keyboardType="email-address"
@@ -178,7 +178,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Create a password"
-                  placeholderTextColor={Colors.gray400}
+                  placeholderTextColor={Colors.gray300}
                   value={formData.password}
                   onChangeText={(value) => updateField('password', value)}
                   secureTextEntry={!showPassword}
@@ -205,7 +205,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Confirm your password"
-                  placeholderTextColor={Colors.gray400}
+                  placeholderTextColor={Colors.gray300}
                   value={formData.confirmPassword}
                   onChangeText={(value) => updateField('confirmPassword', value)}
                   secureTextEntry={!showConfirmPassword}
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   form: {
-    marginBottom: 32,
+    marginBottom: 18,
   },
   nameRow: {
     flexDirection: 'row',
