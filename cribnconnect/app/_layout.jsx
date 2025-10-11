@@ -1,10 +1,11 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
+import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import React from "react";
+import useHostingStore from "../stores/hostingStore";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -26,6 +27,16 @@ export default function RootLayout() {
     // Fallback
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  // Initialize hosting store and run cleanup
+  const { initialize } = useHostingStore();
+  
+  useEffect(() => {
+    if (loaded) {
+      // Initialize hosting store cleanup on app start
+      initialize();
+    }
+  }, [loaded, initialize]);
 
   if (!loaded) {
     return null;
