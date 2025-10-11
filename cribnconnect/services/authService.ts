@@ -7,6 +7,7 @@ import {
   User,
 } from "firebase/auth";
 import axios from "axios";
+import { useToast } from "react-native-toast-notifications";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 
@@ -14,6 +15,8 @@ const MONGO_URL = "https://cribnconnect-api.onrender.com";
 
 // User registration
 export const registerUser = async (userData: any) => {
+  const toast = useToast();
+
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -46,9 +49,13 @@ export const registerUser = async (userData: any) => {
         firstName: userData.firstName || "",
         lastName: userData.lastName || "",
       })
-      .then((res) => console.log("MongoDB response:", res.data))
+      .then((res) => {
+        console.log("MongoDB response:", res.data);
+        toast.show("User saved to MongoDB", { type: "success" });
+      })
       .catch((err) => {
-        console.error("Error connecting to MongoDB:", err);
+        toast.show("Error saving user to MongoDB", { type: "danger" });
+        console.error("MongoDB error:", err);
       });
 
     return { user, error: null };
