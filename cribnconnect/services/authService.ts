@@ -13,16 +13,12 @@ import { auth, db } from "../config/firebase";
 const MONGO_URL = "https://cribnconnect-api.onrender.com";
 
 // User registration
-export const registerUser = async (
-  email: string,
-  password: string,
-  userData: any
-) => {
+export const registerUser = async (userData: any) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
-      email,
-      password
+      userData.email,
+      userData.password
     );
     const user = userCredential.user;
 

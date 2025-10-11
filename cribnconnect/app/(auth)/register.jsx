@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {registerUser} from '../../services/authService';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -65,14 +66,7 @@ export default function RegisterScreen() {
     setIsLoading(true);
     
     try {
-      // TODO: Add API integration for registration
-      // Example API call:
-      // const response = await api.register(formData);
-      // if (response.success) {
-      //   // Store auth token
-      //   // Navigate to main app or onboarding
-      //   router.replace('/(tabs)');
-      // }
+      const response = await registerUser(formData);
       
       // Temporary navigation for demo
       setTimeout(() => {
