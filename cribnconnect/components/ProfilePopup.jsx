@@ -76,7 +76,7 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
     {
       id: 'profile',
       title: 'Public Profile',
-      subtitle: 'Set up your Public Profile information',
+      subtitle: 'Set up your Public Profile',
       icon: UserPlus,
       route: '/(screens)/create-profile',
       showAlways: true,
