@@ -39,95 +39,96 @@ export default function CreateProfile() {
   const maxImages = 3;
   const [mediaFiles, setMediaFiles] = useState([]);
 
-   const uploadPublicProfile = async () => {
-    if (!isAuthenticated || !user) {
-      toast.show('Please log in to create your profile', {
-        type: 'danger',
-      });
-      return;
-    }
+ const uploadPublicProfile = async () => {
+  if (!isAuthenticated || !user) {
+    toast.show('Please log in to create your profile', {
+      type: 'danger',
+    });
+    return;
+  }
 
-    setUploading(true);
+  setUploading(true);
+  
+  try {
+    // Get Firebase auth token
+    const idToken = await user.getIdToken();
+
+    const uploadFormData = new FormData();
+
+    // Add text fields
+    uploadFormData.append('username', formData.username.trim());
+    uploadFormData.append('bio', formData.biography.trim());
     
-    try {
-      // Get Firebase auth token
-      const idToken = await user.getIdToken();
-
-      const uploadFormData = new FormData();
-
-      // Add text fields
-      uploadFormData.append('username', formData.username.trim());
-      uploadFormData.append('bio', formData.biography.trim());
-      
-      // Convert interests to array
-      if (formData.interests.trim()) {
-        const interestsArray = formData.interests.split(',').map(item => item.trim()).filter(item => item.length > 0);
-        uploadFormData.append('interests', JSON.stringify(interestsArray));
-      }
-
-      // Add images
-      formData.images.forEach((image, index) => {
-        uploadFormData.append('files', {
-          uri: typeof image === 'string' ? image : image.uri,
-          type: 'image/jpeg',
-          name: `image_${index}.jpg`,
-        });
-      });
-
-      // Add video
-      if (formData.video) {
-        uploadFormData.append('files', {
-          uri: typeof formData.video === 'string' ? formData.video : formData.video.uri,
-          type: 'video/mp4',
-          name: 'profile_video.mp4',
-        });
-      }
-
-      // Use the API endpoint from environment variables
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000';
-      const response = await fetch(`${API_BASE_URL}/uploads/public-profiles`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-          // Note: Don't set Content-Type for FormData, let the browser set it with boundary
-        },
-        body: uploadFormData,
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast.show('Your public profile has been uploaded successfully', {
-          type: 'success',
-        });
-        
-        // Reset form
-        setFormData({
-          username: '',
-          biography: '',
-          interests: '',
-          images: [],
-          video: null,
-        });
-        setMediaFiles([]);
-        setCharacterCount(0);
-        
-        // Navigate back or to profile
-        router.back();
-      } else {
-        throw new Error(result.message || 'Upload failed');
-      }
-
-    } catch (error) {
-      console.error('Profile upload error:', error);
-      toast.show(error.message || 'Failed to upload profile. Please try again.', {
-        type: 'danger',
-      });
-    } finally {
-      setUploading(false);
+    // Convert interests to array
+    if (formData.interests.trim()) {
+      const interestsArray = formData.interests
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+      uploadFormData.append('interests', JSON.stringify(interestsArray));
     }
-  };
 
+    // Add images - fix the structure
+    formData.images.forEach((imageUri, index) => {
+      uploadFormData.append('files', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: `image_${index}.jpg`,
+      });
+    });
+
+    // Add video - fix the structure
+    if (formData.video) {
+      uploadFormData.append('files', {
+        uri: formData.video.uri, // Access the uri property from the video object
+        type: 'video/mp4',
+        name: 'profile_video.mp4',
+      });
+    }
+
+    // Fix the API endpoint URL
+    const API_BASE_URL = process.env.EXPO_PUBLIC_API_LINK || "https://cribnconnect-api.onrender.com";
+    const response = await fetch(`${API_BASE_URL}/api/uploads/public-profiles`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+      },
+      body: uploadFormData,
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      toast.show('Your public profile has been uploaded successfully', {
+        type: 'success',
+      });
+      
+      // Reset form
+      setFormData({
+        username: '',
+        biography: '',
+        interests: '',
+        images: [],
+        video: null,
+      });
+      setMediaFiles([]);
+      setCharacterCount(0);
+      
+      // Navigate back or to profile
+      router.back();
+    } else {
+      throw new Error(result.message || 'Upload failed');
+    }
+
+  } catch (error) {
+    console.error('Profile upload error:', error);
+    toast.show(error.message || 'Failed to upload profile. Please try again.', {
+      type: 'danger',
+    });
+  } finally {
+    setUploading(false);
+  }
+};
   // Handle form input changes
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
