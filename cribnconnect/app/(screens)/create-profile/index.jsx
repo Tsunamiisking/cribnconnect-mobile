@@ -1,5 +1,6 @@
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
+import { useAuth } from "@/contexts/AuthContext";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
@@ -19,8 +20,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useToast } from "react-native-toast-notifications";
 
 export default function CreateProfile() {
+  const { user, isAuthenticated } = useAuth();
+  const toast = useToast();
   const [formData, setFormData] = useState({
     username: "",
     biography: "",
@@ -30,56 +34,62 @@ export default function CreateProfile() {
   });
 
   const [characterCount, setCharacterCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  // const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const maxBioChars = 300;
   const maxImages = 3;
   const [mediaFiles, setMediaFiles] = useState([]);
 
    const uploadPublicProfile = async () => {
-    setLoading(true);
+    if (!isAuthenticated || !user) {
+      toast.show('Please log in to create your profile', {
+        type: 'danger',
+      });
+      return;
+    }
+
+    setUploading(true);
     
     try {
-      const user = auth().currentUser;
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      // Get Firebase auth token
       const idToken = await user.getIdToken();
 
       const uploadFormData = new FormData();
 
       // Add text fields
-      uploadFormData.append('username', formData.username);
-      uploadFormData.append('bio', formData.biography);
+      uploadFormData.append('username', formData.username.trim());
+      uploadFormData.append('bio', formData.biography.trim());
       
       // Convert interests to array
-      if (formData.interests) {
-        const interestsArray = formData.interests.split(',').map(item => item.trim());
+      if (formData.interests.trim()) {
+        const interestsArray = formData.interests.split(',').map(item => item.trim()).filter(item => item.length > 0);
         uploadFormData.append('interests', JSON.stringify(interestsArray));
       }
 
       // Add images
       formData.images.forEach((image, index) => {
         uploadFormData.append('files', {
-          uri: image.uri,
-          type: image.type || 'image/jpeg',
-          name: image.fileName || `image_${index}.jpg`,
+          uri: typeof image === 'string' ? image : image.uri,
+          type: 'image/jpeg',
+          name: `image_${index}.jpg`,
         });
       });
 
       // Add video
       if (formData.video) {
         uploadFormData.append('files', {
-          uri: formData.video.uri,
-          type: formData.video.type || 'video/mp4',
-          name: formData.video.fileName || 'video.mp4',
+          uri: typeof formData.video === 'string' ? formData.video : formData.video.uri,
+          type: 'video/mp4',
+          name: 'profile_video.mp4',
         });
       }
 
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_LINK}/uploads/public-profiles`, {
+      // Use the API endpoint from environment variables
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000';
+      const response = await fetch(`${API_BASE_URL}/uploads/public-profiles`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${idToken}`,
+          // Note: Don't set Content-Type for FormData, let the browser set it with boundary
         },
         body: uploadFormData,
       });
@@ -87,7 +97,10 @@ export default function CreateProfile() {
       const result = await response.json();
 
       if (response.ok) {
-        Alert.alert('Success', 'Profile uploaded successfully!');
+        toast.show('Your public profile has been uploaded successfully', {
+          type: 'success',
+        });
+        
         // Reset form
         setFormData({
           username: '',
@@ -96,12 +109,20 @@ export default function CreateProfile() {
           images: [],
           video: null,
         });
+        setMediaFiles([]);
+        setCharacterCount(0);
+        
+        // Navigate back or to profile
+        router.back();
       } else {
         throw new Error(result.message || 'Upload failed');
       }
 
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.error('Profile upload error:', error);
+      toast.show(error.message || 'Failed to upload profile. Please try again.', {
+        type: 'danger',
+      });
     } finally {
       setUploading(false);
     }
@@ -235,103 +256,21 @@ export default function CreateProfile() {
   const handleSubmit = () => {
     // Basic validation
     if (!formData.username.trim()) {
-      Alert.alert("Username Required", "Please enter a username to continue.");
+      toast.show('Please enter a username to continue.', {
+        type: 'warning',
+      });
       return;
     }
 
     if (formData.images.length === 0) {
-      Alert.alert(
-        "Photos Required",
-        "Please add at least one photo to your profile."
-      );
+      toast.show('Please add at least one photo to your profile.', {
+        type: 'warning',
+      });
       return;
     }
 
-    setLoading(true);
-
-    // Process the data for API submission
-    const processedFormData = {
-      ...formData,
-      // Process interests string into an array
-      interests: formData.interests
-        .split(",")
-        .map((interest) => interest.trim())
-        .filter((interest) => interest !== ""),
-      // For the API, we might want to keep just the URIs
-      videoUri: formData.video?.uri || null,
-    };
-
-    // TODO: Add API integration for profile creation
-    // Example API call:
-    // try {
-    //   // Create form data for multipart upload
-    //   const apiFormData = new FormData();
-    //
-    //   // Add text fields
-    //   apiFormData.append('username', processedFormData.username);
-    //   apiFormData.append('biography', processedFormData.biography);
-    //   apiFormData.append('interests', JSON.stringify(processedFormData.interests));
-    //
-    //   // Add images
-    //   processedFormData.images.forEach((imageUri, index) => {
-    //     const filename = imageUri.split('/').pop();
-    //     const match = /\.(\w+)$/.exec(filename);
-    //     const type = match ? `image/${match[1]}` : 'image';
-    //     apiFormData.append('images', {
-    //       uri: imageUri,
-    //       name: filename,
-    //       type
-    //     });
-    //   });
-    //
-    //   // Add video if exists
-    //   if (processedFormData.videoUri) {
-    //     const filename = processedFormData.videoUri.split('/').pop();
-    //     const match = /\.(\w+)$/.exec(filename);
-    //     const type = match ? `video/${match[1]}` : 'video/mp4';
-    //     apiFormData.append('video', {
-    //       uri: processedFormData.videoUri,
-    //       name: filename,
-    //       type
-    //     });
-    //   }
-    //
-    //   // Send to API
-    //   const response = await fetch('https://your-api-url.com/profile', {
-    //     method: 'POST',
-    //     body: apiFormData,
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data',
-    //       'Authorization': 'Bearer YOUR_AUTH_TOKEN'
-    //     }
-    //   });
-    //
-    //   const result = await response.json();
-    //   if (result.success) {
-    //     router.replace('/(tabs)');
-    //   } else {
-    //     Alert.alert('Error', result.message || 'Failed to create profile');
-    //   }
-    // } catch (error) {
-    //   console.error('Error creating profile:', error);
-    //   Alert.alert('Error', 'Failed to create profile. Please try again.');
-    // } finally {
-    //   setLoading(false);
-    // }
-
-    console.log("Submitting profile data:", {
-      username: processedFormData.username,
-      biography: processedFormData.biography,
-      interests: processedFormData.interests,
-      imageCount: processedFormData.images.length,
-      hasVideo: !!processedFormData.videoUri,
-    });
-
-    // Temporary navigation for demo
-    setTimeout(() => {
-      setLoading(false);
-      router.replace("/(tabs)");
-    }, 1500);
+    // Call the upload function
+    uploadPublicProfile();
   };
 
   return (
@@ -496,9 +435,9 @@ export default function CreateProfile() {
           <TouchableOpacity
             style={styles.createProfileButton}
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={uploading}
           >
-            {loading ? (
+            {uploading ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
               <Text style={styles.buttonText}>Create Profile</Text>
