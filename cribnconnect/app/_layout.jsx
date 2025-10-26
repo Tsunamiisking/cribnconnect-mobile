@@ -38,6 +38,16 @@ export default function RootLayout() {
     if (loaded) {
       // Initialize hosting store cleanup on app start
       initialize();
+      // Check location permission when app starts
+      const checkPermissions = async () => {
+        try {
+          const { checkLocationPermission } = await import('@/utils/userLocation');
+          await checkLocationPermission();
+        } catch (error) {
+          console.error('Error checking location permissions:', error);
+        }
+      };
+      checkPermissions();
     }
   }, [loaded, initialize]);
 

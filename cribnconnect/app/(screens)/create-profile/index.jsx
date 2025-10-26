@@ -1,6 +1,5 @@
 import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
-import * as Location from "expo-location";
 import { Colors } from "@/constants/Colors";
 import axios from "axios";
 import { useAuth } from "@/contexts/AuthContext";
