@@ -1,9 +1,12 @@
+import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
+import axios from "axios";
 import { useAuth } from "@/contexts/AuthContext";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
+import { auth } from "@/config/firebase";
 import { Camera, ImagePlus, Play, UserRound, X } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -39,96 +42,91 @@ export default function CreateProfile() {
   const maxImages = 3;
   const [mediaFiles, setMediaFiles] = useState([]);
 
- const uploadPublicProfile = async () => {
-  if (!isAuthenticated || !user) {
-    toast.show('Please log in to create your profile', {
-      type: 'danger',
-    });
-    return;
-  }
+  // corrected upload function — paste into your component
 
-  setUploading(true);
-  
-  try {
-    // Get Firebase auth token
-    const idToken = await user.getIdToken();
-
-    const uploadFormData = new FormData();
-
-    // Add text fields
-    uploadFormData.append('username', formData.username.trim());
-    uploadFormData.append('bio', formData.biography.trim());
-    
-    // Convert interests to array
-    if (formData.interests.trim()) {
-      const interestsArray = formData.interests
-        .split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
-      uploadFormData.append('interests', JSON.stringify(interestsArray));
+  const uploadPublicProfile = async () => {
+    if (!isAuthenticated || !user) {
+      toast.show("Please log in to create your profile", { type: "danger" });
+      return;
     }
+    setUploading(true);
 
-    // Add images - fix the structure
-    formData.images.forEach((imageUri, index) => {
-      uploadFormData.append('files', {
-        uri: imageUri,
-        type: 'image/jpeg',
-        name: `image_${index}.jpg`,
+    try {
+      // const idToken = await user.getIdToken();
+      const idToken = await auth?.currentUser.getIdToken(true);
+      console.log("IdToken: ", idToken);
+
+      const uploadFormData = new FormData();
+
+      uploadFormData.append("username", formData.username.trim());
+      uploadFormData.append("bio", formData.biography.trim());
+
+      if (formData.interests.trim()) {
+        const interestsArray = formData.interests
+          .split(",")
+          .map((i) => i.trim())
+          .filter(Boolean);
+        uploadFormData.append("interests", JSON.stringify(interestsArray));
+      }
+
+      // images (formData.images are URIs)
+      formData.images.forEach((imageUri, index) => {
+        const uri = imageUri.startsWith("file://") ? imageUri : imageUri;
+        uploadFormData.append("files", {
+          uri,
+          type: "image/jpeg",
+          name: `image_${index}.jpg`,
+        });
       });
-    });
 
-    // Add video - fix the structure
-    if (formData.video) {
-      uploadFormData.append('files', {
-        uri: formData.video.uri, // Access the uri property from the video object
-        type: 'video/mp4',
-        name: 'profile_video.mp4',
+      // single video (if present)
+      if (formData.video) {
+        const uri = formData.video.uri.startsWith("file://")
+          ? formData.video.uri
+          : formData.video.uri;
+        uploadFormData.append("files", {
+          uri,
+          type: formData.video.type || "video/mp4",
+          name: formData.video.fileName || "profile_video.mp4",
+        });
+      }
+
+      // const API_BASE_URL = "https://cribnconnect-api.onrender.com";
+      const url = `https://cribnconnect-api.onrender.com/api/uploads/public-profiles`;
+
+      const resp = await axios.post(url, uploadFormData, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          Accept: "application/json",
+        },
       });
-    }
 
-    // Fix the API endpoint URL
-    const API_BASE_URL = process.env.EXPO_PUBLIC_API_LINK || "https://cribnconnect-api.onrender.com";
-    const response = await fetch(`${API_BASE_URL}/api/uploads/public-profiles`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${idToken}`,
-      },
-      body: uploadFormData,
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      toast.show('Your public profile has been uploaded successfully', {
-        type: 'success',
+      toast.show("Your public profile has been uploaded successfully", {
+        type: "success",
       });
-      
-      // Reset form
       setFormData({
-        username: '',
-        biography: '',
-        interests: '',
+        username: "",
+        biography: "",
+        interests: "",
         images: [],
         video: null,
       });
       setMediaFiles([]);
       setCharacterCount(0);
-      
-      // Navigate back or to profile
       router.back();
-    } else {
-      throw new Error(result.message || 'Upload failed');
+      return resp.data;
+    } catch (err) {
+      console.error("Upload error:", err);
+      // helpful debug logs
+      if (err.response) {
+        console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
+      }
+      toast.show(`Upload failed: ${err.message}`, { type: "danger" });
+    } finally {
+      setUploading(false);
     }
-
-  } catch (error) {
-    console.error('Profile upload error:', error);
-    toast.show(error.message || 'Failed to upload profile. Please try again.', {
-      type: 'danger',
-    });
-  } finally {
-    setUploading(false);
-  }
-};
+  };
   // Handle form input changes
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -257,15 +255,15 @@ export default function CreateProfile() {
   const handleSubmit = () => {
     // Basic validation
     if (!formData.username.trim()) {
-      toast.show('Please enter a username to continue.', {
-        type: 'warning',
+      toast.show("Please enter a username to continue.", {
+        type: "warning",
       });
       return;
     }
 
     if (formData.images.length === 0) {
-      toast.show('Please add at least one photo to your profile.', {
-        type: 'warning',
+      toast.show("Please add at least one photo to your profile.", {
+        type: "warning",
       });
       return;
     }
