@@ -54,7 +54,7 @@ export default function CreateProfile() {
     try {
       // const idToken = await user.getIdToken();
       const idToken = await auth?.currentUser.getIdToken(true);
-      console.log("IdToken: ", idToken);
+      // console.log("IdToken: ", idToken);
 
       const uploadFormData = new FormData();
 
