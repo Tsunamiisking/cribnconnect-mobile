@@ -116,6 +116,15 @@ export default function ScreensLayout() {
         name="public-profile/index"
         options={{ title: "Public Profile", headerShown: false }}
       />
+      <Stack.Screen
+        name="public-profile/[id]"
+        options={{ title: "Edit Profile", headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="public-profile/edit"
+        options={{ title: "Edit Profile", headerShown: false }}
+      />
     </Stack>
   );
 }

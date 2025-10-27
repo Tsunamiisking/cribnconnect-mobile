@@ -11,34 +11,76 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
 export default function ProfileView({ 
   profile, 
-  isEditable = false, 
-  onEditPress 
+  isEditable = false,
+  isCreating = false,
+  onEditPress,
+  onImagePress,
+  onBioPress,
+  onInterestsPress
 }) {
+  if (!profile) {
+    return null;
+  }
+
+  const images = profile.images || [];
+  
+  // Placeholder components for creation mode
+  const EditIndicator = ({ onPress, children, placeholder }) => {
+    if (!isCreating) return children;
+    
+    return (
+      <TouchableOpacity 
+        onPress={onPress}
+        style={[
+          styles.editIndicator,
+          !children && styles.emptyEditIndicator
+        ]}
+      >
+        {children || (
+          <Text style={styles.placeholderText}>{placeholder}</Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
+  
   return (
-    <ScrollView 
+    <SafeAreaView>
+            <ScrollView 
       className="flex-1 bg-white" 
       showsVerticalScrollIndicator={false}
     >
       {/* Media Gallery */}
-      <View style={styles.mediaGallery}>
-        <ScrollView 
-          horizontal 
-          pagingEnabled 
-          showsHorizontalScrollIndicator={false}
-        >
-          {profile.images.map((image, index) => (
-            <Image
-              key={`image-${index}`}
-              source={{ uri: image }}
-              style={styles.mediaItem}
-              resizeMode="cover"
-            />
-          ))}
+      <EditIndicator
+        onPress={onImagePress}
+        placeholder="Tap to add photos or videos"
+      />
+        <View style={styles.mediaGallery}>
+          <ScrollView 
+            horizontal 
+            pagingEnabled 
+            showsHorizontalScrollIndicator={false}
+          >
+            {images.length > 0 ? (
+              images.map((image, index) => (
+                <Image
+                  key={`image-${index}`}
+                  source={{ uri: image }}
+                  style={styles.mediaItem}
+                  resizeMode="cover"
+                />
+              ))
+            ) : (
+              <View style={[styles.mediaItem, styles.emptyMediaItem]}>
+                <Text style={styles.emptyMediaText}>No media added</Text>
+              </View>
+            )}
+
           {profile.video && (
             <View style={styles.mediaItem}>
               <Video
@@ -58,7 +100,7 @@ export default function ProfileView({
         
         {/* Page Indicator */}
         <View style={styles.pageIndicator}>
-          {profile.images.map((_, index) => (
+          {images.map((_, index) => (
             <View
               key={`dot-${index}`}
               style={[styles.dot, { backgroundColor: Colors.white }]}
@@ -75,7 +117,7 @@ export default function ProfileView({
       {/* Profile Info */}
       <View style={styles.infoContainer}>
         <View style={styles.header}>
-          <Text style={styles.username}>{profile.username}</Text>
+          <Text style={styles.username}>{profile.username || 'User'}</Text>
           {isEditable && (
             <TouchableOpacity 
               style={styles.editButton}
@@ -87,32 +129,82 @@ export default function ProfileView({
         </View>
 
         {/* Interests */}
-        {profile.interests && profile.interests.length > 0 && (
+        <EditIndicator
+          onPress={onInterestsPress}
+          placeholder="Add your interests"
+        >
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Interests</Text>
             <View style={styles.interestsContainer}>
-              {profile.interests.map((interest, index) => (
-                <View key={index} style={styles.interestTag}>
-                  <Text style={styles.interestText}>{interest}</Text>
+              {profile.interests && profile.interests.length > 0 ? (
+                profile.interests.map((interest, index) => (
+                  <View key={index} style={styles.interestTag}>
+                    <Text style={styles.interestText}>{interest}</Text>
+                  </View>
+                ))
+              ) : isCreating && (
+                <View style={[styles.interestTag, styles.emptyInterestTag]}>
+                  <Text style={styles.placeholderText}>Add interests</Text>
                 </View>
-              ))}
+              )}
             </View>
           </View>
-        )}
+        </EditIndicator>
 
         {/* Bio */}
-        {profile.bio && (
+        <EditIndicator
+          onPress={onBioPress}
+          placeholder="Tell others about yourself"
+        >
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.bioText}>{profile.bio}</Text>
+            {profile.bio ? (
+              <Text style={styles.bioText}>{profile.bio}</Text>
+            ) : isCreating && (
+              <Text style={styles.placeholderText}>Add a bio</Text>
+            )}
           </View>
-        )}
+        </EditIndicator>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  editIndicator: {
+    opacity: 1,
+  },
+  emptyEditIndicator: {
+    borderWidth: 1,
+    borderColor: Colors.gray300,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    color: Colors.gray500,
+    fontSize: 16,
+    fontFamily: 'Sora-Regular',
+  },
+  emptyMediaItem: {
+    backgroundColor: Colors.gray100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyMediaText: {
+    color: Colors.gray500,
+    fontSize: 18,
+    fontFamily: 'Sora-Medium',
+  },
+  emptyInterestTag: {
+    backgroundColor: Colors.gray50,
+    borderWidth: 1,
+    borderColor: Colors.gray300,
+    borderStyle: 'dashed',
+  },
   mediaGallery: {
     height: width * 1.2, // Aspect ratio 5:6
     backgroundColor: Colors.gray100,

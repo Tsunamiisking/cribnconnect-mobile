@@ -1,12 +1,11 @@
-import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
+import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
-import axios from "axios";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { auth } from "@/config/firebase";
 import { Camera, ImagePlus, Play, UserRound, X } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -25,16 +24,24 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useToast } from "react-native-toast-notifications";
 
-export default function CreateProfile() {
+export default function CreateProfile({ initialData = null, mode = 'create' }) {
   const { user, isAuthenticated } = useAuth();
   const toast = useToast();
-  const [formData, setFormData] = useState({
-    username: "",
-    biography: "",
-    interests: "",
-    images: [],
-    video: null,
-  });
+  const [formData, setFormData] = useState(
+    initialData ? {
+      username: initialData.username || "",
+      biography: initialData.biography || "",
+      interests: initialData.interests?.join(", ") || "",
+      images: initialData.images || [],
+      video: initialData.video || null,
+    } : {
+      username: "",
+      biography: "",
+      interests: "",
+      images: [],
+      video: null,
+    }
+  );
 
   const [characterCount, setCharacterCount] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -279,7 +286,7 @@ export default function CreateProfile() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
       >
-        <BackHeader title="Create Profile" />
+        <BackHeader title={mode === 'create' ? "Create Profile" : "Edit Profile"} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -439,7 +446,9 @@ export default function CreateProfile() {
             {uploading ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Text style={styles.buttonText}>Create Profile</Text>
+              <Text style={styles.buttonText}>
+                {mode === 'create' ? "Create Profile" : "Save Changes"}
+              </Text>
             )}
           </TouchableOpacity>
         </ScrollView>
