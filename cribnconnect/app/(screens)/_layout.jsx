@@ -111,6 +111,11 @@ export default function ScreensLayout() {
         name="create-profile/index"
         options={{ title: "Create Profile", headerShown: false }}
       />
+
+      <Stack.Screen
+        name="public-profile/index"
+        options={{ title: "Public Profile", headerShown: false }}
+      />
     </Stack>
   );
 }

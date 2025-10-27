@@ -72,7 +72,7 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
       title: "Public Profile",
       subtitle: "Set up your Public Profile",
       icon: UserPlus,
-      route: "/(screens)/create-profile",
+      route: "/(screens)/public-profile",
       showAlways: true,
     },
     // {
