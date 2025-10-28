@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 // Base URL of your backend API
 const api = axios.create({
   baseURL: "https://cribnconnect-api.onrender.com/api",
-  timeout: 10000,
+  // timeout: 10000,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
