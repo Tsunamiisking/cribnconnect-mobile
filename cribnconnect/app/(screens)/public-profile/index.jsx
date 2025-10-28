@@ -6,11 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEvent } from 'expo';
 import { router } from "expo-router";
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Edit, Pause, Play } from "lucide-react-native";
+import { pickImages, pickVideo } from '@/utils/mediaUtils';
+import { Edit, Pause, Play, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Dimensions,
+  ActivityIndicator, Alert, Dimensions,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -19,7 +19,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CreateProfile from "../create-profile";
@@ -73,6 +73,96 @@ export default function PublicProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // Generate video thumbnail
+  const generateThumbnail = async (videoUri) => {
+    try {
+      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+        time: 1500,
+      });
+      return uri;
+    } catch (e) {
+      console.warn("Thumbnail generation failed:", e);
+      return null;
+    }
+  };
+
+  const handleAddImage = async () => {
+    const currentImages = editedProfile?.images || profile.images || [];
+    if (currentImages.length >= 3) {
+      Alert.alert("Maximum Images", "You can only upload up to 3 images");
+      return;
+    }
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library to upload images."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 1,
+      selectionLimit: 3 - currentImages.length,
+    });
+
+    if (!result.canceled) {
+      const newImages = result.assets.map((asset) => ({ url: asset.uri }));
+      const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
+      newProfile.images = [...currentImages, ...newImages].slice(0, 3);
+      setEditedProfile(newProfile);
+      setIsEditing(true);
+    }
+  };
+
+  const handleAddVideo = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library to upload videos."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 1,
+      videoMaxDuration: 60,
+    });
+
+    if (!result.canceled) {
+      const videoUri = result.assets[0].uri;
+      const thumbnail = await generateThumbnail(videoUri);
+      
+      const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
+      newProfile.video = {
+        url: videoUri,
+        thumbnail: thumbnail,
+      };
+      setEditedProfile(newProfile);
+      setIsEditing(true);
+    }
+  };
+
+  const handleRemoveMedia = (type, index) => {
+    setIsEditing(true);
+    const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
+    
+    if (type === 'image') {
+      const currentImages = newProfile.images || [];
+      newProfile.images = currentImages.filter((_, i) => i !== index);
+    } else if (type === 'video') {
+      newProfile.video = null;
+    }
+    
+    setEditedProfile(newProfile);
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -181,19 +271,61 @@ export default function PublicProfile() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.mediaScroll}
           >
-            {profile.images?.map((image, index) => (
+            {(editedProfile?.images || profile.images)?.map((image, index) => (
               <View key={index} style={styles.mediaItem}>
                 <Image
                   source={{ uri: image.url }}
                   style={styles.mediaImage}
                   resizeMode="cover"
                 />
+                {userId === auth?.currentUser?.uid && (
+                  <TouchableOpacity 
+                    style={styles.removeMediaButton}
+                    onPress={() => handleRemoveMedia('image', index)}
+                  >
+                    <X size={20} color={Colors.white} />
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
-            {profile.video && (
+            {/* Add photo placeholder only when images were removed */}
+            {userId === auth?.currentUser?.uid && 
+             editedProfile && 
+             (!editedProfile.images || editedProfile.images.length < (profile.images?.length || 0)) && (
+              <TouchableOpacity 
+                style={[styles.mediaItem, styles.addMediaButton]}
+                onPress={handleAddImage}
+              >
+                <Plus size={32} color={Colors.gray400} />
+                <Text style={styles.addMediaText}>Add Photo</Text>
+              </TouchableOpacity>
+            )}
+            {/* Video section */}
+            {(editedProfile?.video || profile.video) && (
               <View style={styles.mediaItem}>
-                <VideoPlayer videoUrl={profile.video.url} />
+                <VideoPlayer videoUrl={(editedProfile?.video || profile.video).url} />
+                {userId === auth?.currentUser?.uid && (
+                  <TouchableOpacity 
+                    style={styles.removeMediaButton}
+                    onPress={() => handleRemoveMedia('video', 0)}
+                  >
+                    <X size={20} color={Colors.white} />
+                  </TouchableOpacity>
+                )}
               </View>
+            )}
+            {/* Video placeholder only when video was removed */}
+            {userId === auth?.currentUser?.uid && 
+             editedProfile && 
+             !editedProfile.video && 
+             profile.video && (
+              <TouchableOpacity 
+                style={[styles.mediaItem, styles.addMediaButton]}
+                onPress={handleAddVideo}
+              >
+                <Plus size={32} color={Colors.gray400} />
+                <Text style={styles.addMediaText}>Add Video</Text>
+              </TouchableOpacity>
             )}
           </ScrollView>
         </View>
@@ -433,5 +565,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Urbanist-Bold",
     letterSpacing: 0.5,
+  },
+  removeMediaButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addMediaButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.gray100,
+    borderWidth: 2,
+    borderColor: Colors.gray200,
+    borderStyle: 'dashed',
+  },
+  addMediaText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray600,
   },
 });
