@@ -279,7 +279,8 @@ export default function PublicProfile() {
 
         {/* Profile Info Section */}
         <View style={styles.infoContainer}>
-          <Text style={styles.username}>{profile.username}</Text>
+          <Text style={styles.username}>Username: {profile.username}</Text>
+          
 
           {/* Interests Section */}
           <View style={styles.section}>
@@ -431,10 +432,10 @@ const styles = StyleSheet.create({
     marginTop: -24,
   },
   username: {
-    fontSize: 28,
-    fontFamily: "Urbanist-Bold",
+    fontSize: 26,
+    fontFamily: "Sora-SemiBold",
     color: Colors.gray900,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   section: {
     marginBottom: 32,
@@ -446,8 +447,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontFamily: "Urbanist-Bold",
+    fontSize: 18,
+    fontFamily: "Sora-SemiBold",
     color: Colors.gray900,
   },
   interestsContainer: {
