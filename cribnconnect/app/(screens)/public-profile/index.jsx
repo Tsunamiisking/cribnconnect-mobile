@@ -13,6 +13,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CreateProfile from "../create-profile";
@@ -164,7 +165,7 @@ export default function PublicProfile() {
           {/* Bio Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>About</Text>
+              <Text style={styles.sectionTitle}>Bio</Text>
               {userId === auth?.currentUser?.uid && (
                 <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
                   <Edit size={20} color={Colors.gray600} />
