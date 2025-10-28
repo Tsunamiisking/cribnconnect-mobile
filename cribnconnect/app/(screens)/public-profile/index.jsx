@@ -3,20 +3,66 @@ import BackHeader from "@/components/BackHeader";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEvent } from 'expo';
 import { router } from "expo-router";
-import { Edit } from "lucide-react-native";
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { Edit, Pause, Play } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CreateProfile from "../create-profile";
+
+const { width } = Dimensions.get('window');
+const PHOTO_SIZE = (width - 48) / 3; // 3 photos per row with gaps
+
+const VideoPlayer = ({ videoUrl }) => {
+  const player = useVideoPlayer(videoUrl, player => {
+    player.loop = true;
+  });
+
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+
+  return (
+    <View style={styles.videoContainer}>
+      <VideoView 
+        style={styles.mediaImage} 
+        player={player} 
+        allowsFullscreen
+        allowsPictureInPicture
+      />
+      <TouchableOpacity
+        style={styles.videoOverlay}
+        onPress={() => {
+          if (isPlaying) {
+            player.pause();
+          } else {
+            player.play();
+          }
+        }}
+      >
+        <View style={styles.playButton}>
+          {isPlaying ? (
+            <Pause size={24} color={Colors.white} />
+          ) : (
+            <Play size={24} color={Colors.white} />
+          )}
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 export default function PublicProfile() {
   const { isAuthenticated } = useAuth();
@@ -118,14 +164,39 @@ export default function PublicProfile() {
   return (
     <SafeAreaView style={styles.container}>
       <BackHeader title="My Public Profile" />
-      <ScrollView style={styles.content}>
-        {/* Profile Media Section */}
-        <TouchableOpacity
-          style={styles.editSection}
-          onPress={() => router.push("/public-profile/edit")}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+      >
+        <ScrollView 
+          style={styles.content} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          {/* Add media content here */}
-        </TouchableOpacity>
+          {/* Profile Media Section */}
+          <View style={styles.mediaSection}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.mediaScroll}
+          >
+            {profile.images?.map((image, index) => (
+              <View key={index} style={styles.mediaItem}>
+                <Image
+                  source={{ uri: image.url }}
+                  style={styles.mediaImage}
+                  resizeMode="cover"
+                />
+              </View>
+            ))}
+            {profile.video && (
+              <View style={styles.mediaItem}>
+                <VideoPlayer videoUrl={profile.video.url} />
+              </View>
+            )}
+          </ScrollView>
+        </View>
 
         {/* Profile Info Section */}
         <View style={styles.infoContainer}>
@@ -175,14 +246,14 @@ export default function PublicProfile() {
             {isEditing ? (
               <TextInput
                 style={[styles.input, styles.textArea]}
-                value={editedProfile?.biography || profile.biography}
-                onChangeText={(text) => setEditedProfile(prev => ({ ...prev, biography: text }))}
+                value={editedProfile?.bio || profile.bio}
+                onChangeText={(text) => setEditedProfile(prev => ({ ...prev, bio: text }))}
                 placeholder="Tell others about yourself..."
                 multiline
                 numberOfLines={4}
               />
             ) : (
-              <Text style={styles.bioText}>{profile.biography}</Text>
+              <Text style={styles.bioText}>{profile.bio}</Text>
             )}
           </View>
 
@@ -201,7 +272,8 @@ export default function PublicProfile() {
             </TouchableOpacity>
           )}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -212,6 +284,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   loading: {
     flex: 1,
     justifyContent: "center",
@@ -220,40 +295,73 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  editSection: {
-    position: "relative",
+  scrollContent: {
+    flexGrow: 1,
   },
-  editButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    width: 32,
-    height: 32,
+  mediaSection: {
+    marginVertical: 16,
+  },
+  mediaScroll: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  mediaItem: {
+    width: width * 0.75,
+    height: width * 0.75,
     borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    overflow: 'hidden',
+    backgroundColor: Colors.gray100,
+  },
+  mediaImage: {
+    width: '100%',
+    height: '100%',
+  },
+  videoOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   infoContainer: {
     padding: 20,
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -24,
+    // shadowColor: "#000",
+    // shadowOffset: {
+    //   width: 0,
+    //   height: -2,
+    // },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 8,
+    // elevation: 5,
   },
   username: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: "Urbanist-Bold",
     color: Colors.gray900,
-    marginBottom: 20,
+    marginBottom: 8,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: "Urbanist-Bold",
     color: Colors.gray900,
   },
@@ -263,10 +371,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   interestTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     backgroundColor: Colors.gray100,
-    borderRadius: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
   },
   interestText: {
     fontSize: 14,
@@ -277,34 +387,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Sora-Regular",
     color: Colors.gray800,
-    lineHeight: 24,
+    lineHeight: 26,
   },
   input: {
     borderWidth: 1,
     borderColor: Colors.gray200,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
     fontFamily: "Sora-Regular",
     color: Colors.gray800,
     backgroundColor: Colors.gray50,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   textArea: {
-    height: 120,
+    height: 150,
     textAlignVertical: 'top',
   },
   saveButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 25,
-    padding: 15,
+    borderRadius: 28,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
-    marginBottom: 30,
+    marginTop: 24,
+    marginBottom: 32,
+    shadowColor: Colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   saveButtonText: {
     color: Colors.white,
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: "Urbanist-Bold",
+    letterSpacing: 0.5,
   },
 });
