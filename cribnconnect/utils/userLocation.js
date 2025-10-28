@@ -5,24 +5,28 @@ const LOCATION_PERMISSION_KEY = '@location_permission_granted';
 
 export const checkLocationPermission = async () => {
   try {
-    // Check if we already have permission stored
-    const storedPermission = await AsyncStorage.getItem(LOCATION_PERMISSION_KEY);
+    // First check if location services are enabled
+    const serviceEnabled = await Location.hasServicesEnabledAsync();
+    if (!serviceEnabled) {
+      console.log("Location services are not enabled");
+      return false;
+    }
+
+    // Get current permission status
+    let { status } = await Location.getForegroundPermissionsAsync();
     
-    if (!storedPermission) {
-      // Request permission if not stored
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status === 'granted') {
-        // Store the permission state
+    // If permission is not granted, request it
+    if (status !== 'granted') {
+      console.log("Requesting location permission...");
+      const { status: newStatus } = await Location.requestForegroundPermissionsAsync();
+      if (newStatus === 'granted') {
         await AsyncStorage.setItem(LOCATION_PERMISSION_KEY, 'granted');
         return true;
       }
       return false;
     }
-    
-    // If we have stored permission, verify it's still valid
-    const { status } = await Location.getForegroundPermissionsAsync();
-    return status === 'granted';
+
+    return true;
   } catch (error) {
     console.error('Error checking location permission:', error);
     return false;
@@ -31,15 +35,40 @@ export const checkLocationPermission = async () => {
 
 export const getUserLocation = async () => {
   try {
-    const hasPermission = await checkLocationPermission();
+    console.log("Getting user location...");
     
+    const hasPermission = await checkLocationPermission();
     if (!hasPermission) {
-      console.log("Location permission not granted");
-      return null;
+      console.log("Location permission denied");
+      throw new Error("Location permission not granted. Please enable location access in your device settings.");
     }
 
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High,
+    console.log("Permission granted, getting current position...");
+    // Using watchPositionAsync for more accurate results with cleanup
+    const location = await new Promise((resolve, reject) => {
+      let subscription;
+      try {
+        subscription = Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 5000,
+            distanceInterval: 0,
+          },
+          (location) => {
+            if (subscription) {
+              subscription.remove();
+            }
+            resolve(location);
+          }
+        );
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    console.log("Location obtained:", {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude
     });
 
     return {
@@ -48,6 +77,6 @@ export const getUserLocation = async () => {
     };
   } catch (error) {
     console.error('Error getting location:', error);
-    return null;
+    throw error; // Throw the error so we can handle it in the profile creation
   }
 };

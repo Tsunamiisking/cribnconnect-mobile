@@ -2,6 +2,8 @@ import BackHeader from "@/components/BackHeader";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserLocation } from "@/utils/userLocation";
+import { Linking } from 'react-native';
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -24,23 +26,25 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useToast } from "react-native-toast-notifications";
 
-export default function CreateProfile({ initialData = null, mode = 'create' }) {
+export default function CreateProfile({ initialData = null, mode = "create" }) {
   const { user, isAuthenticated } = useAuth();
   const toast = useToast();
   const [formData, setFormData] = useState(
-    initialData ? {
-      username: initialData.username || "",
-      biography: initialData.biography || "",
-      interests: initialData.interests?.join(", ") || "",
-      images: initialData.images || [],
-      video: initialData.video || null,
-    } : {
-      username: "",
-      biography: "",
-      interests: "",
-      images: [],
-      video: null,
-    }
+    initialData
+      ? {
+          username: initialData.username || "",
+          biography: initialData.biography || "",
+          interests: initialData.interests?.join(", ") || "",
+          images: initialData.images || [],
+          video: initialData.video || null,
+        }
+      : {
+          username: "",
+          biography: "",
+          interests: "",
+          images: [],
+          video: null,
+        }
   );
 
   const [characterCount, setCharacterCount] = useState(0);
@@ -59,19 +63,53 @@ export default function CreateProfile({ initialData = null, mode = 'create' }) {
     setUploading(true);
 
     try {
-      // const idToken = await user.getIdToken();
-      const idToken = await auth?.currentUser.getIdToken(true);
-      // console.log("IdToken: ", idToken);
-
-      if (!auth?.currentUser?.uid) {
-        throw new Error('User ID not found. Please try logging in again.');
+      // Get user location
+      let location;
+      try {
+        location = await getUserLocation();
+      } catch (locationError) {
+        Alert.alert(
+          "Location Required",
+          "Location access is required to create a profile. Would you like to enable location services?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => {
+                setUploading(false);
+              },
+            },
+            {
+              text: "Settings",
+              onPress: async () => {
+                setUploading(false);
+                await Linking.openSettings();
+              },
+            },
+          ]
+        );
+        return;
       }
 
+      const idToken = await auth?.currentUser.getIdToken(true);
+      console.log("IdToken: ", idToken);
+
+      if (!auth?.currentUser?.uid) {
+        throw new Error("User ID not found. Please try logging in again.");
+      }
+      const uid = auth?.currentUser?.uid;
+
       const uploadFormData = new FormData();
-      uploadFormData.append("uid", auth?.currentUser.uid);
-      console.log("UID: ", auth?.currentUser.uid);
+      uploadFormData.append("uid", uid);
       uploadFormData.append("username", formData.username.trim());
       uploadFormData.append("bio", formData.biography.trim());
+
+      // Add location data in the format expected by the backend
+      const locationData = {
+        type: "Point",
+        coordinates: [location.longitude, location.latitude], // MongoDB expects [longitude, latitude]
+      };
+      uploadFormData.append("location", JSON.stringify(locationData));
 
       if (formData.interests.trim()) {
         const interestsArray = formData.interests
@@ -134,7 +172,8 @@ export default function CreateProfile({ initialData = null, mode = 'create' }) {
         console.error("Response status:", err.response.status);
         console.error("Response data:", err.response.data);
       }
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
+      const errorMessage =
+        err.response?.data?.error || err.response?.data?.message || err.message;
       toast.show(`Upload failed: ${errorMessage}`, { type: "danger" });
     } finally {
       setUploading(false);
@@ -185,7 +224,7 @@ export default function CreateProfile({ initialData = null, mode = 'create' }) {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
-      quality: 0.8,
+      quality: 1,
       selectionLimit: maxImages - formData.images.length,
     });
 
@@ -292,7 +331,9 @@ export default function CreateProfile({ initialData = null, mode = 'create' }) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
       >
-        <BackHeader title={mode === 'create' ? "Create Profile" : "Edit Profile"} />
+        <BackHeader
+          title={mode === "create" ? "Create Profile" : "Edit Profile"}
+        />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -453,7 +494,7 @@ export default function CreateProfile({ initialData = null, mode = 'create' }) {
               <ActivityIndicator color={Colors.white} />
             ) : (
               <Text style={styles.buttonText}>
-                {mode === 'create' ? "Create Profile" : "Save Changes"}
+                {mode === "create" ? "Create Profile" : "Save Changes"}
               </Text>
             )}
           </TouchableOpacity>
