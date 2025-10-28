@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dimensions, Image, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import VideoPlayer from './VideoPlayer';
 
