@@ -3,14 +3,15 @@ import BackHeader from "@/components/BackHeader";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { pickImages, pickVideo } from '@/utils/mediaUtils';
 import { useEvent } from 'expo';
 import { router } from "expo-router";
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { pickImages, pickVideo } from '@/utils/mediaUtils';
 import { Edit, Pause, Play, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator, Alert, Dimensions,
+  ActivityIndicator,
+  Dimensions,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -74,44 +75,11 @@ export default function PublicProfile() {
   const [editedProfile, setEditedProfile] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Generate video thumbnail
-  const generateThumbnail = async (videoUri) => {
-    try {
-      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-        time: 1500,
-      });
-      return uri;
-    } catch (e) {
-      console.warn("Thumbnail generation failed:", e);
-      return null;
-    }
-  };
-
   const handleAddImage = async () => {
     const currentImages = editedProfile?.images || profile.images || [];
-    if (currentImages.length >= 3) {
-      Alert.alert("Maximum Images", "You can only upload up to 3 images");
-      return;
-    }
-
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library to upload images."
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      quality: 1,
-      selectionLimit: 3 - currentImages.length,
-    });
-
-    if (!result.canceled) {
-      const newImages = result.assets.map((asset) => ({ url: asset.uri }));
+    const newImages = await pickImages(currentImages.length);
+    
+    if (newImages) {
       const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
       newProfile.images = [...currentImages, ...newImages].slice(0, 3);
       setEditedProfile(newProfile);
@@ -120,31 +88,11 @@ export default function PublicProfile() {
   };
 
   const handleAddVideo = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library to upload videos."
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      allowsEditing: true,
-      quality: 1,
-      videoMaxDuration: 60,
-    });
-
-    if (!result.canceled) {
-      const videoUri = result.assets[0].uri;
-      const thumbnail = await generateThumbnail(videoUri);
-      
+    const newVideo = await pickVideo();
+    
+    if (newVideo) {
       const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
-      newProfile.video = {
-        url: videoUri,
-        thumbnail: thumbnail,
-      };
+      newProfile.video = newVideo;
       setEditedProfile(newProfile);
       setIsEditing(true);
     }
@@ -301,7 +249,7 @@ export default function PublicProfile() {
               </TouchableOpacity>
             )}
             {/* Video section */}
-            {(editedProfile?.video || profile.video) && (
+            {(editedProfile?.video || (!editedProfile && profile.video)) && (
               <View style={styles.mediaItem}>
                 <VideoPlayer videoUrl={(editedProfile?.video || profile.video).url} />
                 {userId === auth?.currentUser?.uid && (
@@ -316,8 +264,7 @@ export default function PublicProfile() {
             )}
             {/* Video placeholder only when video was removed */}
             {userId === auth?.currentUser?.uid && 
-             editedProfile && 
-             !editedProfile.video && 
+             editedProfile?.video === null && 
              profile.video && (
               <TouchableOpacity 
                 style={[styles.mediaItem, styles.addMediaButton]}
