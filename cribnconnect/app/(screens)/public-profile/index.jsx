@@ -415,14 +415,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     marginTop: -24,
-    // shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: -2,
-    // },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 8,
-    // elevation: 5,
   },
   username: {
     fontSize: 28,
