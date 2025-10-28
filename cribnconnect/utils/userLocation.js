@@ -44,26 +44,9 @@ export const getUserLocation = async () => {
     }
 
     console.log("Permission granted, getting current position...");
-    // Using watchPositionAsync for more accurate results with cleanup
-    const location = await new Promise((resolve, reject) => {
-      let subscription;
-      try {
-        subscription = Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.Balanced,
-            timeInterval: 5000,
-            distanceInterval: 0,
-          },
-          (location) => {
-            if (subscription) {
-              subscription.remove();
-            }
-            resolve(location);
-          }
-        );
-      } catch (error) {
-        reject(error);
-      }
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+      maxAge: 5000, // Accept a location reading from the last 5 seconds
     });
 
     console.log("Location obtained:", {
