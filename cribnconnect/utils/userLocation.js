@@ -35,7 +35,7 @@ export const checkLocationPermission = async () => {
 
 export const getUserLocation = async () => {
   try {
-    console.log("Getting user location...");
+    // console.log("Getting user location...");
     
     const hasPermission = await checkLocationPermission();
     if (!hasPermission) {

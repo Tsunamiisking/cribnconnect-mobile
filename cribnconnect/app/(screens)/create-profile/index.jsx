@@ -92,7 +92,7 @@ export default function CreateProfile({ initialData = null, mode = "create" }) {
       }
 
       const idToken = await auth?.currentUser.getIdToken(true);
-      console.log("IdToken: ", idToken);
+      // console.log("IdToken: ", idToken);
 
       if (!auth?.currentUser?.uid) {
         throw new Error("User ID not found. Please try logging in again.");
