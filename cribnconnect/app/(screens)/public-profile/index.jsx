@@ -1,5 +1,6 @@
 import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
+import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { router } from "expo-router";
@@ -11,30 +12,46 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CreateProfile from "../create-profile";
 
 export default function PublicProfile() {
-  const { user } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const userId = auth?.currentUser?.uid;
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      router.replace('/(auth)/login');
+      return;
+    }
+    
     loadProfile();
-  }, []);
+  }, [isAuthenticated]);
 
   const loadProfile = async () => {
+    if (!userId) {
+      // Double check - redirect to login if no userId
+      router.replace('/(auth)/login');
+      return;
+    }
+
     try {
-      const response = await api.get('/public-profile');
+      const response = await api.get(`${userId}/public-profile`);
       setProfile(response.data);
       setHasProfile(true);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error("Error loading profile:", error);
       if (error.response?.status === 404) {
         setHasProfile(false);
+      } else if (error.response?.status === 401) {
+        // Unauthorized - redirect to login
+        router.replace('/(auth)/login');
       }
     } finally {
       setLoading(false);
@@ -63,8 +80,8 @@ export default function PublicProfile() {
       <BackHeader title="My Public Profile" />
       <ScrollView style={styles.content}>
         {/* Profile Media Section */}
-        <TouchableOpacity 
-          style={styles.editSection} 
+        <TouchableOpacity
+          style={styles.editSection}
           onPress={() => router.push("/public-profile/edit")}
         >
           {/* Add media content here */}
@@ -73,12 +90,14 @@ export default function PublicProfile() {
         {/* Profile Info Section */}
         <View style={styles.infoContainer}>
           <Text style={styles.username}>{profile.username}</Text>
-          
+
           {/* Interests Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Interests</Text>
-              <TouchableOpacity onPress={() => router.push("/public-profile/edit")}>
+              <TouchableOpacity
+                onPress={() => router.push("/public-profile/edit")}
+              >
                 <Edit size={20} color={Colors.gray600} />
               </TouchableOpacity>
             </View>
@@ -95,7 +114,9 @@ export default function PublicProfile() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>About</Text>
-              <TouchableOpacity onPress={() => router.push("/public-profile/edit")}>
+              <TouchableOpacity
+                onPress={() => router.push("/public-profile/edit")}
+              >
                 <Edit size={20} color={Colors.gray600} />
               </TouchableOpacity>
             </View>
@@ -114,25 +135,25 @@ const styles = StyleSheet.create({
   },
   loading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   content: {
     flex: 1,
   },
   editSection: {
-    position: 'relative',
+    position: "relative",
   },
   editButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     right: 12,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: "rgba(0,0,0,0.6)",
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   infoContainer: {
     padding: 20,
@@ -147,9 +168,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   sectionTitle: {
@@ -158,8 +179,8 @@ const styles = StyleSheet.create({
     color: Colors.gray900,
   },
   interestsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   interestTag: {

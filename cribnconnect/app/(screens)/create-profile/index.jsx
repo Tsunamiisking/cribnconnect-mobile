@@ -63,8 +63,13 @@ export default function CreateProfile({ initialData = null, mode = 'create' }) {
       const idToken = await auth?.currentUser.getIdToken(true);
       // console.log("IdToken: ", idToken);
 
-      const uploadFormData = new FormData();
+      if (!auth?.currentUser?.uid) {
+        throw new Error('User ID not found. Please try logging in again.');
+      }
 
+      const uploadFormData = new FormData();
+      uploadFormData.append("uid", auth?.currentUser.uid);
+      console.log("UID: ", auth?.currentUser.uid);
       uploadFormData.append("username", formData.username.trim());
       uploadFormData.append("bio", formData.biography.trim());
 
@@ -129,7 +134,8 @@ export default function CreateProfile({ initialData = null, mode = 'create' }) {
         console.error("Response status:", err.response.status);
         console.error("Response data:", err.response.data);
       }
-      toast.show(`Upload failed: ${err.message}`, { type: "danger" });
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
+      toast.show(`Upload failed: ${errorMessage}`, { type: "danger" });
     } finally {
       setUploading(false);
     }
