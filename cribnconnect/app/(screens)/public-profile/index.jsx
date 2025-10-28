@@ -7,12 +7,12 @@ import { router } from "expo-router";
 import { Edit } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CreateProfile from "../create-profile";
@@ -42,11 +42,29 @@ export default function PublicProfile() {
     }
 
     try {
-      const response = await api.get(`${userId}/public-profile`);
+      if (!userId) {
+        throw new Error('No user ID available');
+      }
+
+      console.log('Attempting to fetch profile for userId:', userId);
+      
+      // Use the exact URL format that works in Postman
+      const response = await api.get(`/public-profiles/${userId}`);
+      
+      // Log full response for debugging
+      console.log("Profile request successful:", {
+        status: response.status,
+        hasData: !!response.data,
+        dataType: typeof response.data
+      });
       setProfile(response.data);
       setHasProfile(true);
     } catch (error) {
-      console.error("Error loading profile:", error);
+      console.error("Error loading profile:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       if (error.response?.status === 404) {
         setHasProfile(false);
       } else if (error.response?.status === 401) {
