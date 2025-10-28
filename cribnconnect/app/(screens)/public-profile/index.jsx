@@ -249,8 +249,8 @@ export default function PublicProfile() {
             {/* Video section */}
             {(editedProfile?.video || (!editedProfile && profile.video)) && (
               <View style={styles.mediaItem}>
-                <TouchableOpacity onPress={() => handleMediaPress(allMedia.length - 1)}>
-                  <VideoPlayer videoUrl={(editedProfile?.video || profile.video).url} />
+                <TouchableOpacity onPress={() => handleMediaPress(allMedia.length - 1)} style={styles.videoContainer}>
+                  <VideoPlayer videoUrl={(editedProfile?.video || profile.video).url} style={styles.mediaImage} />
                 </TouchableOpacity>
                 {userId === auth?.currentUser?.uid && (
                   <TouchableOpacity 
@@ -401,6 +401,13 @@ const styles = StyleSheet.create({
   mediaImage: {
     width: '100%',
     height: '100%',
+    borderRadius: 16,
+  },
+  videoContainer: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,

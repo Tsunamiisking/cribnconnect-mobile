@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Image, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import VideoPlayer from './VideoPlayer';
 
@@ -13,6 +13,13 @@ export default function MediaViewer({
   initialIndex = 0 
 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Reset currentIndex when initialIndex changes or modal becomes visible
+  useEffect(() => {
+    if (visible) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [initialIndex, visible]);
 
   // Reset currentIndex if it's out of bounds
   useEffect(() => {
