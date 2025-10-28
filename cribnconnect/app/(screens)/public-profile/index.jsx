@@ -23,6 +23,9 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -33,6 +36,24 @@ export default function PublicProfile() {
     
     loadProfile();
   }, [isAuthenticated]);
+
+  const handleSaveChanges = async () => {
+    if (!editedProfile || !userId) return;
+    
+    setSaving(true);
+    try {
+      const response = await api.put(`/public-profiles/${userId}`, editedProfile);
+      setProfile(response.data);
+      setEditedProfile(null);
+      setIsEditing(false);
+      toast.show("Profile updated successfully!", { type: "success" });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.show("Failed to update profile. Please try again.", { type: "danger" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const loadProfile = async () => {
     if (!userId) {
@@ -113,38 +134,77 @@ export default function PublicProfile() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Interests</Text>
-              <TouchableOpacity
-                onPress={() => router.push("/public-profile/edit")}
-              >
-                <Edit size={20} color={Colors.gray600} />
-              </TouchableOpacity>
+              {userId === auth?.currentUser?.uid && (
+                <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
+                  <Edit size={20} color={Colors.gray600} />
+                </TouchableOpacity>
+              )}
             </View>
-            <View style={styles.interestsContainer}>
-              {profile.interests.map((interest, index) => (
-                <View key={index} style={styles.interestTag}>
-                  <Text style={styles.interestText}>{interest}</Text>
-                </View>
-              ))}
-            </View>
+            {isEditing ? (
+              <TextInput
+                style={styles.input}
+                value={editedProfile?.interests?.join(", ") || profile.interests.join(", ")}
+                onChangeText={(text) => {
+                  const interests = text.split(",").map(i => i.trim()).filter(Boolean);
+                  setEditedProfile(prev => ({ ...prev, interests }));
+                }}
+                placeholder="Separate interests with commas"
+              />
+            ) : (
+              <View style={styles.interestsContainer}>
+                {profile.interests.map((interest, index) => (
+                  <View key={index} style={styles.interestTag}>
+                    <Text style={styles.interestText}>{interest}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
 
           {/* Bio Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>About</Text>
-              <TouchableOpacity
-                onPress={() => router.push("/public-profile/edit")}
-              >
-                <Edit size={20} color={Colors.gray600} />
-              </TouchableOpacity>
+              {userId === auth?.currentUser?.uid && (
+                <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
+                  <Edit size={20} color={Colors.gray600} />
+                </TouchableOpacity>
+              )}
             </View>
-            <Text style={styles.bioText}>{profile.biography}</Text>
+            {isEditing ? (
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={editedProfile?.biography || profile.biography}
+                onChangeText={(text) => setEditedProfile(prev => ({ ...prev, biography: text }))}
+                placeholder="Tell others about yourself..."
+                multiline
+                numberOfLines={4}
+              />
+            ) : (
+              <Text style={styles.bioText}>{profile.biography}</Text>
+            )}
           </View>
+
+          {/* Save Changes Button */}
+          {isEditing && (
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSaveChanges}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color={Colors.white} />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -217,5 +277,33 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
     color: Colors.gray800,
     lineHeight: 24,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray800,
+    backgroundColor: Colors.gray50,
+  },
+  textArea: {
+    height: 120,
+    textAlignVertical: 'top',
+  },
+  saveButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 25,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  saveButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontFamily: "Urbanist-Bold",
   },
 });
