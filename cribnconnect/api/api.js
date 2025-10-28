@@ -22,12 +22,12 @@ api.interceptors.request.use(async (config) => {
       config.headers.Authorization = `Bearer ${token}`;
       
       // Log the full request details
-      console.log('Full request details:', {
-        fullUrl: `${config.baseURL}${config.url}`,
-        method: config.method,
-        headers: config.headers,
-        uid: user.uid
-      });
+      // console.log('Full request details:', {
+      //   fullUrl: `${config.baseURL}${config.url}`,
+      //   method: config.method,
+      //   headers: config.headers,
+      //   uid: user.uid
+      // });
     } else {
       console.warn('No authenticated user found');
     }
