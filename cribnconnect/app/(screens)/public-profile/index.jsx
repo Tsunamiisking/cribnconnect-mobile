@@ -1,13 +1,13 @@
 import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
+import MediaViewer from '@/components/MediaViewer';
+import VideoPlayer from '@/components/VideoPlayer';
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { pickImages, pickVideo } from '@/utils/mediaUtils';
-import { useEvent } from 'expo';
 import { router } from "expo-router";
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { Edit, Pause, Play, Plus, X } from "lucide-react-native";
+import { Edit, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,43 +28,6 @@ import CreateProfile from "../create-profile";
 const { width } = Dimensions.get('window');
 const PHOTO_SIZE = (width - 48) / 3; // 3 photos per row with gaps
 
-const VideoPlayer = ({ videoUrl }) => {
-  const player = useVideoPlayer(videoUrl, player => {
-    player.loop = true;
-  });
-
-  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-
-  return (
-    <View style={styles.videoContainer}>
-      <VideoView 
-        style={styles.mediaImage} 
-        player={player} 
-        allowsFullscreen
-        allowsPictureInPicture
-      />
-      <TouchableOpacity
-        style={styles.videoOverlay}
-        onPress={() => {
-          if (isPlaying) {
-            player.pause();
-          } else {
-            player.play();
-          }
-        }}
-      >
-        <View style={styles.playButton}>
-          {isPlaying ? (
-            <Pause size={24} color={Colors.white} />
-          ) : (
-            <Play size={24} color={Colors.white} />
-          )}
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
 export default function PublicProfile() {
   const { isAuthenticated } = useAuth();
   const userId = auth?.currentUser?.uid;
@@ -74,6 +37,36 @@ export default function PublicProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [showMediaViewer, setShowMediaViewer] = useState(false);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+
+  const allMedia = React.useMemo(() => {
+    const currentProfile = editedProfile || profile;
+    const media = [];
+    
+    // Add images
+    if (currentProfile?.images) {
+      media.push(...currentProfile.images.map(img => ({
+        ...img,
+        type: 'image'
+      })));
+    }
+    
+    // Add video if exists
+    if (currentProfile?.video) {
+      media.push({
+        ...currentProfile.video,
+        type: 'video'
+      });
+    }
+    
+    return media;
+  }, [editedProfile, profile]);
+
+  const handleMediaPress = (index) => {
+    setSelectedMediaIndex(index);
+    setShowMediaViewer(true);
+  };
 
   const handleAddImage = async () => {
     const currentImages = editedProfile?.images || profile.images || [];
@@ -221,11 +214,13 @@ export default function PublicProfile() {
           >
             {(editedProfile?.images || profile.images)?.map((image, index) => (
               <View key={index} style={styles.mediaItem}>
-                <Image
-                  source={{ uri: image.url }}
-                  style={styles.mediaImage}
-                  resizeMode="cover"
-                />
+                <TouchableOpacity onPress={() => handleMediaPress(index)}>
+                  <Image
+                    source={{ uri: image.url }}
+                    style={styles.mediaImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
                 {userId === auth?.currentUser?.uid && (
                   <TouchableOpacity 
                     style={styles.removeMediaButton}
@@ -251,7 +246,9 @@ export default function PublicProfile() {
             {/* Video section */}
             {(editedProfile?.video || (!editedProfile && profile.video)) && (
               <View style={styles.mediaItem}>
-                <VideoPlayer videoUrl={(editedProfile?.video || profile.video).url} />
+                <TouchableOpacity onPress={() => handleMediaPress(allMedia.length - 1)}>
+                  <VideoPlayer videoUrl={(editedProfile?.video || profile.video).url} />
+                </TouchableOpacity>
                 {userId === auth?.currentUser?.uid && (
                   <TouchableOpacity 
                     style={styles.removeMediaButton}
@@ -353,6 +350,13 @@ export default function PublicProfile() {
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <MediaViewer
+        isVisible={showMediaViewer}
+        onClose={() => setShowMediaViewer(false)}
+        media={allMedia}
+        initialIndex={selectedMediaIndex}
+      />
     </SafeAreaView>
   );
 }
