@@ -9,10 +9,24 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 export default function MediaViewer({ 
   visible, 
   onClose, 
-  media, 
+  media = [], 
   initialIndex = 0 
 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Reset currentIndex if it's out of bounds
+  useEffect(() => {
+    if (currentIndex >= media.length) {
+      setCurrentIndex(Math.max(0, media.length - 1));
+    }
+  }, [media.length]);
+
+  // Guard against empty media array
+  if (!media.length) {
+    visible && onClose?.();
+    return null;
+  }
+
   const currentItem = media[currentIndex];
 
   const handlePrevious = () => {

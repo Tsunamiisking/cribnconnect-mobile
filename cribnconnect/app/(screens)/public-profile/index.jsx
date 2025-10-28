@@ -38,7 +38,7 @@ export default function PublicProfile() {
   const [editedProfile, setEditedProfile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showMediaViewer, setShowMediaViewer] = useState(false);
-  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(null);
 
   const allMedia = React.useMemo(() => {
     const currentProfile = editedProfile || profile;
@@ -102,6 +102,9 @@ export default function PublicProfile() {
       newProfile.video = null;
     }
     
+    // Close media viewer if open and update edited profile
+    setShowMediaViewer(false);
+    setSelectedMediaIndex(null);
     setEditedProfile(newProfile);
   };
 
@@ -352,10 +355,10 @@ export default function PublicProfile() {
       </KeyboardAvoidingView>
 
       <MediaViewer
-        isVisible={showMediaViewer}
+        visible={showMediaViewer}
         onClose={() => setShowMediaViewer(false)}
         media={allMedia}
-        initialIndex={selectedMediaIndex}
+        initialIndex={selectedMediaIndex || 0}
       />
     </SafeAreaView>
   );
