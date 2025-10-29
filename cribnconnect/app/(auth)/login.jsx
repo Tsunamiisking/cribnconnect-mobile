@@ -2,7 +2,7 @@ import { Colors } from "@/constants/Colors";
 import { Link, router } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import { useState } from "react";
-import { useToast } from "react-native-toast-notifications";
+import Toast from 'react-native-toast-message';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -23,7 +23,6 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const toast = useToast();
 
   const validateForm = () => {
     const newErrors = {};
@@ -52,13 +51,21 @@ export default function LoginScreen() {
     try {
       const response = await loginUser(email, password );
       if (response.success) {
-        toast.show(response.message, { type: "success" }); // Store auth token
+        Toast.show({
+          text1: "Login Successful",
+          text2: response.message,
+          type: "success",
+        }); // Store auth token
         // Navigate to main app
         router.replace("/(tabs)");
         return;
       } else {
         setIsLoading(false);
-        toast.show(response.error, { type: "danger" });
+        Toast.show({
+          text1: "Login Failed",
+          text2: response.error,
+          type: "danger",
+        });
       }
 
       // // Temporary navigation for demo
@@ -68,7 +75,11 @@ export default function LoginScreen() {
       // }, 1000);
     } catch (error) {
       setIsLoading(false);
-      toast.show(response.error, { type: "danger" });
+      Toast.show({
+        text1: "Login Failed",
+        text2: "Login failed. Please try again.",
+        type: "danger",
+      });
 
       // Alert.alert("Error", "Login failed. Please try again.");
     }

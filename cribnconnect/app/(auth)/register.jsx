@@ -4,7 +4,7 @@ import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useToast } from 'react-native-toast-notifications';
+import Toast from 'react-native-toast-message';
 import { registerUser } from '../../services/authService';
 
 export default function RegisterScreen() {
@@ -19,7 +19,6 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const toast = useToast();
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -72,8 +71,12 @@ export default function RegisterScreen() {
       
       if (response.success) {
         // Show success message
-        toast.show(response.message, { type: "success" });
-        
+        Toast.show({
+          text1: "Registration Successful",
+          text2: response.message,
+          type: "success",
+        });
+
         // Navigate to main app after successful registration
         setTimeout(() => {
           setIsLoading(false);
@@ -82,12 +85,20 @@ export default function RegisterScreen() {
       } else {
         // Handle registration error
         setIsLoading(false);
-        toast.show(response.error, { type: "danger" });
+        Toast.show({
+          text1: "Registration Failed",
+          text2: response.error,
+          type: "danger",
+        });
       }
     } catch (error) {
       setIsLoading(false);
       console.error('Registration error:', error);
-      toast.show('An unexpected error occurred. Please try again.', { type: "danger" });
+      Toast.show({
+        text1: 'Registration Failed',
+        text2: 'An unexpected error occurred. Please try again.',
+        type: "danger",
+      });
     }
   };
 

@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLocationString } from '@/hooks/useLocationString';
 import { pickImages, pickVideo } from '@/utils/mediaUtils';
 import { router } from "expo-router";
-import { Edit, Plus, X } from "lucide-react-native";
+import { Edit, Plus, X, MapPin  } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -128,7 +128,27 @@ export default function PublicProfile() {
     
     setSaving(true);
     try {
-      const response = await api.put(`/public-profiles/${userId}`, editedProfile);
+      // Get the ID token for authentication
+      const idToken = await auth?.currentUser?.getIdToken(true);
+      
+      // Create the update object with only the changed fields
+      const updateData = {};
+      
+      if (editedProfile.username) updateData.username = editedProfile.username.trim();
+      if (editedProfile.bio) updateData.bio = editedProfile.bio.trim();
+      if (editedProfile.interests) updateData.interests = editedProfile.interests;
+      if (editedProfile.location) updateData.location = editedProfile.location;
+      if (editedProfile.images) updateData.images = editedProfile.images;
+      if (editedProfile.video) updateData.video = editedProfile.video;
+
+      // Make the PUT request with the update data
+      const response = await api.put(`/public-profiles/${userId}`, updateData, {
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      
       setProfile(response.data);
       setEditedProfile(null);
       setIsEditing(false);
@@ -352,7 +372,39 @@ export default function PublicProfile() {
                 </TouchableOpacity>
               )}
             </View>
-            {locationLoading ? (
+            {isEditing ? (
+              <View style={styles.locationEditContainer}>
+                <TouchableOpacity 
+                  style={styles.updateLocationButton}
+                  onPress={async () => {
+                    try {
+                      const { status } = await Location.requestForegroundPermissionsAsync();
+                      if (status !== 'granted') {
+                        toast.show('Location permission is required to update your location', { type: 'warning' });
+                        return;
+                      }
+                      
+                      const location = await Location.getCurrentPositionAsync({});
+                      const newLocation = {
+                        type: "Point",
+                        coordinates: [location.coords.longitude, location.coords.latitude]
+                      };
+                      setEditedProfile(prev => ({
+                        ...prev,
+                        location: newLocation
+                      }));
+                      toast.show('Location updated successfully', { type: 'success' });
+                    } catch (error) {
+                      console.error('Error updating location:', error);
+                      toast.show('Failed to update location', { type: 'danger' });
+                    }
+                  }}
+                >
+                  <MapPin size={20} color={Colors.primary} style={{ marginRight: 8 }} />
+                  <Text style={styles.updateLocationText}>Update Current Location</Text>
+                </TouchableOpacity>
+              </View>
+            ) : locationLoading ? (
               <ActivityIndicator size="small" color={Colors.primary} />
             ) : (
               <Text style={styles.locationText}>
@@ -504,6 +556,23 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
     color: Colors.gray800,
     lineHeight: 24,
+  },
+  locationEditContainer: {
+    marginTop: 8,
+  },
+  updateLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray50,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    borderRadius: 12,
+    padding: 16,
+  },
+  updateLocationText: {
+    fontSize: 16,
+    fontFamily: "Sora-Medium",
+    color: Colors.primary,
   },
   input: {
     borderWidth: 1,

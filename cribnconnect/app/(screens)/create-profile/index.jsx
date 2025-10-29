@@ -24,11 +24,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useToast } from "react-native-toast-notifications";
+import Toast from 'react-native-toast-message';
 
 export default function CreateProfile({ initialData = null, mode = "create" }) {
   const { user, isAuthenticated } = useAuth();
-  const toast = useToast();
   const [formData, setFormData] = useState(
     initialData
       ? {
@@ -57,7 +56,11 @@ export default function CreateProfile({ initialData = null, mode = "create" }) {
 
   const uploadPublicProfile = async () => {
     if (!isAuthenticated || !user) {
-      toast.show("Please log in to create your profile", { type: "danger" });
+      Toast.show({
+        text1: "Authentication Required",
+        text2: "Please log in to create your profile",
+        type: "danger",
+      });
       return;
     }
     setUploading(true);
@@ -151,7 +154,9 @@ export default function CreateProfile({ initialData = null, mode = "create" }) {
         },
       });
 
-      toast.show("Your public profile has been uploaded successfully", {
+      Toast.show({
+        text1: "Profile Upload Successful",
+        text2: "Your public profile has been uploaded successfully",
         type: "success",
       });
       setFormData({
@@ -174,7 +179,11 @@ export default function CreateProfile({ initialData = null, mode = "create" }) {
       }
       const errorMessage =
         err.response?.data?.error || err.response?.data?.message || err.message;
-      toast.show(`Upload failed: ${errorMessage}`, { type: "danger" });
+      Toast.show({
+        text1: `Upload failed`,
+        text2: errorMessage,
+        type: "danger",
+      });
     } finally {
       setUploading(false);
     }
@@ -307,14 +316,18 @@ export default function CreateProfile({ initialData = null, mode = "create" }) {
   const handleSubmit = () => {
     // Basic validation
     if (!formData.username.trim()) {
-      toast.show("Please enter a username to continue.", {
+      Toast.show({
+        text1: "Validation Error",
+        text2: "Please enter a username to continue.",
         type: "warning",
       });
       return;
     }
 
     if (formData.images.length === 0) {
-      toast.show("Please add at least one photo to your profile.", {
+      Toast.show({
+        text1: "Validation Error",
+        text2: "Please add at least one photo to your profile.",
         type: "warning",
       });
       return;
