@@ -5,6 +5,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocationString } from '@/hooks/useLocationString';
 import { pickImages, pickVideo } from '@/utils/mediaUtils';
 import { router } from "expo-router";
 import { Edit, Plus, X } from "lucide-react-native";
@@ -39,33 +40,10 @@ export default function PublicProfile() {
   const [saving, setSaving] = useState(false);
   const [showMediaViewer, setShowMediaViewer] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(null);
-  const [locationString, setLocationString] = useState("");
-
-  // Convert location coordinates to readable address
-  const reverseGeocode = async (coordinates) => {
-    try {
-      const response = await fetch(
-        `https://api.opencagedata.com/geocode/v1/json?q=${coordinates[1]}+${coordinates[0]}&key=YOUR_API_KEY`
-      );
-      const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        return data.results[0].formatted;
-      }
-      return "Location not available";
-    } catch (error) {
-      console.error("Error reverse geocoding:", error);
-      return "Location not available";
-    }
-  };
-
-  // Update location string whenever profile or editedProfile changes
-  useEffect(() => {
-    const currentProfile = editedProfile || profile;
-    if (currentProfile?.location?.coordinates) {
-      reverseGeocode(currentProfile.location.coordinates)
-        .then(address => setLocationString(address));
-    }
-  }, [profile, editedProfile]);
+  
+  // Use the location hook to get the formatted address
+  const currentProfile = editedProfile || profile;
+  const { locationString, loading: locationLoading } = useLocationString(currentProfile?.location);
 
   const allMedia = React.useMemo(() => {
     const currentProfile = editedProfile || profile;
@@ -374,9 +352,13 @@ export default function PublicProfile() {
                 </TouchableOpacity>
               )}
             </View>
-            <Text style={styles.locationText}>
-              {locationString || "Location not specified"}
-            </Text>
+            {locationLoading ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Text style={styles.locationText}>
+                {locationString}
+              </Text>
+            )}
           </View>
 
           {/* Save Changes Button */}
