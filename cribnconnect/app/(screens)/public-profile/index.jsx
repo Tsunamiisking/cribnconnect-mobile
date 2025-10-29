@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLocationString } from '@/hooks/useLocationString';
 import { pickImages, pickVideo } from '@/utils/mediaUtils';
 import { getUserLocation } from "@/utils/userLocation";
+import * as Location from 'expo-location';
 import { router } from "expo-router";
 import { Edit, MapPin, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
@@ -314,18 +315,22 @@ export default function PublicProfile() {
 
         {/* Profile Info Section */}
         <View style={styles.infoContainer}>
-          <Text style={styles.username}>Username: {profile.username}</Text>
-          
+          <View style={styles.profileHeader}>
+            <Text style={styles.username}>Username: {profile.username}</Text>
+            {userId === auth?.currentUser?.uid && (
+              <TouchableOpacity 
+                style={styles.editButton}
+                onPress={() => setIsEditing(!isEditing)}
+              >
+                <Edit size={24} color={Colors.gray600} />
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* Interests Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Interests</Text>
-              {userId === auth?.currentUser?.uid && (
-                <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
-                  <Edit size={20} color={Colors.gray600} />
-                </TouchableOpacity>
-              )}
             </View>
             {isEditing ? (
               <TextInput
@@ -352,11 +357,6 @@ export default function PublicProfile() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Bio</Text>
-              {userId === auth?.currentUser?.uid && (
-                <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
-                  <Edit size={20} color={Colors.gray600} />
-                </TouchableOpacity>
-              )}
             </View>
             {isEditing ? (
               <TextInput
@@ -376,11 +376,6 @@ export default function PublicProfile() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Location</Text>
-              {userId === auth?.currentUser?.uid && (
-                <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
-                  <Edit size={20} color={Colors.gray600} />
-                </TouchableOpacity>
-              )}
             </View>
             {isEditing ? (
               <View style={styles.locationEditContainer}>
@@ -414,8 +409,67 @@ export default function PublicProfile() {
                   }}
                 >
                   <MapPin size={20} color={Colors.primary} style={{ marginRight: 8 }} />
-                  <Text style={styles.updateLocationText}>Update Current Location</Text>
+                  <Text style={styles.updateLocationText}>Use Current Location</Text>
                 </TouchableOpacity>
+
+                <Text style={styles.orText}>- OR -</Text>
+
+                <View style={styles.addressInputContainer}>
+                  <TextInput
+                    style={styles.addressInput}
+                    placeholder="Enter your address"
+                    value={editedProfile?.manualAddress || ''}
+                    onChangeText={(text) => setEditedProfile(prev => ({ ...prev, manualAddress: text }))}
+                  />
+                  <TouchableOpacity 
+                    style={styles.searchAddressButton}
+                    onPress={async () => {
+                      try {
+                        if (!editedProfile?.manualAddress) {
+                          Toast.show({
+                            text1: 'Error',
+                            text2: 'Please enter an address',
+                            type: 'error'
+                          });
+                          return;
+                        }
+
+                        const [result] = await Location.geocodeAsync(editedProfile.manualAddress);
+                        
+                        if (!result) {
+                          throw new Error('Address not found');
+                        }
+
+                        const newLocation = {
+                          type: "Point",
+                          coordinates: [result.longitude, result.latitude]
+                        };
+
+                        setEditedProfile(prev => ({
+                          ...prev,
+                          location: newLocation
+                        }));
+
+                        Toast.show({
+                          text1: 'Location Updated',
+                          text2: 'Address has been converted to coordinates successfully',
+                          type: 'success',
+                          visibilityTime: 2000
+                        });
+                      } catch (error) {
+                        console.error('Error geocoding address:', error);
+                        Toast.show({
+                          text1: 'Error',
+                          text2: error.message || 'Failed to convert address to location',
+                          type: 'error'
+                        });
+                      }
+                    }}
+                  >
+                    <Text style={styles.searchAddressButtonText}>Search</Text>
+                  </TouchableOpacity>
+                </View>
+
                 {editedProfile?.location && !locationLoading ? (
                   <Text style={styles.locationCoordinates}>
                     Current Location: {locationString}
@@ -532,11 +586,26 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     marginTop: -24,
   },
+  profileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
   username: {
     fontSize: 26,
     fontFamily: "Sora-SemiBold",
     color: Colors.gray900,
-    marginBottom: 16,
+    flex: 1,
+  },
+  editButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.gray100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 16,
   },
   section: {
     marginBottom: 32,
@@ -655,6 +724,41 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Urbanist-Bold",
     letterSpacing: 0.5,
+  },
+  orText: {
+    textAlign: 'center',
+    marginVertical: 16,
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray500,
+  },
+  addressInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  addressInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray800,
+    backgroundColor: Colors.white,
+  },
+  searchAddressButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchAddressButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontFamily: "Sora-Medium",
   },
   removeMediaButton: {
     position: 'absolute',

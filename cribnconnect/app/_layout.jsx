@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import Toast from 'react-native-toast-message';
+import Toast from "react-native-toast-message";
 import { Colors } from "../constants/Colors";
 import { AuthProvider } from "../contexts/AuthContext";
 import "../global.css";
@@ -41,10 +41,12 @@ export default function RootLayout() {
       // Check location permission when app starts
       const checkPermissions = async () => {
         try {
-          const { checkLocationPermission } = await import('@/utils/userLocation');
+          const { checkLocationPermission } = await import(
+            "@/utils/userLocation"
+          );
           await checkLocationPermission();
         } catch (error) {
-          console.error('Error checking location permissions:', error);
+          console.error("Error checking location permissions:", error);
         }
       };
       checkPermissions();
@@ -58,25 +60,25 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
+        <Stack>
+          {/* Auth Flow - Welcome, Login, Register */}
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+          {/* Main App - Tab Navigator */}
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+          {/* Detail Screens */}
+          <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+
+          {/* Hosting Flows */}
+          <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
+
+          {/* 404 Screen */}
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar barStyle="dark-content" backgroundColor="white" />
         <Toast />
-          <Stack>
-            {/* Auth Flow - Welcome, Login, Register */}
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-
-            {/* Main App - Tab Navigator */}
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
-            {/* Detail Screens */}
-            <Stack.Screen name="(screens)" options={{ headerShown: false }} />
-
-            {/* Hosting Flows */}
-            <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
-
-            {/* 404 Screen */}
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar barStyle="dark-content" backgroundColor="white" />
       </AuthProvider>
     </GestureHandlerRootView>
   );

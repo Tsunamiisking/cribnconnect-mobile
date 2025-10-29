@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from "expo-location";
+import Toast from 'react-native-toast-message';
 
 const LOCATION_PERMISSION_KEY = '@location_permission_granted';
 
@@ -42,10 +43,13 @@ export const getUserLocation = async () => {
       console.log("Location permission denied");
       throw new Error("Location permission not granted. Please enable location access in your device settings.");
     }
-
+    Toast.show({
+      type: 'info',
+      text1: 'Please wait while we fetch your location...',
+    });
     console.log("Permission granted, getting current position...");
     const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
+      accuracy: Location.Accuracy.Highest,
       maxAge: 5000, // Accept a location reading from the last 5 seconds
     });
 
