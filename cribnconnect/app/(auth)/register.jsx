@@ -88,7 +88,7 @@ export default function RegisterScreen() {
         Toast.show({
           text1: "Registration Failed",
           text2: response.error,
-          type: "danger",
+          type: "error",
         });
       }
     } catch (error) {
@@ -97,7 +97,7 @@ export default function RegisterScreen() {
       Toast.show({
         text1: 'Registration Failed',
         text2: 'An unexpected error occurred. Please try again.',
-        type: "danger",
+        type: "error",
       });
     }
   };

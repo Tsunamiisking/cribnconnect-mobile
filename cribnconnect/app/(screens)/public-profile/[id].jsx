@@ -3,11 +3,10 @@ import BackHeader from "@/components/BackHeader";
 import MediaViewer from '@/components/MediaViewer';
 import VideoPlayer from '@/components/VideoPlayer';
 import { auth } from "@/config/firebase";
-import { useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { pickImages, pickVideo } from '@/utils/mediaUtils';
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Edit, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -132,7 +131,7 @@ export default function PublicProfile() {
       toast.show("Profile updated successfully!", { type: "success" });
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.show("Failed to update profile. Please try again.", { type: "danger" });
+      toast.show("Failed to update profile. Please try again.", { type: "error" });
     } finally {
       setSaving(false);
     }

@@ -3,7 +3,6 @@ import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserLocation } from "@/utils/userLocation";
-import { Linking } from 'react-native';
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -14,15 +13,14 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  KeyboardAvoidingView,
-  Platform,
+  KeyboardAvoidingView, Linking, Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View
+} from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from 'react-native-toast-message';
 
@@ -59,7 +57,7 @@ export default function CreateProfile({ initialData = null, mode = "create" }) {
       Toast.show({
         text1: "Authentication Required",
         text2: "Please log in to create your profile",
-        type: "danger",
+        type: "error",
       });
       return;
     }
@@ -182,7 +180,7 @@ export default function CreateProfile({ initialData = null, mode = "create" }) {
       Toast.show({
         text1: `Upload failed`,
         text2: errorMessage,
-        type: "danger",
+        type: "error",
       });
     } finally {
       setUploading(false);

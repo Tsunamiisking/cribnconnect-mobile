@@ -1,8 +1,8 @@
 import { Colors } from "@/constants/Colors";
+import { loginUser } from "@/services/authService";
 import { Link, router } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import { useState } from "react";
-import Toast from 'react-native-toast-message';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { loginUser } from "@/services/authService";
+import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -64,7 +64,7 @@ export default function LoginScreen() {
         Toast.show({
           text1: "Login Failed",
           text2: response.error,
-          type: "danger",
+          type: "error",
         });
       }
 
@@ -78,7 +78,7 @@ export default function LoginScreen() {
       Toast.show({
         text1: "Login Failed",
         text2: "Login failed. Please try again.",
-        type: "danger",
+        type: "error",
       });
 
       // Alert.alert("Error", "Login failed. Please try again.");

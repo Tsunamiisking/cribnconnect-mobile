@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLocationString } from '@/hooks/useLocationString';
 import { pickImages, pickVideo } from '@/utils/mediaUtils';
 import { router } from "expo-router";
-import { Edit, Plus, X, MapPin  } from "lucide-react-native";
+import { Edit, MapPin, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,6 +24,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from 'react-native-toast-message';
 import CreateProfile from "../create-profile";
 
 const { width } = Dimensions.get('window');
@@ -152,10 +153,18 @@ export default function PublicProfile() {
       setProfile(response.data);
       setEditedProfile(null);
       setIsEditing(false);
-      toast.show("Profile updated successfully!", { type: "success" });
+      Toast.show({
+        text1: "Success",
+        text2: "Profile updated successfully!",
+        type: "success"
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.show("Failed to update profile. Please try again.", { type: "danger" });
+      Toast.show({
+        text1: "Error",
+        text2: "Failed to update profile. Please try again.",
+        type: "error"
+      });
     } finally {
       setSaving(false);
     }
@@ -380,7 +389,11 @@ export default function PublicProfile() {
                     try {
                       const { status } = await Location.requestForegroundPermissionsAsync();
                       if (status !== 'granted') {
-                        toast.show('Location permission is required to update your location', { type: 'warning' });
+                        Toast.show({
+                          text1: 'Permission Required',
+                          text2: 'Location permission is required to update your location',
+                          type: 'error'
+                        });
                         return;
                       }
                       
@@ -393,10 +406,18 @@ export default function PublicProfile() {
                         ...prev,
                         location: newLocation
                       }));
-                      toast.show('Location updated successfully', { type: 'success' });
+                      Toast.show({
+                        text1: 'Success',
+                        text2: 'Location updated successfully',
+                        type: 'success'
+                      });
                     } catch (error) {
                       console.error('Error updating location:', error);
-                      toast.show('Failed to update location', { type: 'danger' });
+                      Toast.show({
+                        text1: 'Error',
+                        text2: 'Failed to update location',
+                        type: 'error'
+                      });
                     }
                   }}
                 >
