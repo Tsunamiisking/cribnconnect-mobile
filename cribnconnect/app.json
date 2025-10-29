@@ -34,12 +34,19 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      ["expo-video",
-      {
-        "supportsBackgroundPlayback": true,
-        "supportsPictureInPicture": true
-      }
-    ]
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Crib Connect to use your location."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
