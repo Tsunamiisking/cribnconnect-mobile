@@ -39,6 +39,33 @@ export default function PublicProfile() {
   const [saving, setSaving] = useState(false);
   const [showMediaViewer, setShowMediaViewer] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(null);
+  const [locationString, setLocationString] = useState("");
+
+  // Convert location coordinates to readable address
+  const reverseGeocode = async (coordinates) => {
+    try {
+      const response = await fetch(
+        `https://api.opencagedata.com/geocode/v1/json?q=${coordinates[1]}+${coordinates[0]}&key=YOUR_API_KEY`
+      );
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        return data.results[0].formatted;
+      }
+      return "Location not available";
+    } catch (error) {
+      console.error("Error reverse geocoding:", error);
+      return "Location not available";
+    }
+  };
+
+  // Update location string whenever profile or editedProfile changes
+  useEffect(() => {
+    const currentProfile = editedProfile || profile;
+    if (currentProfile?.location?.coordinates) {
+      reverseGeocode(currentProfile.location.coordinates)
+        .then(address => setLocationString(address));
+    }
+  }, [profile, editedProfile]);
 
   const allMedia = React.useMemo(() => {
     const currentProfile = editedProfile || profile;
@@ -337,6 +364,21 @@ export default function PublicProfile() {
             )}
           </View>
 
+          {/* Location Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Location</Text>
+              {userId === auth?.currentUser?.uid && (
+                <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
+                  <Edit size={20} color={Colors.gray600} />
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text style={styles.locationText}>
+              {locationString || "Location not specified"}
+            </Text>
+          </View>
+
           {/* Save Changes Button */}
           {isEditing && (
             <TouchableOpacity
@@ -474,6 +516,12 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
     color: Colors.gray800,
     lineHeight: 26,
+  },
+  locationText: {
+    fontSize: 16,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray800,
+    lineHeight: 24,
   },
   input: {
     borderWidth: 1,
