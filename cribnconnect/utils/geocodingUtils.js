@@ -21,22 +21,27 @@ export const reverseGeocode = async (coordinates) => {
     const data = await response.json();
     
     if (data.results && data.results.length > 0) {
-      const result = data.results[0].components;
-      const city = result.city || result.town || result.village || result.suburb;
-      const state = result.state;
-      const country = result.country;
+      // Use the formatted address provided by OpenCage
+      const formatted = data.results[0].formatted;
       
-      if (city && (state || country)) {
-        return `${city}, ${state || country}`;
-      }
-      return data.results[0].formatted;
+      // Remove any business names or building numbers if present
+      // This will make the address more general and privacy-friendly
+      const parts = formatted.split(', ');
+      
+      // Filter out parts that might be business names (usually the first part if it contains no numbers)
+      const filteredParts = parts.filter((part, index) => {
+        // Keep all parts except suspected business names
+        return index === 0 ? /\d/.test(part) : true;
+      });
+      
+      return filteredParts.join(', ');
     }
     return "Location not available";
   } catch (error) {
     console.error("Error reverse geocoding:", error);
     return "Location not available";
   }
-};
+}
 
 /**
  * Convert address to coordinates

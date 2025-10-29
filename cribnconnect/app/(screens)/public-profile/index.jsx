@@ -7,6 +7,7 @@ import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocationString } from '@/hooks/useLocationString';
 import { pickImages, pickVideo } from '@/utils/mediaUtils';
+import { getUserLocation } from "@/utils/userLocation";
 import { router } from "expo-router";
 import { Edit, MapPin, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
@@ -387,35 +388,26 @@ export default function PublicProfile() {
                   style={styles.updateLocationButton}
                   onPress={async () => {
                     try {
-                      const { status } = await Location.requestForegroundPermissionsAsync();
-                      if (status !== 'granted') {
-                        Toast.show({
-                          text1: 'Permission Required',
-                          text2: 'Location permission is required to update your location',
-                          type: 'error'
-                        });
-                        return;
-                      }
-                      
-                      const location = await Location.getCurrentPositionAsync({});
+                      const location = await getUserLocation();
                       const newLocation = {
                         type: "Point",
-                        coordinates: [location.coords.longitude, location.coords.latitude]
+                        coordinates: [location.longitude, location.latitude]
                       };
                       setEditedProfile(prev => ({
                         ...prev,
                         location: newLocation
                       }));
                       Toast.show({
-                        text1: 'Success',
-                        text2: 'Location updated successfully',
-                        type: 'success'
+                        text1: 'Location Updated',
+                        text2: 'Your location has been updated successfully',
+                        type: 'success',
+                        visibilityTime: 2000
                       });
                     } catch (error) {
                       console.error('Error updating location:', error);
                       Toast.show({
                         text1: 'Error',
-                        text2: 'Failed to update location',
+                        text2: error.message || 'Failed to update location',
                         type: 'error'
                       });
                     }
@@ -424,6 +416,18 @@ export default function PublicProfile() {
                   <MapPin size={20} color={Colors.primary} style={{ marginRight: 8 }} />
                   <Text style={styles.updateLocationText}>Update Current Location</Text>
                 </TouchableOpacity>
+                {editedProfile?.location && !locationLoading ? (
+                  <Text style={styles.locationCoordinates}>
+                    Current Location: {locationString}
+                  </Text>
+                ) : editedProfile?.location && locationLoading ? (
+                  <View style={styles.locationLoadingContainer}>
+                    <ActivityIndicator size="small" color={Colors.primary} />
+                    <Text style={[styles.locationCoordinates, { marginLeft: 8 }]}>
+                      Getting location details...
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             ) : locationLoading ? (
               <ActivityIndicator size="small" color={Colors.primary} />
@@ -594,6 +598,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Sora-Medium",
     color: Colors.primary,
+  },
+  locationCoordinates: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+  },
+  locationLoadingContainer: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   input: {
     borderWidth: 1,
