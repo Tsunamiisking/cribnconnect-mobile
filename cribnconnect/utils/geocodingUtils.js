@@ -1,11 +1,5 @@
-import NodeGeocoder from 'node-geocoder';
-
 const OPENCAGE_API_KEY = '4fa06087f37c43a2b492c83e2575024b';
-
-const geocoder = NodeGeocoder({
-  provider: 'opencage',
-  apiKey: OPENCAGE_API_KEY
-});
+const OPENCAGE_API_URL = 'https://api.opencagedata.com/geocode/v1/json';
 
 /**
  * Convert coordinates to address
@@ -20,15 +14,22 @@ export const reverseGeocode = async (coordinates) => {
     
     // OpenCage expects "latitude, longitude"
     const [longitude, latitude] = coordinates;
-    const res = await geocoder.reverse({ lat: latitude, lon: longitude });
+    const query = `${latitude},${longitude}`;
+    const url = `${OPENCAGE_API_URL}?q=${query}&key=${OPENCAGE_API_KEY}&no_annotations=1`;
     
-    if (res && res.length > 0) {
-      // Format the address to show only city and state/country
-      const { city, state, country } = res[0];
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      const result = data.results[0].components;
+      const city = result.city || result.town || result.village || result.suburb;
+      const state = result.state;
+      const country = result.country;
+      
       if (city && (state || country)) {
         return `${city}, ${state || country}`;
       }
-      return res[0].formattedAddress;
+      return data.results[0].formatted;
     }
     return "Location not available";
   } catch (error) {
@@ -44,10 +45,14 @@ export const reverseGeocode = async (coordinates) => {
  */
 export const forwardGeocode = async (address) => {
   try {
-    const res = await geocoder.geocode(address);
-    if (res && res.length > 0) {
-      const { latitude, longitude } = res[0];
-      return [longitude, latitude]; // Return in [longitude, latitude] format for GeoJSON
+    const url = `${OPENCAGE_API_URL}?q=${encodeURIComponent(address)}&key=${OPENCAGE_API_KEY}&no_annotations=1`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      const { lat, lng } = data.results[0].geometry;
+      return [lng, lat]; // Return in [longitude, latitude] format for GeoJSON
     }
     return null;
   } catch (error) {
