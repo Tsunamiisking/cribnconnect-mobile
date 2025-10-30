@@ -49,7 +49,7 @@ export const getUserLocation = async () => {
     });
     console.log("Permission granted, getting current position...");
     const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Highest,
+      accuracy: Location.Accuracy.Balanced,
       maxAge: 5000, // Accept a location reading from the last 5 seconds
     });
 
