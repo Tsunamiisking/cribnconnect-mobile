@@ -21,7 +21,7 @@ export default function PeopleTab({
   onRefresh 
 }) {
   const handleCreateProfile = () => {
-    router.push("/(screens)/create-profile");
+    router.push("/(screens)/public-profile");
   };
 
   return (
