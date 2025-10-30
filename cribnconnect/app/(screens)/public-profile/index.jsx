@@ -103,16 +103,38 @@ export default function PublicProfile() {
     setIsEditing(true);
     const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
     
+    // Calculate the current total media count before removal
+    const currentImageCount = (newProfile.images || []).length;
+    const hasVideo = newProfile.video !== null;
+    const totalMediaCount = currentImageCount + (hasVideo ? 1 : 0);
+
     if (type === 'image') {
       const currentImages = newProfile.images || [];
       newProfile.images = currentImages.filter((_, i) => i !== index);
+      
+      // If the removed image comes before the video in the array,
+      // we need to adjust the selected index for the video
+      if (hasVideo && index < currentImageCount) {
+        setSelectedMediaIndex(prev => prev > index ? prev - 1 : prev);
+      }
     } else if (type === 'video') {
       newProfile.video = null;
+      // If we're removing the video and it's selected, reset the selection
+      if (selectedMediaIndex === totalMediaCount - 1) {
+        setSelectedMediaIndex(null);
+      }
     }
     
-    // Close media viewer if open and update edited profile
-    setShowMediaViewer(false);
-    setSelectedMediaIndex(null);
+    // Close media viewer if there are no media items left
+    const newImageCount = (newProfile.images || []).length;
+    const newHasVideo = newProfile.video !== null;
+    const newTotalMediaCount = newImageCount + (newHasVideo ? 1 : 0);
+    
+    if (newTotalMediaCount === 0) {
+      setShowMediaViewer(false);
+      setSelectedMediaIndex(null);
+    }
+    
     setEditedProfile(newProfile);
   };
 
