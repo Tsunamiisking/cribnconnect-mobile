@@ -1,9 +1,10 @@
 import LinkupsTab from "@/components/LinkupsTab";
+import axios from "axios";
 import NormalHeader from "@/components/NormalHeader";
 import PeopleTab from "@/components/PeopleTab";
 import TabSelector from "@/components/TabSelector";
 import { Colors } from "@/constants/Colors";
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -56,6 +57,18 @@ const PEOPLE_DATA = [
     lastSeen: "Active now",
   },
 ];
+
+// const loadUsers = async () => {
+//   try {
+//     // Simulate API call
+//     const URL = "https://cribandconnect.onrender.com/api/public-profiles";
+//     const publicProfiles = await axios.get(URL);
+//     return publicProfiles.data;
+//   } catch (error) {
+//     console.error("Error loading users:", error);
+//     return [];
+//   }
+// };
 
 // Mock data for linkups (keeping existing data)
 const ACTIVE_LINKUPS = [
