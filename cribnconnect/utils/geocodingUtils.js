@@ -21,20 +21,25 @@ export const reverseGeocode = async (coordinates) => {
     const data = await response.json();
     
     if (data.results && data.results.length > 0) {
-      // Use the formatted address provided by OpenCage
-      const formatted = data.results[0].formatted;
+      const result = data.results[0].components;
       
-      // Remove any business names or building numbers if present
-      // This will make the address more general and privacy-friendly
-      const parts = formatted.split(', ');
+      // Extract county, state, and country
+      const county = result.county;
+      const state = result.state;
+      const country = result.country;
       
-      // Filter out parts that might be business names (usually the first part if it contains no numbers)
-      const filteredParts = parts.filter((part, index) => {
-        // Keep all parts except suspected business names
-        return index === 0 ? /\d/.test(part) : true;
-      });
+      // Build the address string with available components
+      const addressParts = [];
+      if (county) addressParts.push(county);
+      if (state) addressParts.push(state);
+      if (country) addressParts.push(country);
       
-      return filteredParts.join(', ');
+      // If no components are available, return default message
+      if (addressParts.length === 0) {
+        return "Location not available";
+      }
+      
+      return addressParts.join(', ');
     }
     return "Location not available";
   } catch (error) {
