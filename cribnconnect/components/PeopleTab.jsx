@@ -5,11 +5,11 @@ import TextSearchInput from "@/components/TextSearchInput";
 import { router } from "expo-router";
 import { UserPlus } from "lucide-react-native";
 import {
-    Platform,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    View
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View
 } from "react-native";
 
 export default function PeopleTab({ 
@@ -18,7 +18,9 @@ export default function PeopleTab({
   onSearchChange, 
   onClearSearch, 
   refreshing, 
-  onRefresh 
+  onRefresh,
+  onPersonPress,
+  loading 
 }) {
   const handleCreateProfile = () => {
     router.push("/(screens)/public-profile");
@@ -49,7 +51,11 @@ export default function PeopleTab({
       <View style={styles.peopleCardsContainer}>
         {filteredPeople.length > 0 ? (
           filteredPeople.map((person) => (
-            <PersonCard key={person.id} person={person} />
+            <PersonCard 
+              key={person.id} 
+              person={person} 
+              onPress={onPersonPress}
+            />
           ))
         ) : (
           <NoResults

@@ -32,12 +32,12 @@ export default function PersonCard({ person, onPress }) {
   };
 
   return (
-    <View style={styles.personCard}>
+    <TouchableOpacity 
+      style={styles.personCard}
+      onPress={handleImagePress}
+    >
       {/* Image Container */}
-      <TouchableOpacity 
-        style={styles.imageContainer}
-        onPress={handleImagePress}
-      >
+      <View style={styles.imageContainer}>
         <Image 
           source={{ uri: person.image }} 
           style={styles.personImage}
@@ -48,7 +48,7 @@ export default function PersonCard({ person, onPress }) {
           <MapPin size={14} color={Colors.white} />
           <Text style={styles.distanceText}>{person.distance}</Text>
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Person Info */}
       <View style={styles.personInfo}>
@@ -80,7 +80,7 @@ export default function PersonCard({ person, onPress }) {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
