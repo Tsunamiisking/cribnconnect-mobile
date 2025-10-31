@@ -35,7 +35,9 @@ const PublicProfileID = () => {
     if (profile.images) {
       media.push(...profile.images.map(image => ({
         type: 'image',
-        url: image.secure_url || image.url
+        url: image.url,
+        resource_type: image.resource_type,
+        isPrimary: image.isPrimary
       })));
     }
     
@@ -43,7 +45,10 @@ const PublicProfileID = () => {
     if (profile.video) {
       media.push({
         type: 'video',
-        url: profile.video.secure_url || profile.video.url
+        url: profile.video.url,
+        resource_type: profile.video.resource_type,
+        isPrimary: profile.video.isPrimary,
+        thumbnailUrl: profile.video.thumbnail_url // If there's a thumbnail URL
       });
     }
     
@@ -64,7 +69,7 @@ const PublicProfileID = () => {
       setLoading(true);
       const response = await api.get(`/public-profiles/${id}`);
       setProfile(response.data);
-      console.log("Loaded profile:", response.data);
+      // console.log("Loaded profile:", response.data);
     } catch (error) {
       console.error("Error loading profile:", error);
     } finally {
@@ -124,8 +129,12 @@ const PublicProfileID = () => {
                 style={styles.mediaItem}
                 onPress={() => handleMediaPress(profile.images?.length || 0)}
               >
+                {/* Show video thumbnail if available, otherwise first frame of video */}
                 <Image
-                  source={{ uri: profile.video.secure_url || profile.video.url }}
+                  source={{ 
+                    uri: profile.video.thumbnail_url || 
+                         profile.video.url.replace('.mov', '.jpg') // Fallback to default thumbnail if no specific one
+                  }}
                   style={styles.mediaImage}
                   resizeMode="cover"
                 />
