@@ -78,22 +78,49 @@ export default function PublicProfile() {
 
   const handleAddImage = async () => {
     const currentImages = editedProfile?.images || profile.images || [];
+    if (currentImages.length >= 3) {
+      Toast.show({
+        text1: "Maximum Images",
+        text2: "You can only upload up to 3 images",
+        type: "warning"
+      });
+      return;
+    }
+
     const newImages = await pickImages(currentImages.length);
     
     if (newImages) {
       const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
-      newProfile.images = [...currentImages, ...newImages].slice(0, 3);
+      const formattedNewImages = newImages.map(uri => ({
+        url: uri,
+        resource_type: "image",
+        isPrimary: false
+      }));
+      newProfile.images = [...currentImages, ...formattedNewImages].slice(0, 3);
       setEditedProfile(newProfile);
       setIsEditing(true);
     }
   };
 
   const handleAddVideo = async () => {
+    if (editedProfile?.video || profile?.video) {
+      Toast.show({
+        text1: "Video Already Exists",
+        text2: "Please remove the existing video before adding a new one",
+        type: "warning"
+      });
+      return;
+    }
+
     const newVideo = await pickVideo();
     
     if (newVideo) {
       const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
-      newProfile.video = newVideo;
+      newProfile.video = {
+        url: newVideo.uri,
+        resource_type: "video",
+        isPrimary: false
+      };
       setEditedProfile(newProfile);
       setIsEditing(true);
     }
@@ -156,21 +183,64 @@ export default function PublicProfile() {
       // Get the ID token for authentication
       const idToken = await auth?.currentUser?.getIdToken(true);
       
-      // Create the update object with only the changed fields
-      const updateData = {};
+      // Create FormData for file uploads
+      const uploadFormData = new FormData();
       
-      if (editedProfile.username) updateData.username = editedProfile.username.trim();
-      if (editedProfile.bio) updateData.bio = editedProfile.bio.trim();
-      if (editedProfile.interests) updateData.interests = editedProfile.interests;
-      if (editedProfile.location) updateData.location = editedProfile.location;
-      if (editedProfile.images) updateData.images = editedProfile.images;
-      if (editedProfile.video) updateData.video = editedProfile.video;
+      // Add basic fields
+      if (editedProfile.username) uploadFormData.append("username", editedProfile.username.trim());
+      if (editedProfile.bio) uploadFormData.append("bio", editedProfile.bio.trim());
+      if (editedProfile.interests) uploadFormData.append("interests", JSON.stringify(editedProfile.interests));
+      if (editedProfile.location) uploadFormData.append("location", JSON.stringify(editedProfile.location));
 
-      // Make the PUT request with the update data
-      const response = await api.put(`/public-profiles/${userId}`, updateData, {
+      // Handle images
+      if (editedProfile.images) {
+        // Separate new and existing images
+        const { newImages, existingImages } = editedProfile.images.reduce((acc, img) => {
+          if (img.url?.startsWith('file://')) {
+            acc.newImages.push(img);
+          } else {
+            acc.existingImages.push(img);
+          }
+          return acc;
+        }, { newImages: [], existingImages: [] });
+
+        // Add new images to files array
+        newImages.forEach((img, index) => {
+          uploadFormData.append("files", {
+            uri: img.url,
+            type: "image/jpeg",
+            name: `image_${index}.jpg`,
+          });
+        });
+
+        // Set existing images in the images field
+        uploadFormData.append("images", JSON.stringify(existingImages));
+      }
+
+      // Handle video
+      if (editedProfile.video) {
+        if (editedProfile.video.url?.startsWith('file://')) {
+          // New video that needs to be uploaded
+          uploadFormData.append("files", {
+            uri: editedProfile.video.url,
+            type: "video/mp4",
+            name: "profile_video.mp4",
+          });
+          // Don't set video field as it will be processed from files
+        } else {
+          // Existing Cloudinary video
+          uploadFormData.append("video", JSON.stringify(editedProfile.video));
+        }
+      } else if (editedProfile.video === null) {
+        // Explicitly set video to null if it was removed
+        uploadFormData.append("video", "null");
+      }
+
+      // Make the PUT request with FormData
+      const response = await api.put(`/public-profiles/${userId}`, uploadFormData, {
         headers: {
           'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         }
       });
       
