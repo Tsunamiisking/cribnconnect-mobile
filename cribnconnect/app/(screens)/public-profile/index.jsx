@@ -1,7 +1,6 @@
 import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
 import MediaViewer from '@/components/MediaViewer';
-import VideoPlayer from '@/components/VideoPlayer';
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +9,7 @@ import { pickImages, pickVideo } from '@/utils/mediaUtils';
 import { getUserLocation } from "@/utils/userLocation";
 import * as Location from 'expo-location';
 import { router } from "expo-router";
-import { Edit, MapPin, Plus, X } from "lucide-react-native";
+import { Edit, MapPin, Play, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -53,18 +52,31 @@ export default function PublicProfile() {
     const media = [];
     
     // Add images
-    if (currentProfile?.images) {
-      media.push(...currentProfile.images.map(img => ({
-        ...img,
-        type: 'image'
+    if (currentProfile?.images && Array.isArray(currentProfile.images)) {
+      const validImages = currentProfile.images.filter(img => {
+        if (!img) return false;
+        const hasValidUrl = typeof img.url === 'string' && img.url.length > 0;
+        if (!hasValidUrl) {
+          console.warn('Invalid image found:', img);
+        }
+        return hasValidUrl;
+      });
+      media.push(...validImages.map(img => ({
+        type: 'image',
+        url: img.url,
+        resource_type: img.resource_type || 'image',
+        isPrimary: img.isPrimary || false
       })));
     }
     
-    // Add video if exists
-    if (currentProfile?.video) {
+    // Add video if exists and has a valid URL
+    if (currentProfile?.video && currentProfile.video.url) {
       media.push({
-        ...currentProfile.video,
-        type: 'video'
+        type: 'video',
+        url: currentProfile.video.url,
+        resource_type: currentProfile.video.resource_type || 'video',
+        isPrimary: currentProfile.video.isPrimary || false,
+        thumbnailUrl: currentProfile.video.thumbnail_url // Include thumbnail if available
       });
     }
     
@@ -77,7 +89,7 @@ export default function PublicProfile() {
   };
 
   const handleAddImage = async () => {
-    const currentImages = editedProfile?.images || profile.images || [];
+    const currentImages = editedProfile?.images || profile?.images || [];
     if (currentImages.length >= 3) {
       Toast.show({
         text1: "Maximum Images",
@@ -87,23 +99,58 @@ export default function PublicProfile() {
       return;
     }
 
-    const newImages = await pickImages(currentImages.length);
-    
-    if (newImages) {
-      const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
-      const formattedNewImages = newImages.map(uri => ({
-        url: uri,
-        resource_type: "image",
-        isPrimary: false
-      }));
-      newProfile.images = [...currentImages, ...formattedNewImages].slice(0, 3);
-      setEditedProfile(newProfile);
-      setIsEditing(true);
+    try {
+      const newImages = await pickImages(currentImages.length);
+      
+      if (newImages && newImages.length > 0) {
+        console.log('Received images:', JSON.stringify(newImages, null, 2));
+        const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
+        // Properly format the new images with their URIs
+        const formattedNewImages = newImages.map(image => {
+          // Handle both object with uri/url and direct string URI
+          let imageUri;
+          if (typeof image === 'string') {
+            imageUri = image;
+          } else if (image.uri) {
+            imageUri = image.uri;
+          } else if (image.url) {
+            imageUri = image.url;
+          } else {
+            console.warn('Invalid image format:', image);
+            return null;
+          }
+
+          return {
+            url: imageUri,
+            resource_type: "image",
+            isPrimary: false
+          };
+        }).filter(Boolean); // Remove any null entries
+        
+        // Initialize images array if it doesn't exist
+        if (!newProfile.images) {
+          newProfile.images = [];
+        }
+        
+        newProfile.images = [...(newProfile.images || []), ...formattedNewImages].slice(0, 3);
+        setEditedProfile(newProfile);
+        setIsEditing(true);
+      }
+    } catch (error) {
+      console.error('Error adding images:', error);
+      Toast.show({
+        text1: "Error",
+        text2: "Failed to add images. Please try again.",
+        type: "error"
+      });
     }
   };
 
   const handleAddVideo = async () => {
-    if (editedProfile?.video || profile?.video) {
+    // Check if there's actually a video in the current state
+    const currentVideo = editedProfile?.video || (!editedProfile && profile?.video);
+    
+    if (currentVideo) {
       Toast.show({
         text1: "Video Already Exists",
         text2: "Please remove the existing video before adding a new one",
@@ -112,17 +159,50 @@ export default function PublicProfile() {
       return;
     }
 
-    const newVideo = await pickVideo();
-    
-    if (newVideo) {
-      const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
-      newProfile.video = {
-        url: newVideo.uri,
-        resource_type: "video",
-        isPrimary: false
-      };
-      setEditedProfile(newProfile);
-      setIsEditing(true);
+    try {
+      const newVideo = await pickVideo();
+      
+      if (newVideo) {
+        console.log('Received video:', newVideo); // Debug log
+        
+        const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
+        // Handle different video object structures
+        let videoUrl;
+        // pickVideo returns an object like { url, thumbnail, type }
+        if (typeof newVideo === 'string') {
+          videoUrl = newVideo;
+        } else if (newVideo.uri) {
+          videoUrl = newVideo.uri;
+        } else if (newVideo.url) {
+          videoUrl = newVideo.url;
+        } else {
+          console.warn('Invalid video format:', newVideo);
+          throw new Error('Invalid video format received');
+        }
+
+        // Prefer the thumbnail returned by pickVideo (field `thumbnail`),
+        // but also accept `thumbnail_url` if present. Store as `thumbnail_url` so
+        // other code (carousel / MediaViewer) can use the same key.
+        const thumbnailUri = newVideo.thumbnail || newVideo.thumbnail_url || null;
+
+        newProfile.video = {
+          url: videoUrl,
+          resource_type: "video",
+          isPrimary: false,
+          thumbnail_url: thumbnailUri,
+        };
+        
+        console.log('Added video with URL:', videoUrl);
+        setEditedProfile(newProfile);
+        setIsEditing(true);
+      }
+    } catch (error) {
+      console.error('Error adding video:', error);
+      Toast.show({
+        text1: "Error",
+        text2: "Failed to add video. Please try again.",
+        type: "error"
+      });
     }
   };
 
@@ -130,36 +210,16 @@ export default function PublicProfile() {
     setIsEditing(true);
     const newProfile = editedProfile ? { ...editedProfile } : { ...profile };
     
-    // Calculate the current total media count before removal
-    const currentImageCount = (newProfile.images || []).length;
-    const hasVideo = newProfile.video !== null;
-    const totalMediaCount = currentImageCount + (hasVideo ? 1 : 0);
-
+    // Always close the media viewer first to prevent any undefined media access
+    setShowMediaViewer(false);
+    setSelectedMediaIndex(null);
+    
     if (type === 'image') {
+      // Ensure we have a valid images array
       const currentImages = newProfile.images || [];
       newProfile.images = currentImages.filter((_, i) => i !== index);
-      
-      // If the removed image comes before the video in the array,
-      // we need to adjust the selected index for the video
-      if (hasVideo && index < currentImageCount) {
-        setSelectedMediaIndex(prev => prev > index ? prev - 1 : prev);
-      }
     } else if (type === 'video') {
       newProfile.video = null;
-      // If we're removing the video and it's selected, reset the selection
-      if (selectedMediaIndex === totalMediaCount - 1) {
-        setSelectedMediaIndex(null);
-      }
-    }
-    
-    // Close media viewer if there are no media items left
-    const newImageCount = (newProfile.images || []).length;
-    const newHasVideo = newProfile.video !== null;
-    const newTotalMediaCount = newImageCount + (newHasVideo ? 1 : 0);
-    
-    if (newTotalMediaCount === 0) {
-      setShowMediaViewer(false);
-      setSelectedMediaIndex(null);
     }
     
     setEditedProfile(newProfile);
@@ -193,16 +253,24 @@ export default function PublicProfile() {
       if (editedProfile.location) uploadFormData.append("location", JSON.stringify(editedProfile.location));
 
       // Handle images
-      if (editedProfile.images) {
+      if (editedProfile.images && Array.isArray(editedProfile.images)) {
         // Separate new and existing images
         const { newImages, existingImages } = editedProfile.images.reduce((acc, img) => {
-          if (img.url?.startsWith('file://')) {
+          if (!img || !img.url) {
+            console.warn('Invalid image object:', img);
+            return acc;
+          }
+          
+          if (img.url.startsWith('file://') || img.url.startsWith('content://')) {
             acc.newImages.push(img);
           } else {
             acc.existingImages.push(img);
           }
           return acc;
         }, { newImages: [], existingImages: [] });
+
+        console.log('New images to upload:', JSON.stringify(newImages, null, 2));
+        console.log('Existing images to keep:', JSON.stringify(existingImages, null, 2));
 
         // Add new images to files array
         newImages.forEach((img, index) => {
@@ -237,10 +305,13 @@ export default function PublicProfile() {
       }
 
       // Make the PUT request with FormData
+      // Let axios/set the multipart Content-Type (with boundary) automatically.
+      // Manually setting 'Content-Type' can break the boundary header and
+      // cause the server to not parse uploaded files, resulting in raw
+      // file:// URIs being persisted (see edited.json symptom).
       const response = await api.put(`/public-profiles/${userId}`, uploadFormData, {
         headers: {
           'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'multipart/form-data',
         }
       });
       
@@ -343,14 +414,18 @@ export default function PublicProfile() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.mediaScroll}
           >
-            {(editedProfile?.images || profile.images)?.map((image, index) => (
+            {(editedProfile?.images || profile?.images || []).map((image, index) => (
               <View key={index} style={styles.mediaItem}>
                 <TouchableOpacity onPress={() => handleMediaPress(index)}>
-                  <Image
-                    source={{ uri: image.url }}
-                    style={styles.mediaImage}
-                    resizeMode="cover"
-                  />
+                  {image && image.url ? (
+                    <Image
+                      source={{ uri: image.url }}
+                      style={styles.mediaImage}
+                      resizeMode="cover"
+                      defaultSource={require('@/assets/images/default-avatar.jpg')}
+                      onError={(e) => console.error('Image loading error:', e.nativeEvent.error)}
+                    />
+                  ) : null}
                 </TouchableOpacity>
                 {userId === auth?.currentUser?.uid && (
                   <TouchableOpacity 
@@ -362,23 +437,35 @@ export default function PublicProfile() {
                 )}
               </View>
             ))}
-            {/* Add photo placeholder only when images were removed */}
+            {/* Add photo placeholder when in edit mode and less than 3 images */}
             {userId === auth?.currentUser?.uid && 
-             editedProfile && 
-             (!editedProfile.images || editedProfile.images.length < (profile.images?.length || 0)) && (
+             isEditing && 
+             ((editedProfile?.images || []).length < 3) && (
               <TouchableOpacity 
                 style={[styles.mediaItem, styles.addMediaButton]}
                 onPress={handleAddImage}
               >
                 <Plus size={32} color={Colors.gray400} />
-                <Text style={styles.addMediaText}>Add Photo</Text>
+                <Text style={styles.addMediaText}>Add Photo ({(editedProfile?.images || []).length}/3)</Text>
               </TouchableOpacity>
             )}
             {/* Video section */}
-            {(editedProfile?.video || (!editedProfile && profile.video)) && (
+            {(editedProfile?.video || (!editedProfile && profile?.video)) && (
               <View style={styles.mediaItem}>
                 <TouchableOpacity onPress={() => handleMediaPress(allMedia.length - 1)} style={styles.videoContainer}>
-                  <VideoPlayer videoUrl={(editedProfile?.video || profile.video).url} style={styles.mediaImage} />
+                  <Image
+                    source={{ 
+                      uri: (editedProfile?.video?.thumbnail_url || profile?.video?.thumbnail_url) || 
+                          require('@/assets/images/default-avatar.jpg')
+                    }}
+                    style={styles.mediaImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.videoOverlay}>
+                    <View style={styles.playButton}>
+                      <Play size={24} color={Colors.white} style={styles.playIcon} />
+                    </View>
+                  </View>
                 </TouchableOpacity>
                 {userId === auth?.currentUser?.uid && (
                   <TouchableOpacity 
@@ -390,10 +477,10 @@ export default function PublicProfile() {
                 )}
               </View>
             )}
-            {/* Video placeholder only when video was removed */}
+            {/* Video placeholder when in edit mode and no video */}
             {userId === auth?.currentUser?.uid && 
-             editedProfile?.video === null && 
-             profile.video && (
+             isEditing && 
+             !editedProfile?.video && (
               <TouchableOpacity 
                 style={[styles.mediaItem, styles.addMediaButton]}
                 onPress={handleAddVideo}
@@ -612,7 +699,6 @@ export default function PublicProfile() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -659,17 +745,28 @@ const styles = StyleSheet.create({
   },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   playButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  playIcon: {
+    marginLeft: 4, // Adjust for the visual center due to play icon shape
   },
   infoContainer: {
     padding: 20,
