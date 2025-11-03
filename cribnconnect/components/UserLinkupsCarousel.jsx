@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react"
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from "react-native"
-import { Colors } from "@/constants/Colors"
-import { router } from "expo-router"
-import { Users, Calendar, Globe, Lock } from "lucide-react-native"
 import api from "@/api/api"
 import { auth } from "@/config/firebase"
+import { Colors } from "@/constants/Colors"
+import { router } from "expo-router"
+import { Globe, Lock, Users } from "lucide-react-native"
+import React, { useEffect, useState } from "react"
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
 export default function UserLinkupsCarousel() {
   const [userLinkups, setUserLinkups] = useState([]);
@@ -17,24 +17,30 @@ export default function UserLinkupsCarousel() {
   const loadUserLinkups = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/linkups");
       const currentUserId = auth?.currentUser?.uid;
       
-      // Filter to only show linkups created by the current user
-      const createdByUser = response.data
-        .filter(linkup => linkup.createdBy?.uid === currentUserId)
-        .map(linkup => ({
-          id: linkup._id,
-          title: linkup.name,
-          interest: linkup.interests?.[0] || "General",
-          nextMeeting: linkup.meetingFrequency || "Not scheduled",
-          memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
-          privacy: linkup.privacy || "public",
-          imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
-          status: "active",
-        }));
+      if (!currentUserId) {
+        console.warn("No authenticated user found");
+        setUserLinkups([]);
+        return;
+      }
       
-      setUserLinkups(createdByUser);
+      // Use the dedicated endpoint for user's owned linkups
+      const response = await api.get(`/linkups/${currentUserId}/owned`);
+      
+      // Map the response data to the format needed for the carousel
+      const formattedLinkups = response.data.map(linkup => ({
+        id: linkup._id,
+        title: linkup.name,
+        interest: linkup.interests?.[0] || "General",
+        nextMeeting: linkup.meetingFrequency || "Not scheduled",
+        memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
+        privacy: linkup.privacy || "public",
+        imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
+        status: "active",
+      }));
+      
+      setUserLinkups(formattedLinkups);
     } catch (error) {
       console.error("Error loading user linkups:", error);
       setUserLinkups([]);
