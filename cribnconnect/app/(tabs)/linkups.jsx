@@ -1,3 +1,4 @@
+import api from "@/api/api";
 import LinkupsTab from "@/components/LinkupsTab";
 import NormalHeader from "@/components/NormalHeader";
 import PeopleTab from "@/components/PeopleTab";
@@ -6,7 +7,6 @@ import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { calculateDistance } from "@/utils/distanceCalculator";
 import { getUserLocation } from "@/utils/userLocation";
-import axios from "axios";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -54,8 +54,7 @@ export default function LinkupsScreen() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const URL = "https://cribnconnect-api.onrender.com/api/public-profiles";
-      const response = await axios.get(URL);
+      const response = await api.get("/public-profiles");
       
       // Filter out current user and add distance information
       const currentUserId = auth?.currentUser?.uid;
@@ -98,8 +97,7 @@ export default function LinkupsScreen() {
   const loadLinkups = async () => {
     try {
       setLinkupsLoading(true);
-      const URL = "https://cribnconnect-api.onrender.com/api/linkups";
-      const response = await axios.get(URL);
+      const response = await api.get("/linkups");
       console.log("Fetched linkups:", response.data);
       
       // Map the API response to match LinkupCard props
