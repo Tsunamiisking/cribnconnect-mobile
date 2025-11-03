@@ -9,8 +9,12 @@ import { Colors } from "../constants/Colors";
 import { AuthProvider } from "../contexts/AuthContext";
 import "../global.css";
 import useHostingStore from "../stores/hostingStore";
+import { useHeartbeat } from "../hooks/useHeartbeat";
 
 export default function RootLayout() {
+  // Start heartbeat service for active status tracking
+  useHeartbeat();
+
   const [loaded] = useFonts({
     // Sora font family for body text
     "Sora-Light": require("../assets/fonts/Sora-Light.ttf"),
