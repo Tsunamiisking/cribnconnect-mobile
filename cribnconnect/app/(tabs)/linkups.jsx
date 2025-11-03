@@ -100,22 +100,27 @@ export default function LinkupsScreen() {
       const response = await api.get("/linkups");
       console.log("Fetched linkups:", response.data);
       
+      const currentUserId = auth?.currentUser?.uid;
+      
       // Map the API response to match LinkupCard props
-      const formattedLinkups = response.data.map(linkup => ({
-        id: linkup._id,
-        title: linkup.name,
-        interest: linkup.interests?.[0] || "General", // Use first interest or "General"
-        description: linkup.description || "",
-        memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
-        privacy: linkup.privacy || "public",
-        host: linkup.createdBy?.username || "Unknown",
-        imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
-        category: linkup.interests?.[0] || "Social", // Use first interest as category
-        // Store original data for filtering
-        interests: linkup.interests || [],
-        maxPeople: linkup.maxPeople,
-        isPrivate: linkup.isPrivate,
-      }));
+      // Filter out linkups created by current user (they see those in Messages tab)
+      const formattedLinkups = response.data
+        .filter(linkup => linkup.createdBy?.uid !== currentUserId) // Exclude user's own linkups
+        .map(linkup => ({
+          id: linkup._id,
+          title: linkup.name,
+          interest: linkup.interests?.[0] || "General", // Use first interest or "General"
+          description: linkup.description || "",
+          memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
+          privacy: linkup.privacy || "public",
+          host: linkup.createdBy?.username || "Unknown",
+          imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
+          category: linkup.interests?.[0] || "Social", // Use first interest as category
+          // Store original data for filtering
+          interests: linkup.interests || [],
+          maxPeople: linkup.maxPeople,
+          isPrivate: linkup.isPrivate,
+        }));
 
       setLinkups(formattedLinkups);
     } catch (error) {

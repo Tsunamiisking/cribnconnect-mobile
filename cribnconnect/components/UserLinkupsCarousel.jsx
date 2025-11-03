@@ -1,44 +1,47 @@
-import React from "react"
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from "react-native"
+import React, { useEffect, useState } from "react"
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from "react-native"
 import { Colors } from "@/constants/Colors"
 import { router } from "expo-router"
 import { Users, Calendar, Globe, Lock } from "lucide-react-native"
-
-// Mock data for user's current linkups - TODO: Replace with API integration
-const USER_LINKUPS = [
-  {
-    id: "1",
-    title: "Coffee & Code Buddies",
-    interest: "Tech & Programming",
-    nextMeeting: "Tomorrow, 2:00 PM",
-    memberCount: "12 members",
-    privacy: "public",
-    imageUri: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
-    status: "active",
-  },
-  {
-    id: "3",
-    title: "Board Game Enthusiasts",
-    interest: "Games & Strategy",
-    nextMeeting: "Saturday, 6:30 PM",
-    memberCount: "18 members",
-    privacy: "private",
-    imageUri: "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=400&h=300&fit=crop",
-    status: "active",
-  },
-  {
-    id: "5",
-    title: "Book Club Readers",
-    interest: "Literature & Discussion",
-    nextMeeting: "Next Thursday, 7:00 PM",
-    memberCount: "15 members",
-    privacy: "public",
-    imageUri: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop",
-    status: "active",
-  },
-];
+import api from "@/api/api"
+import { auth } from "@/config/firebase"
 
 export default function UserLinkupsCarousel() {
+  const [userLinkups, setUserLinkups] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserLinkups();
+  }, []);
+
+  const loadUserLinkups = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/linkups");
+      const currentUserId = auth?.currentUser?.uid;
+      
+      // Filter to only show linkups created by the current user
+      const createdByUser = response.data
+        .filter(linkup => linkup.createdBy?.uid === currentUserId)
+        .map(linkup => ({
+          id: linkup._id,
+          title: linkup.name,
+          interest: linkup.interests?.[0] || "General",
+          nextMeeting: linkup.meetingFrequency || "Not scheduled",
+          memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
+          privacy: linkup.privacy || "public",
+          imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
+          status: "active",
+        }));
+      
+      setUserLinkups(createdByUser);
+    } catch (error) {
+      console.error("Error loading user linkups:", error);
+      setUserLinkups([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   const renderUserLinkupCard = ({ item }) => {
     const isPrivate = item.privacy === "private"
     const PrivacyIcon = isPrivate ? Lock : Globe
@@ -89,7 +92,20 @@ export default function UserLinkupsCarousel() {
     )
   }
 
-  if (USER_LINKUPS.length === 0) {
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Created Linkup Groups</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={Colors.primary} />
+        </View>
+      </View>
+    );
+  }
+
+  if (userLinkups.length === 0) {
     return null // Don't show carousel if user has no linkups
   }
 
@@ -103,7 +119,7 @@ export default function UserLinkupsCarousel() {
       </View>
       
       <FlatList
-        data={USER_LINKUPS}
+        data={userLinkups}
         renderItem={renderUserLinkupCard}
         keyExtractor={(item) => item.id}
         horizontal
@@ -117,6 +133,11 @@ export default function UserLinkupsCarousel() {
 const styles = StyleSheet.create({
   container: {
     marginVertical: 8,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',
