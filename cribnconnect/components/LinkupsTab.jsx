@@ -80,8 +80,7 @@ export default function LinkupsTab({
                 imageUri={item.imageUri}
                 title={item.title}
                 interest={item.interest}
-                location={item.location}
-                schedule={item.schedule}
+                description={item.description}
                 memberCount={item.memberCount}
                 privacy={item.privacy}
                 host={item.host}

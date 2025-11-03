@@ -12,88 +12,6 @@ import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Mock data for linkups (keeping existing data)
-const ACTIVE_LINKUPS = [
-  {
-    id: "1",
-    title: "Coffee & Code Buddies",
-    interest: "Tech & Programming",
-    location: "Downtown Cafe, Lagos",
-    schedule: "Every Wednesday, 2:00 PM",
-    memberCount: "12 members",
-    privacy: "public",
-    host: "Emma Wilson",
-    imageUri:
-      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
-    category: "Professional",
-  },
-  {
-    id: "2",
-    title: "Morning Runners Club",
-    interest: "Fitness & Health",
-    location: "Central Park, Victoria Island",
-    schedule: "Daily, 7:00 AM",
-    memberCount: "8 members",
-    privacy: "public",
-    host: "David Kim",
-    imageUri:
-      "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop",
-    category: "Fitness",
-  },
-  {
-    id: "3",
-    title: "Board Game Enthusiasts",
-    interest: "Games & Strategy",
-    location: "Game Lounge, Ikoyi",
-    schedule: "Saturdays, 6:30 PM",
-    memberCount: "18 members",
-    privacy: "private",
-    host: "Lisa Chen",
-    imageUri:
-      "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=400&h=300&fit=crop",
-    category: "Social",
-  },
-  {
-    id: "4",
-    title: "Football Fans Chat",
-    interest: "Sports & Discussion",
-    location: "", // Online group - no location
-    schedule: "Match days & weekends",
-    memberCount: "34 members",
-    privacy: "public",
-    host: "Mark Johnson",
-    imageUri:
-      "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=400&h=300&fit=crop",
-    category: "Social",
-  },
-  {
-    id: "5",
-    title: "Book Club Readers",
-    interest: "Literature & Discussion",
-    location: "Library, Yaba",
-    schedule: "Bi-weekly, Thursdays 7:00 PM",
-    memberCount: "15 members",
-    privacy: "public",
-    host: "Sarah Mitchell",
-    imageUri:
-      "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop",
-    category: "Social",
-  },
-  {
-    id: "6",
-    title: "Startup Network",
-    interest: "Business & Networking",
-    location: "Co-working Space, Lekki",
-    schedule: "Monthly, First Friday 6:00 PM",
-    memberCount: "25 members",
-    privacy: "private",
-    host: "Tech Hub Lagos",
-    imageUri:
-      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
-    category: "Professional",
-  },
-];
-
 const LINKUP_CATEGORIES = [
   "All",
   "Professional",
@@ -110,8 +28,10 @@ export default function LinkupsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [people, setPeople] = useState([]);
+  const [linkups, setLinkups] = useState([]);
   const [currentUserLocation, setCurrentUserLocation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [linkupsLoading, setLinkupsLoading] = useState(true);
 
   // Get current user's location
   useEffect(() => {
@@ -130,47 +50,7 @@ export default function LinkupsScreen() {
     getCurrentLocation();
   }, []);
 
-  // Load users from API
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        setLoading(true);
-        const URL = "https://cribnconnect-api.onrender.com/api/public-profiles";
-        const response = await axios.get(URL);
-        console.log("Public profiles response:", response.data);
-        // Filter out current user and add distance information
-        const currentUserId = auth?.currentUser?.uid;
-        const otherUsers = response.data.filter(profile => profile.uid !== currentUserId);
-        
-        const usersWithDistance = otherUsers.map(user => {
-          const distance = currentUserLocation 
-            ? calculateDistance(currentUserLocation, user.location)
-            : null;
-
-          return {
-            id: user._id,
-            uid: user.uid,
-            username: user.username,
-            bio: user.bio,
-            interests: user.interests,
-            image: user.images?.[0]?.secure_url || user.images?.[0]?.url || null, // Get first image secure_url or url
-            location: user.location,
-            distance: distance?.formatted || 'Distance unknown'
-          };
-        });
-
-        setPeople(usersWithDistance);
-      } catch (error) {
-        console.error("Error loading users:", error);
-        setPeople([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUsers();
-  }, [currentUserLocation]);
-
+  // Load users function
   const loadUsers = async () => {
     try {
       setLoading(true);
@@ -181,10 +61,7 @@ export default function LinkupsScreen() {
       const currentUserId = auth?.currentUser?.uid;
       const otherUsers = response.data.filter(profile => profile.uid !== currentUserId);
       
-      console.log("Current user location:", currentUserLocation);
-      
       const usersWithDistance = otherUsers.map(user => {
-        console.log("User location:", user.location);
         const distance = currentUserLocation 
           ? calculateDistance(currentUserLocation, user.location)
           : null;
@@ -195,7 +72,7 @@ export default function LinkupsScreen() {
           username: user.username,
           bio: user.bio,
           interests: user.interests,
-          image: user.images?.[0]?.url || null,
+          image: user.images?.[0]?.secure_url || user.images?.[0]?.url || null,
           location: user.location,
           distance: distance?.formatted || 'Distance unknown'
         };
@@ -210,20 +87,71 @@ export default function LinkupsScreen() {
     }
   };
 
+  // Load users from API when location is available
+  useEffect(() => {
+    if (currentUserLocation) {
+      loadUsers();
+    }
+  }, [currentUserLocation]);
+
+  // Load linkups from API
+  const loadLinkups = async () => {
+    try {
+      setLinkupsLoading(true);
+      const URL = "https://cribnconnect-api.onrender.com/api/linkups";
+      const response = await axios.get(URL);
+      
+      // Map the API response to match LinkupCard props
+      const formattedLinkups = response.data.map(linkup => ({
+        id: linkup._id,
+        title: linkup.name,
+        interest: linkup.interests?.[0] || "General", // Use first interest or "General"
+        description: linkup.description || "",
+        memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
+        privacy: linkup.privacy || "public",
+        host: linkup.createdBy?.username || "Unknown",
+        imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
+        category: linkup.interests?.[0] || "Social", // Use first interest as category
+        // Store original data for filtering
+        interests: linkup.interests || [],
+        maxPeople: linkup.maxPeople,
+        isPrivate: linkup.isPrivate,
+      }));
+
+      setLinkups(formattedLinkups);
+    } catch (error) {
+      console.error("Error loading linkups:", error);
+      setLinkups([]);
+    } finally {
+      setLinkupsLoading(false);
+    }
+  };
+
+  // Load linkups on component mount
+  useEffect(() => {
+    loadLinkups();
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadUsers();
+    await Promise.all([loadUsers(), loadLinkups()]);
     setRefreshing(false);
   };
 
   // Filter linkups based on selected category and search query
-  const filteredLinkups = ACTIVE_LINKUPS.filter((linkup) => {
+  const filteredLinkups = linkups.filter((linkup) => {
     const matchesCategory =
-      selectedCategory === "All" || linkup.category === selectedCategory;
+      selectedCategory === "All" || 
+      linkup.category === selectedCategory ||
+      linkup.interests.includes(selectedCategory);
+    
     const matchesSearch =
       searchQuery === "" ||
       linkup.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      linkup.interest.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      linkup.interests.some(interest => 
+        interest.toLowerCase().includes(searchQuery.toLowerCase())
+      ) ||
+      linkup.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       linkup.host.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesCategory && matchesSearch;
