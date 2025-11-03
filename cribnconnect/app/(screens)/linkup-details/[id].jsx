@@ -1,19 +1,22 @@
+import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
+import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { router, useLocalSearchParams } from "expo-router";
 import { Globe, Heart, Lock, Share2, Users } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,50 +29,65 @@ export default function LinkupDetailsScreen() {
   const [requestSent, setRequestSent] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [hasJoined, setHasJoined] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // TODO: Fetch linkup details from API
-    // Example API call:
-    // const fetchLinkup = async () => {
-    //   try {
-    //     const response = await api.getLinkup(id);
-    //     setLinkup(response.data);
-    //     setIsBookmarked(response.data.isBookmarked);
-    //     setHasJoined(response.data.isMember);
-    //   } catch (error) {
-    //     console.error('Error fetching linkup:', error);
-    //   }
-    // };
-    // fetchLinkup();
+    const fetchLinkup = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // console.log("Fetching linkup details for ID:", id);
+        const response = await api.get(`/linkups/${id}`);
+        const linkupData = response.data;
+        
+        const currentUserId = auth?.currentUser?.uid;
+        const isMember = linkupData.members?.some(member => member.uid === currentUserId);
+        
+        // Map database structure to component state
+        setLinkup({
+          id: linkupData._id,
+          title: linkupData.name,
+          interest: linkupData.interests?.[0] || "General",
+          description: linkupData.description || "No description provided.",
+          privacy: linkupData.privacy || "public",
+          hostName: linkupData.createdBy?.username || "Unknown Host",
+          hostId: linkupData.createdBy?._id,
+          meetingFrequency: linkupData.meetingFrequency || "Not specified",
+          groupSize: {
+            current: linkupData.members?.length || 0,
+            max: linkupData.maxPeople || 50,
+          },
+          activityLevel: "active", // Could be calculated based on recent messages/activity
+          lastActive: new Date(linkupData.updatedAt).toLocaleString(),
+          createdAt: linkupData.createdAt,
+          imageUri: linkupData.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=500&fit=crop",
+          isActive: true,
+          memberCount: linkupData.members?.length || 0,
+          maxMembers: linkupData.maxPeople || 50,
+          online: 0, // Would need active status integration
+          contactMethod: "App Messaging",
+          allInterests: linkupData.interests || [],
+          isPrivate: linkupData.isPrivate,
+          members: linkupData.members || [],
+        });
+        
+        setHasJoined(isMember);
+        // setIsBookmarked would come from user's bookmarks if implemented
+      } catch (error) {
+        console.error('Error fetching linkup:', error);
+        setError(error.response?.data?.message || 'Failed to load linkup details');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Mock data for now
-    setLinkup({
-      id: id,
-      title: "Tech Enthusiasts Hub",
-      interest: "Tech & Programming",
-      description:
-        "A community for developers, designers, and tech enthusiasts to discuss the latest trends, share resources, and help each other grow professionally.",
-      privacy: "private", // 'public' or 'private'
-      hostName: "Alex Chen",
-      meetingFrequency: "Weekly virtual meetups",
-      groupSize: {
-        current: 48,
-        max: 100,
-      },
-      activityLevel: "very-active", // 'low', 'active', 'very-active'
-      lastActive: "10 minutes ago",
-      createdAt: "2023-12-15",
-      imageUri:
-        "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=500&fit=crop",
-      isActive: true,
-      memberCount: 48,
-      maxMembers: 100,
-      online: 5,
-      contactMethod: "App Messaging",
-    });
+    if (id) {
+      fetchLinkup();
+    }
   }, [id]);
 
-  const handleJoinGroup = () => {
+  const handleJoinGroup = async () => {
     if (hasJoined) {
       // If already joined, perhaps show leave group confirmation
       console.log("You are already a member of this group");
@@ -77,47 +95,68 @@ export default function LinkupDetailsScreen() {
     }
 
     // Check if group is private
-    if (linkup?.privacy === "private") {
-      // Show request modal instead of password modal
+    if (linkup?.privacy === "private" || linkup?.isPrivate) {
+      // Show request modal instead of direct join
       setJoinModalVisible(true);
     } else {
       // Public group - join immediately
-      // In a real app, this would make an API call
-
-      // For demo purposes, we'll just show success
-      setHasJoined(true);
+      try {
+        await api.post(`/linkups/${linkup.id}/join`);
+        setHasJoined(true);
+        
+        // Update local state
+        setLinkup(prev => ({
+          ...prev,
+          groupSize: {
+            ...prev.groupSize,
+            current: prev.groupSize.current + 1
+          },
+          memberCount: prev.memberCount + 1
+        }));
+      } catch (error) {
+        console.error('Error joining linkup:', error);
+        alert(error.response?.data?.message || 'Failed to join group');
+      }
     }
   };
 
-  const handleSubmitRequest = () => {
-    // In a real app, this would send the request to the admin via API
-    // api.sendJoinRequest(linkup.id, requestMessage);
+  const handleSubmitRequest = async () => {
+    try {
+      // Send join request to the backend
+      await api.post(`/linkups/${linkup.id}/request`, {
+        message: requestMessage
+      });
 
-    console.log(
-      "Join request sent to group admin with message:",
-      requestMessage
-    );
+      console.log("Join request sent to group admin with message:", requestMessage);
 
-    // Show success state
-    setRequestSent(true);
+      // Show success state
+      setRequestSent(true);
 
-    // Close the modal after a delay to allow the user to see the success message
-    setTimeout(() => {
-      setJoinModalVisible(false);
-    }, 3000);
+      // Close the modal after a delay to allow the user to see the success message
+      setTimeout(() => {
+        setJoinModalVisible(false);
+        setRequestMessage("");
+        setRequestSent(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error sending join request:', error);
+      setJoinError(error.response?.data?.message || 'Failed to send request');
+      
+      // Clear error after 3 seconds
+      setTimeout(() => {
+        setJoinError("");
+      }, 3000);
+    }
   };
 
-  const handleBookmark = () => {
-    // TODO: Add API integration for bookmarking
-    // Example API call:
-    // try {
-    //   const response = await api.bookmarkLinkup(id, !isBookmarked);
-    //   setIsBookmarked(!isBookmarked);
-    // } catch (error) {
-    //   console.error('Error updating bookmark:', error);
-    // }
-
-    setIsBookmarked(!isBookmarked);
+  const handleBookmark = async () => {
+    try {
+      // TODO: Add API integration for bookmarking when endpoint is ready
+      // await api.post(`/linkups/${id}/bookmark`, { bookmark: !isBookmarked });
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error('Error updating bookmark:', error);
+    }
   };
 
   const handleContactHost = () => {
@@ -141,14 +180,47 @@ export default function LinkupDetailsScreen() {
     console.log("View members for linkup:", id);
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <BackHeader title="Group Details" showUser={false} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading linkup details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <BackHeader title="Group Details" showUser={false} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => {
+              setError(null);
+              setLoading(true);
+              // Trigger re-fetch by changing a dependency
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!linkup) {
     return (
-      <View
-        style={styles.loadingContainer}
-        className="flex-1 justify-center items-center bg-white"
-      >
-        <Text style={styles.loadingText}>Loading linkup details...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <BackHeader title="Group Details" showUser={false} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Linkup not found</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -194,6 +266,10 @@ export default function LinkupDetailsScreen() {
                   <Text style={styles.charCount}>
                     {requestMessage.length}/300
                   </Text>
+
+                  {joinError && (
+                    <Text style={styles.errorText}>{joinError}</Text>
+                  )}
 
                   <View style={styles.modalButtons}>
                     <TouchableOpacity
@@ -364,7 +440,19 @@ export default function LinkupDetailsScreen() {
             </View>
           </View>
 
-          {/* No additional sections to match the minimalist approach */}
+          {/* Interests Section */}
+          {linkup.allInterests && linkup.allInterests.length > 0 && (
+            <View style={styles.interestsSection}>
+              <Text style={styles.sectionTitle}>Group Interests</Text>
+              <View style={styles.interestsTags}>
+                {linkup.allInterests.map((interest, index) => (
+                  <View key={index} style={styles.interestTag}>
+                    <Text style={styles.interestText}>{interest}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* Members Section */}
           <View style={styles.membersSection}>
@@ -448,6 +536,25 @@ const styles = StyleSheet.create({
     color: Colors.gray500,
     fontFamily: "Sora-Regular",
     fontSize: 16,
+    marginTop: 12,
+  },
+  errorText: {
+    color: "#ef4444",
+    fontFamily: "Sora-Regular",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: Colors.white,
+    fontFamily: "Sora-SemiBold",
+    fontSize: 15,
   },
   content: {
     flex: 1,

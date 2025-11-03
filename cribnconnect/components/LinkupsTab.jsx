@@ -7,13 +7,14 @@ import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { Plus } from "lucide-react-native";
 import {
-    Platform,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 export default function LinkupsTab({ 
@@ -25,7 +26,8 @@ export default function LinkupsTab({
   onSearchChange, 
   onClearSearch, 
   refreshing, 
-  onRefresh 
+  onRefresh,
+  loading = false
 }) {
   const handleCreateLinkup = () => {
     router.push("/(screens)/create-linkup");
@@ -73,7 +75,12 @@ export default function LinkupsTab({
 
       {/* Linkups List */}
       <View style={styles.linkupsContainer}>
-        {filteredLinkups.length > 0 ? (
+        {loading && filteredLinkups.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Loading linkups...</Text>
+          </View>
+        ) : filteredLinkups.length > 0 ? (
           filteredLinkups.map((item) => (
             <View key={item.id} style={styles.linkupCardContainer}>
               <LinkupCard
@@ -141,5 +148,16 @@ const styles = StyleSheet.create({
   },
   linkupCardContainer: {
     marginBottom: 16,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray600,
   },
 });

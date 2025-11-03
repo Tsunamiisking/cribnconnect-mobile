@@ -100,6 +100,7 @@ export default function LinkupsScreen() {
       setLinkupsLoading(true);
       const URL = "https://cribnconnect-api.onrender.com/api/linkups";
       const response = await axios.get(URL);
+      console.log("Fetched linkups:", response.data);
       
       // Map the API response to match LinkupCard props
       const formattedLinkups = response.data.map(linkup => ({
@@ -212,6 +213,7 @@ export default function LinkupsScreen() {
             onClearSearch={clearSearch}
             refreshing={refreshing}
             onRefresh={onRefresh}
+            loading={linkupsLoading}
           />
         )}
       </View>
