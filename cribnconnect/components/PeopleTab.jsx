@@ -2,13 +2,17 @@ import CreateButton from "@/components/CreateButton";
 import NoResults from "@/components/NoResults";
 import PersonCard from "@/components/PersonCard";
 import TextSearchInput from "@/components/TextSearchInput";
+import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { UserPlus } from "lucide-react-native";
 import {
+  ActivityIndicator,
   Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View
 } from "react-native";
 
@@ -20,7 +24,10 @@ export default function PeopleTab({
   refreshing, 
   onRefresh,
   onPersonPress,
-  loading 
+  loading,
+  loadingMore = false,
+  hasMore = false,
+  onLoadMore
 }) {
   const handleCreateProfile = () => {
     router.push("/(screens)/public-profile");
@@ -50,13 +57,32 @@ export default function PeopleTab({
 
       <View style={styles.peopleCardsContainer}>
         {filteredPeople.length > 0 ? (
-          filteredPeople.map((person) => (
-            <PersonCard 
-              key={person.id} 
-              person={person} 
-              onPress={onPersonPress}
-            />
-          ))
+          <>
+            {filteredPeople.map((person) => (
+              <PersonCard 
+                key={person.id} 
+                person={person} 
+                onPress={onPersonPress}
+              />
+            ))}
+            
+            {/* Load More Button */}
+            {hasMore && !searchQuery && (
+              <View style={styles.loadMoreContainer}>
+                <TouchableOpacity 
+                  style={styles.loadMoreButton}
+                  onPress={onLoadMore}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Text style={styles.loadMoreText}>Load More People</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
         ) : (
           <NoResults
             title="No people found"
@@ -78,5 +104,23 @@ const styles = StyleSheet.create({
   },
   peopleCardsContainer: {
     paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+  },
+  loadMoreContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  loadMoreButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    minWidth: 200,
+    alignItems: 'center',
+  },
+  loadMoreText: {
+    color: Colors.white,
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 15,
   },
 });

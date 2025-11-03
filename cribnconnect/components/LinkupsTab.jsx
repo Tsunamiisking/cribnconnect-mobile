@@ -27,7 +27,10 @@ export default function LinkupsTab({
   onClearSearch, 
   refreshing, 
   onRefresh,
-  loading = false
+  loading = false,
+  loadingMore = false,
+  hasMore = false,
+  onLoadMore
 }) {
   const handleCreateLinkup = () => {
     router.push("/(screens)/create-linkup");
@@ -81,26 +84,45 @@ export default function LinkupsTab({
             <Text style={styles.loadingText}>Loading linkups...</Text>
           </View>
         ) : filteredLinkups.length > 0 ? (
-          filteredLinkups.map((item) => (
-            <View key={item.id} style={styles.linkupCardContainer}>
-              <LinkupCard
-                imageUri={item.imageUri}
-                title={item.title}
-                interest={item.interest}
-                description={item.description}
-                memberCount={item.memberCount}
-                privacy={item.privacy}
-                host={item.host}
-                liked={false}
-                onLikeToggle={(liked) => {
-                  console.log("Linkup saved:", item.id, liked);
-                }}
-                onPress={() => {
-                  router.push(`/(screens)/linkup-details/${item.id}`);
-                }}
-              />
-            </View>
-          ))
+          <>
+            {filteredLinkups.map((item) => (
+              <View key={item.id} style={styles.linkupCardContainer}>
+                <LinkupCard
+                  imageUri={item.imageUri}
+                  title={item.title}
+                  interest={item.interest}
+                  description={item.description}
+                  memberCount={item.memberCount}
+                  privacy={item.privacy}
+                  host={item.host}
+                  liked={false}
+                  onLikeToggle={(liked) => {
+                    console.log("Linkup saved:", item.id, liked);
+                  }}
+                  onPress={() => {
+                    router.push(`/(screens)/linkup-details/${item.id}`);
+                  }}
+                />
+              </View>
+            ))}
+            
+            {/* Load More Button */}
+            {hasMore && !searchQuery && selectedCategory === "All" && (
+              <View style={styles.loadMoreButtonContainer}>
+                <TouchableOpacity 
+                  style={styles.loadMoreButton}
+                  onPress={onLoadMore}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Text style={styles.loadMoreButtonText}>Load More Linkups</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
         ) : (
           <NoResults
             title="No linkups found"
@@ -159,5 +181,22 @@ const styles = StyleSheet.create({
     fontFamily: 'Sora-Regular',
     fontSize: 14,
     color: Colors.gray600,
+  },
+  loadMoreButtonContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  loadMoreButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    minWidth: 200,
+    alignItems: 'center',
+  },
+  loadMoreButtonText: {
+    color: Colors.white,
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 15,
   },
 });

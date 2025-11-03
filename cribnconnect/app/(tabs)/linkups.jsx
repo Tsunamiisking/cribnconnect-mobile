@@ -32,6 +32,13 @@ export default function LinkupsScreen() {
   const [currentUserLocation, setCurrentUserLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [linkupsLoading, setLinkupsLoading] = useState(true);
+  
+  // Pagination states
+  const [peoplePage, setPeoplePage] = useState(1);
+  const [linkupsPage, setLinkupsPage] = useState(1);
+  const [peopleHasMore, setPeopleHasMore] = useState(true);
+  const [linkupsHasMore, setLinkupsHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Get current user's location
   useEffect(() => {
@@ -50,15 +57,43 @@ export default function LinkupsScreen() {
     getCurrentLocation();
   }, []);
 
-  // Load users function
-  const loadUsers = async () => {
+  // Load users function with pagination and shuffle
+  const loadUsers = async (pageNum = 1, append = false) => {
     try {
-      setLoading(true);
-      const response = await api.get("/public-profiles");
+      if (!append) setLoading(true);
+      
+      const response = await api.get("/public-profiles", {
+        params: {
+          page: pageNum,
+          limit: 20,
+          shuffle: true // Use shuffle for discovery
+        }
+      });
+      
+      // console.log("Public Profiles API Response:", response.data);
+      
+      // Handle new paginated response structure
+      // Check if response has pagination structure
+      let profiles;
+      let pagination;
+      
+      if (response.data.data && response.data.pagination) {
+        // New paginated structure
+        profiles = response.data.data;
+        pagination = response.data.pagination;
+      } else if (Array.isArray(response.data)) {
+        // Old structure - direct array
+        profiles = response.data;
+        pagination = { hasNextPage: false };
+      } else {
+        console.error("Unexpected response structure:", response.data);
+        profiles = [];
+        pagination = { hasNextPage: false };
+      }
       
       // Filter out current user and add distance information
       const currentUserId = auth?.currentUser?.uid;
-      const otherUsers = response.data.filter(profile => profile.uid !== currentUserId);
+      const otherUsers = profiles.filter(profile => profile.uid !== currentUserId);
       
       const usersWithDistance = otherUsers.map(user => {
         const distance = currentUserLocation 
@@ -77,12 +112,20 @@ export default function LinkupsScreen() {
         };
       });
 
-      setPeople(usersWithDistance);
+      if (append) {
+        setPeople(prev => [...prev, ...usersWithDistance]);
+      } else {
+        setPeople(usersWithDistance);
+      }
+      
+      setPeopleHasMore(pagination.hasNextPage || false);
+      setPeoplePage(pageNum);
     } catch (error) {
       console.error("Error loading users:", error);
-      setPeople([]);
+      if (!append) setPeople([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -93,52 +136,113 @@ export default function LinkupsScreen() {
     }
   }, [currentUserLocation]);
 
-  // Load linkups from API
-  const loadLinkups = async () => {
+  // Load linkups from API with pagination and shuffle
+  const loadLinkups = async (pageNum = 1, append = false) => {
     try {
-      setLinkupsLoading(true);
-      const response = await api.get("/linkups");
-      console.log("Fetched linkups:", response.data);
+      if (!append) setLinkupsLoading(true);
+      
+      const response = await api.get("/linkups", {
+        params: {
+          page: pageNum,
+          limit: 20,
+          shuffle: true // Use shuffle for discovery
+        }
+      });
+      
+      // console.log("Linkups API Response:", response.data);
+      
+      // Handle new paginated response structure
+      // Check if response has pagination structure
+      let linkupsData;
+      let pagination;
+      
+      if (response.data.data && response.data.pagination) {
+        // New paginated structure
+        linkupsData = response.data.data;
+        pagination = response.data.pagination;
+      } else if (Array.isArray(response.data)) {
+        // Old structure - direct array
+        linkupsData = response.data;
+        pagination = { hasNextPage: false };
+      } else {
+        console.error("Unexpected response structure:", response.data);
+        linkupsData = [];
+        pagination = { hasNextPage: false };
+      }
       
       const currentUserId = auth?.currentUser?.uid;
       
       // Map the API response to match LinkupCard props
       // Filter out linkups created by current user (they see those in Messages tab)
-      const formattedLinkups = response.data
-        .filter(linkup => linkup.createdBy?.uid !== currentUserId) // Exclude user's own linkups
+      const formattedLinkups = linkupsData
+        .filter(linkup => linkup.uid !== currentUserId) // Exclude user's own linkups
         .map(linkup => ({
           id: linkup._id,
           title: linkup.name,
-          interest: linkup.interests?.[0] || "General", // Use first interest or "General"
+          interest: linkup.interests?.[0] || "General",
           description: linkup.description || "",
           memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
           privacy: linkup.privacy || "public",
           host: linkup.createdBy?.username || "Unknown",
           imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
-          category: linkup.interests?.[0] || "Social", // Use first interest as category
-          // Store original data for filtering
+          category: linkup.interests?.[0] || "Social",
           interests: linkup.interests || [],
           maxPeople: linkup.maxPeople,
           isPrivate: linkup.isPrivate,
         }));
 
-      setLinkups(formattedLinkups);
+      if (append) {
+        setLinkups(prev => [...prev, ...formattedLinkups]);
+      } else {
+        setLinkups(formattedLinkups);
+      }
+      
+      setLinkupsHasMore(pagination.hasNextPage || false);
+      setLinkupsPage(pageNum);
     } catch (error) {
       console.error("Error loading linkups:", error);
-      setLinkups([]);
+      if (!append) setLinkups([]);
     } finally {
       setLinkupsLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  // Load users from API when location is available
+  useEffect(() => {
+    if (currentUserLocation) {
+      loadUsers(1, false);
+    }
+  }, [currentUserLocation]);
+
   // Load linkups on component mount
   useEffect(() => {
-    loadLinkups();
+    loadLinkups(1, false);
   }, []);
+
+  // Load more people
+  const loadMorePeople = () => {
+    if (!loadingMore && peopleHasMore) {
+      setLoadingMore(true);
+      loadUsers(peoplePage + 1, true);
+    }
+  };
+
+  // Load more linkups
+  const loadMoreLinkups = () => {
+    if (!loadingMore && linkupsHasMore) {
+      setLoadingMore(true);
+      loadLinkups(linkupsPage + 1, true);
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadUsers(), loadLinkups()]);
+    // Reset to page 1 and get fresh shuffled data
+    await Promise.all([
+      loadUsers(1, false),
+      loadLinkups(1, false)
+    ]);
     setRefreshing(false);
   };
 
@@ -201,6 +305,9 @@ export default function LinkupsScreen() {
             refreshing={refreshing}
             onRefresh={onRefresh}
             loading={loading}
+            loadingMore={loadingMore}
+            hasMore={peopleHasMore}
+            onLoadMore={loadMorePeople}
             onPersonPress={(person) => {
               router.push(`/(screens)/public-profile/${person.uid}`);
             }}
@@ -217,6 +324,9 @@ export default function LinkupsScreen() {
             refreshing={refreshing}
             onRefresh={onRefresh}
             loading={linkupsLoading}
+            loadingMore={loadingMore}
+            hasMore={linkupsHasMore}
+            onLoadMore={loadMoreLinkups}
           />
         )}
       </View>
