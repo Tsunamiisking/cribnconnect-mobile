@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import api from '@/api/api';
+import { useEffect, useState } from 'react';
 
 /**
  * useActiveStatus Hook
@@ -61,7 +61,7 @@ export const useGroupActiveMembers = (groupId, enablePolling = false) => {
     if (!groupId) return;
     
     try {
-      const response = await api.get(`/linkups/${groupId}/active-members`);
+      const response = await api.get(`/api/linkups/${groupId}/active-members`);
       setActiveCount(response.data.count);
       setActiveMembers(response.data.members);
     } catch (error) {

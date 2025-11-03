@@ -1,13 +1,16 @@
+import api from '@/api/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
-import api from '@/api/api';
 
 /**
  * useHeartbeat Hook
  * Sends periodic heartbeat to backend to update user's active status
  * Uses polling approach with AppState awareness
+ * Only starts after user is authenticated
  */
 export const useHeartbeat = () => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const intervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
 
@@ -43,6 +46,14 @@ export const useHeartbeat = () => {
   };
 
   useEffect(() => {
+    // Don't start heartbeat until auth is confirmed
+    if (authLoading || !isAuthenticated) {
+      console.log('Heartbeat waiting for authentication...');
+      return;
+    }
+
+    console.log('User authenticated - starting heartbeat');
+
     const handleAppStateChange = (nextAppState) => {
       // App has come to foreground
       if (
@@ -78,7 +89,7 @@ export const useHeartbeat = () => {
       stopHeartbeat();
       subscription.remove();
     };
-  }, []);
+  }, [isAuthenticated, authLoading]);
 
   return null;
 };
