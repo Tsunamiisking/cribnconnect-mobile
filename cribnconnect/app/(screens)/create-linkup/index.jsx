@@ -1,18 +1,24 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  TextInput,
-  StatusBar,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Users, MapPin, Calendar, Lock, Globe } from "lucide-react-native";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
+import { pickImages } from "@/utils/mediaUtils";
 import { router } from "expo-router";
+import { Globe, ImagePlus, Lock, Users, X } from "lucide-react-native";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+import api from "../../../api/api";
 
 /**
  * CreateLinkupScreen
@@ -20,13 +26,16 @@ import { router } from "expo-router";
  * - Essential fields only for quick group creation
  */
 export default function CreateLinkupScreen() {
+  const [loading, setLoading] = useState(false);
+  const [interestsText, setInterestsText] = useState("");
   const [formData, setFormData] = useState({
-    title: "",
-    interest: "",
-    location: "",
-    schedule: "",
-    privacy: "public", // "public" or "private"
+    name: "",
     description: "",
+    interests: [],
+    maxPeople: "",
+    isPrivate: false,
+    privacy: "public", // "public" or "private"
+    photo: null,
   });
 
   const privacyOptions = [
@@ -39,22 +48,118 @@ export default function CreateLinkupScreen() {
     { id: "private", name: "Private", description: "Invite only", icon: Lock },
   ];
 
-  const handleCreate = () => {
-    // Simple validation - only title and interest are required
-    if (!formData.title || !formData.interest) {
-      alert("Please enter a group name and interest/topic");
+  const handleCreate = async () => {
+    // Simple validation - only name and interests are required
+    if (!formData.name || formData.interests.length === 0) {
+      alert("Please enter a group name and at least one interest");
       return;
     }
 
-    // TODO: Implement actual linkup creation
-    console.log("Creating linkup:", formData);
-
-    // Navigate back to linkups screen
-    router.back();
+    try {
+      setLoading(true);
+      
+      // Create FormData if photo exists, otherwise send JSON
+      let requestData;
+      
+      if (formData.photo) {
+        // Photo exists - send as FormData
+        requestData = new FormData();
+        
+        // Add the image file - match the pattern from public-profile
+        const filename = formData.photo.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        
+        // Important: Use 'files' as the field name to match backend multer uploadArray('files')
+        requestData.append('files', {
+          uri: formData.photo,
+          name: filename,
+          type: type,
+        });
+        
+        // Add other form fields
+        requestData.append('name', formData.name);
+        requestData.append('description', formData.description || '');
+        requestData.append('interests', JSON.stringify(formData.interests));
+        if (formData.maxPeople) {
+          requestData.append('maxPeople', formData.maxPeople);
+        }
+        requestData.append('isPrivate', formData.isPrivate.toString());
+        requestData.append('privacy', formData.privacy);
+      } else {
+        // No photo - send as JSON (backend will generate default image)
+        requestData = {
+          name: formData.name,
+          description: formData.description,
+          interests: formData.interests,
+          maxPeople: formData.maxPeople || null,
+          isPrivate: formData.isPrivate,
+          privacy: formData.privacy,
+        };
+      }
+      
+      const response = await api.post('/linkups', requestData);
+      
+      Toast.show({
+        text1: "Success",
+        text2: "Linkup created successfully!",
+        type: "success"
+      });
+      
+      // Navigate back to linkups screen
+      router.back();
+    } catch(error) {
+      console.error('Error creating linkup:', error);
+      console.error('Error response:', error.response?.data);
+      Toast.show({
+        text1: "Error",
+        text2: error.response?.data?.message || "Failed to create linkup. Please try again.",
+        type: "error"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateInterests = (text) => {
+    setInterestsText(text);
+    const interestsArray = text.split(",").map(i => i.trim()).filter(Boolean);
+    setFormData((prev) => ({ ...prev, interests: interestsArray }));
+  };
+
+  const handleAddImage = async () => {
+    if (formData.photo) {
+      Toast.show({
+        text1: "Image Already Added",
+        text2: "Please remove the existing image before adding a new one",
+        type: "warning"
+      });
+      return;
+    }
+
+    try {
+      const newImages = await pickImages(0, 1); // Only allow 1 image
+      
+      if (newImages && newImages.length > 0) {
+        const imageUri = newImages[0].url;
+        setFormData((prev) => ({ ...prev, photo: imageUri }));
+      }
+    } catch (error) {
+      console.error('Error adding image:', error);
+      Toast.show({
+        text1: "Error",
+        text2: "Failed to add image. Please try again.",
+        type: "error"
+      });
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({ ...prev, photo: null }));
   };
 
   return (
@@ -64,21 +169,52 @@ export default function CreateLinkupScreen() {
       <BackHeader title="Create Linkup" showUser={true} />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Title */}
+        {/* Group Photo */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Group Photo (Optional)</Text>
+          <Text style={styles.subtitle}>
+            Add a photo to make your group stand out
+          </Text>
+          
+          {formData.photo ? (
+            <View style={styles.imageWrapper}>
+              <Image
+                source={{ uri: formData.photo }}
+                style={styles.imagePreview}
+                resizeMode="cover"
+              />
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={handleRemoveImage}
+              >
+                <X size={16} color={Colors.white} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.addPhotoButton}
+              onPress={handleAddImage}
+            >
+              <ImagePlus size={32} color={Colors.primary} />
+              <Text style={styles.addPhotoText}>Add Group Photo</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Group Name */}
         <View style={styles.section}>
           <Text style={styles.label}>Group Name *</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g., Coffee & Code Buddies"
-            // placeholderClassName="#"
-            value={formData.title}
-            onChangeText={(value) => updateField("title", value)}
+            value={formData.name}
+            onChangeText={(value) => updateField("name", value)}
           />
         </View>
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.label}>Description </Text>
+          <Text style={styles.label}>Description</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Tell people what your group is about..."
@@ -90,33 +226,35 @@ export default function CreateLinkupScreen() {
           />
         </View>
 
-        {/* Interest */}
+        {/* Interests */}
         <View style={styles.section}>
-          <Text style={styles.label}>Interest/Topic *</Text>
+          <Text style={styles.label}>Interests *</Text>
           <Text style={styles.subtitle}>
             Comma separate multiple interests (e.g., Tech, Art, Fitness)
           </Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g., Tech & Programming"
-            value={formData.interest}
-            onChangeText={(value) => updateField("interest", value)}
+            placeholder="e.g., Tech, Programming, Coffee"
+            value={interestsText}
+            onChangeText={updateInterests}
           />
         </View>
 
-        {/* Location */}
+        {/* Max People */}
         <View style={styles.section}>
-          <Text style={styles.label}>Meeting Frequency (Optional)</Text>
+          <Text style={styles.label}>Maximum Members (Optional)</Text>
           <Text style={styles.subtitle}>
-            (Occasionally, Weekly etc.), leave blank for online groups
+            Leave blank for 2000 members
           </Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g., Downtown Cafe, Lagos"
-            value={formData.location}
-            onChangeText={(value) => updateField("location", value)}
+            placeholder="e.g., 50"
+            value={formData.maxPeople}
+            onChangeText={(value) => updateField("maxPeople", value)}
+            keyboardType="number-pad"
           />
         </View>
+
         {/* Privacy Settings */}
         <View style={styles.section}>
           <Text style={styles.label}>Privacy</Text>
@@ -132,7 +270,10 @@ export default function CreateLinkupScreen() {
                   styles.privacyOption,
                   formData.privacy === option.id && styles.selectedPrivacy,
                 ]}
-                onPress={() => updateField("privacy", option.id)}
+                onPress={() => {
+                  updateField("privacy", option.id);
+                  updateField("isPrivate", option.id === "private");
+                }}
               >
                 <option.icon
                   size={20}
@@ -162,9 +303,19 @@ export default function CreateLinkupScreen() {
 
         {/* Create Button */}
         <View style={styles.createSection}>
-          <Pressable style={styles.createButton} onPress={handleCreate}>
-            <Users size={20} color="white" />
-            <Text style={styles.createButtonText}>Create Linkup</Text>
+          <Pressable 
+            style={[styles.createButton, loading && styles.createButtonDisabled]} 
+            onPress={handleCreate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <>
+                <Users size={20} color="white" />
+                <Text style={styles.createButtonText}>Create Linkup</Text>
+              </>
+            )}
           </Pressable>
 
           <Text style={styles.helpText}>
@@ -249,6 +400,45 @@ const styles = StyleSheet.create({
     color: Colors.gray500,
     marginTop: 2,
   },
+  imageWrapper: {
+    position: 'relative',
+    marginTop: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addPhotoButton: {
+    marginTop: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary + '10',
+  },
+  addPhotoText: {
+    marginTop: 8,
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: 'Sora-Medium',
+  },
   createSection: {
     marginBottom: 32,
     paddingTop: 16,
@@ -261,6 +451,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRadius: 26,
     marginBottom: 12,
+  },
+  createButtonDisabled: {
+    opacity: 0.6,
   },
   createButtonText: {
     fontFamily: "Sora-SemiBold",
