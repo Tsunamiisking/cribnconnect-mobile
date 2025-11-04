@@ -141,6 +141,12 @@ export default function LinkupsScreen() {
     try {
       if (!append) setLinkupsLoading(true);
       
+      const currentUser = auth?.currentUser;
+      console.log("🔍 Making linkups request as user:", {
+        uid: currentUser?.uid,
+        email: currentUser?.email
+      });
+      
       const response = await api.get("/linkups", {
         params: {
           page: pageNum,
@@ -148,8 +154,9 @@ export default function LinkupsScreen() {
           shuffle: true // Use shuffle for discovery
         }
       });
-      
-      // console.log("Linkups API Response:", response.data);
+
+
+      // console.log("📦 Raw API Response:", JSON.stringify(response.data, null, 2));
       
       // Handle new paginated response structure
       // Check if response has pagination structure
@@ -159,6 +166,8 @@ export default function LinkupsScreen() {
       if (response.data.data && response.data.pagination) {
         // New paginated structure
         linkupsData = response.data.data;
+        // console.log("📊 Processed linkups data:", linkupsData);
+        // console.log("👥 First linkup members:", linkupsData[0]?.members);
         pagination = response.data.pagination;
       } else if (Array.isArray(response.data)) {
         // Old structure - direct array
@@ -176,12 +185,16 @@ export default function LinkupsScreen() {
       // Filter out linkups created by current user (they see those in Messages tab)
       const formattedLinkups = linkupsData
         .filter(linkup => linkup.uid !== currentUserId) // Exclude user's own linkups
-        .map(linkup => ({
+        .map(linkup => {
+          // Use activeMemberCount if available (virtual field), otherwise fall back to members.length
+          const count = linkup.activeMemberCount ?? linkup.members?.length ?? 0;
+          
+          return {
           id: linkup._id,
           title: linkup.name,
           interest: linkup.interests?.[0] || "General",
           description: linkup.description || "",
-          memberCount: `${linkup.members?.length || 0} ${linkup.members?.length === 1 ? 'member' : 'members'}`,
+          memberCount: `${count} ${count === 1 ? 'member' : 'members'}`,
           privacy: linkup.privacy || "public",
           host: linkup.createdBy?.username || "Unknown",
           imageUri: linkup.photo?.url || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
@@ -189,7 +202,8 @@ export default function LinkupsScreen() {
           interests: linkup.interests || [],
           maxPeople: linkup.maxPeople,
           isPrivate: linkup.isPrivate,
-        }));
+        };
+        });
 
       if (append) {
         setLinkups(prev => [...prev, ...formattedLinkups]);
