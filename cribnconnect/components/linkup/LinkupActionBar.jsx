@@ -5,9 +5,21 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 export default function LinkupActionBar({
   hasJoined,
   requestSent,
+  isAdmin = false,
+  isCreator = false,
+  isPrivate = false,
   onJoin,
+  onLeave,
+  onEdit,
+  onManageRequests,
   onShare,
 }) {
+  // Determine what buttons to show
+  const showEditButton = isAdmin; // Show edit for admins and creator
+  const showJoinButton = !hasJoined && !isAdmin; // Show join only if not joined and not admin
+  const showLeaveButton = hasJoined && !isCreator; // Show leave if joined but not creator
+  const showManageRequestsButton = isAdmin && isPrivate; // Show manage requests for admins of private groups
+
   return (
     <View style={styles.actionBar}>
       <View style={styles.actionButtons}>
@@ -16,23 +28,60 @@ export default function LinkupActionBar({
           <Text style={styles.shareButtonText}>Share</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.joinButton,
-            hasJoined && styles.joinedButton,
-            requestSent && styles.requestSentButton,
-          ]}
-          onPress={onJoin}
-          disabled={requestSent}
-        >
-          <Text style={styles.joinButtonText}>
-            {hasJoined
-              ? "Joined ✓"
-              : requestSent
-                ? "Request Sent ✓"
-                : "Join Group"}
-          </Text>
-        </TouchableOpacity>
+        {/* Join Button - Only for non-members who are not admins */}
+        {showJoinButton && (
+          <TouchableOpacity
+            style={[
+              styles.joinButton,
+              requestSent && styles.requestSentButton,
+            ]}
+            onPress={onJoin}
+            disabled={requestSent}
+          >
+            <Text style={styles.joinButtonText}>
+              {requestSent ? "Request Sent ✓" : "Join Group"}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Leave Button - For members who are not creators */}
+        {showLeaveButton && (
+          <TouchableOpacity
+            style={styles.leaveButton}
+            onPress={onLeave}
+          >
+            <Text style={styles.leaveButtonText}>Leave Group</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Edit Button - For admins and creator */}
+        {showEditButton && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={onEdit}
+          >
+            <Text style={styles.editButtonText}>Edit Group</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Manage Requests Button - For admins of private groups */}
+        {showManageRequestsButton && (
+          <TouchableOpacity
+            style={styles.manageButton}
+            onPress={onManageRequests}
+          >
+            <Text style={styles.manageButtonText}>Manage Requests</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Joined Badge - For members who are admins */}
+        {hasJoined && isAdmin && (
+          <View style={styles.adminBadge}>
+            <Text style={styles.adminBadgeText}>
+              {isCreator ? "Creator" : "Admin"}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -80,6 +129,59 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.amber,
   },
   joinButtonText: {
+    color: Colors.white,
+    fontFamily: "Sora-Bold",
+    fontSize: 16,
+  },
+  leaveButton: {
+    flex: 1,
+    backgroundColor: "#ef4444",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  leaveButtonText: {
+    color: Colors.white,
+    fontFamily: "Sora-Bold",
+    fontSize: 16,
+  },
+  editButton: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  editButtonText: {
+    color: Colors.white,
+    fontFamily: "Sora-Bold",
+    fontSize: 16,
+  },
+  manageButton: {
+    backgroundColor: Colors.amber,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+  },
+  manageButtonText: {
+    color: Colors.white,
+    fontFamily: "Sora-SemiBold",
+    fontSize: 14,
+  },
+  adminBadge: {
+    backgroundColor: Colors.emerald,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  adminBadgeText: {
     color: Colors.white,
     fontFamily: "Sora-Bold",
     fontSize: 16,

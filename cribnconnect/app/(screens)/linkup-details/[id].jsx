@@ -8,6 +8,7 @@ import LinkupHeader from "@/components/linkup/LinkupHeader";
 import LinkupInfo from "@/components/linkup/LinkupInfo";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
+import { useAuth } from "@/contexts/AuthContext";
 import { addUserToLinkupChat, createLinkupGroupChat } from "@/services/linkupChatService";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -23,6 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LinkupDetailsScreen() {
   const { id } = useLocalSearchParams();
+  const { publicProfileId } = useAuth();
   const [linkup, setLinkup] = useState(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
@@ -32,6 +34,8 @@ export default function LinkupDetailsScreen() {
   const [requestSent, setRequestSent] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [hasJoined, setHasJoined] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -45,7 +49,28 @@ export default function LinkupDetailsScreen() {
         const linkupData = response.data;
         
         const currentUserId = auth?.currentUser?.uid;
-        const isMember = linkupData.members?.some(member => member.uid === currentUserId);
+        
+        // Check if current user is a member (members array contains PublicProfile ObjectIds)
+        const isMember = publicProfileId && linkupData.members?.some(member => {
+          // Members can be either ObjectId strings or populated objects
+          const memberId = typeof member === 'string' ? member : member._id;
+          return memberId === publicProfileId;
+        });
+        
+        // Check if current user is the creator (compare Firebase uid with linkup.uid)
+        const isGroupCreator = currentUserId === linkupData.uid;
+        
+        // For now, creator is the only admin (can be extended with admins array later)
+        const isGroupAdmin = isGroupCreator;
+        
+        console.log('Debug - Current User Firebase UID:', currentUserId);
+        console.log('Debug - Current User Public Profile ID:', publicProfileId);
+        console.log('Debug - Linkup Creator UID:', linkupData.uid);
+        console.log('Debug - Is Member:', isMember);
+        console.log('Debug - Is Creator:', isGroupCreator);
+        
+        setIsCreator(isGroupCreator);
+        setIsAdmin(isGroupAdmin)
         
         // Map database structure to component state
         setLinkup({
@@ -298,6 +323,52 @@ export default function LinkupDetailsScreen() {
     console.log("View members for linkup:", id);
   };
 
+  const handleEditGroup = () => {
+    // TODO: Navigate to edit group screen
+    console.log("Edit linkup:", id);
+    // router.push(`/(hosting)/edit-linkup/${id}`);
+  };
+
+  const handleLeaveGroup = async () => {
+    try {
+      if (isCreator) {
+        setJoinError("Group creator cannot leave the group. Delete the group instead.");
+        setTimeout(() => setJoinError(""), 3000);
+        return;
+      }
+
+      // TODO: Show confirmation modal before leaving
+      await api.post(`/linkups/${linkup.id}/leave`);
+      
+      setHasJoined(false);
+      
+      // Update local state
+      setLinkup(prev => ({
+        ...prev,
+        groupSize: {
+          ...prev.groupSize,
+          current: Math.max(0, prev.groupSize.current - 1)
+        },
+        memberCount: Math.max(0, prev.memberCount - 1)
+      }));
+
+      console.log('Successfully left the group');
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      setJoinError(error.response?.data?.message || 'Failed to leave group');
+      
+      setTimeout(() => {
+        setJoinError("");
+      }, 3000);
+    }
+  };
+
+  const handleManageRequests = () => {
+    // TODO: Navigate to pending requests screen
+    console.log("Manage requests for linkup:", id);
+    // router.push(`/(screens)/linkup-requests/${id}`);
+  };
+
   const handleCloseJoinModal = () => {
     setJoinModalVisible(false);
     setRequestMessage("");
@@ -383,7 +454,13 @@ export default function LinkupDetailsScreen() {
       <LinkupActionBar
         hasJoined={hasJoined}
         requestSent={requestSent}
+        isAdmin={isAdmin}
+        isCreator={isCreator}
+        isPrivate={linkup?.privacy === "private" || linkup?.isPrivate}
         onJoin={handleJoinGroup}
+        onLeave={handleLeaveGroup}
+        onEdit={handleEditGroup}
+        onManageRequests={handleManageRequests}
         onShare={handleShare}
       />
 
