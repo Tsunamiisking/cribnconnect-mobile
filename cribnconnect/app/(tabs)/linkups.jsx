@@ -142,10 +142,10 @@ export default function LinkupsScreen() {
       if (!append) setLinkupsLoading(true);
       
       const currentUser = auth?.currentUser;
-      console.log("🔍 Making linkups request as user:", {
-        uid: currentUser?.uid,
-        email: currentUser?.email
-      });
+      // console.log("🔍 Making linkups request as user:", {
+      //   uid: currentUser?.uid,
+      //   email: currentUser?.email
+      // });
       
       const response = await api.get("/linkups", {
         params: {

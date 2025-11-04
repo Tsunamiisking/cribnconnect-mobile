@@ -1,5 +1,7 @@
 import BackHeader from "@/components/BackHeader";
+import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
+import { createLinkupGroupChat } from "@/services/linkupChatService";
 import { pickImages } from "@/utils/mediaUtils";
 import { router } from "expo-router";
 import { Globe, ImagePlus, Lock, Users, X } from "lucide-react-native";
@@ -99,6 +101,32 @@ export default function CreateLinkupScreen() {
       }
       
       const response = await api.post('/linkups', requestData);
+      
+      // Create Firebase group chat for the linkup
+      const linkupId = response.data._id || response.data.id;
+      const currentUser = auth.currentUser;
+      
+      if (linkupId && currentUser) {
+        try {
+          await createLinkupGroupChat(
+            linkupId,
+            {
+              name: formData.name,
+              photo: response.data.photo?.url || formData.photo,
+              description: formData.description,
+            },
+            currentUser.uid,
+            {
+              name: currentUser.displayName || 'Unknown User',
+              photoURL: currentUser.photoURL || null,
+            }
+          );
+          console.log('Group chat created for linkup:', linkupId);
+        } catch (chatError) {
+          console.error('Error creating group chat:', chatError);
+          // Don't fail the whole creation if chat fails
+        }
+      }
       
       Toast.show({
         text1: "Success",
