@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Fetch fresh data from backend
-      const response = await api.get('/public-profile/me');
+      const response = await api.get('/public-profiles/me');
       const profileId = response.data?._id;
       
       if (profileId) {

@@ -1,3 +1,4 @@
+import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
@@ -8,7 +9,6 @@ import {
   subscribeLinkupChat,
   subscribeLinkupMessages
 } from "@/services/linkupChatService";
-import api from "@/api/api";
 import { useLocalSearchParams } from "expo-router";
 import { Info, Paperclip, Send, Users } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
@@ -50,7 +50,7 @@ export default function ChatScreen() {
     // Fetch user's public profile to get username
     const fetchUsername = async () => {
       try {
-        const response = await api.get('/public-profile/me');
+        const response = await api.get('/public-profiles/me');
         const userProfile = response.data;
         setUsername(userProfile?.username || currentUser.displayName || 'Anonymous');
         console.log('Fetched username:', userProfile?.username);
