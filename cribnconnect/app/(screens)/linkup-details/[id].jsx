@@ -142,6 +142,15 @@ export default function LinkupDetailsScreen() {
       // Add user to Firebase group chat
       if (currentUser) {
         try {
+          // Fetch username from public profile
+          let username = currentUser.displayName || 'Anonymous';
+          try {
+            const profileResponse = await api.get('/public-profile/me');
+            username = profileResponse.data?.username || username;
+          } catch (profileError) {
+            console.log('Could not fetch username, using displayName');
+          }
+          
           // First, ensure group chat exists (in case it wasn't created)
           await createLinkupGroupChat(
             linkup.id,
@@ -157,17 +166,17 @@ export default function LinkupDetailsScreen() {
             }
           );
           
-          // Then add the current user to the chat
+          // Then add the current user to the chat with their username
           await addUserToLinkupChat(
             linkup.id,
             currentUser.uid,
             {
-              name: currentUser.displayName || 'Anonymous',
+              name: username,
               photoURL: currentUser.photoURL || null,
             }
           );
           
-          console.log('User added to linkup group chat');
+          console.log('User added to linkup group chat with username:', username);
         } catch (chatError) {
           console.error('Error adding user to group chat:', chatError);
           // Don't fail the join if chat fails
@@ -250,16 +259,25 @@ export default function LinkupDetailsScreen() {
       // Add user to Firebase group chat
       if (currentUser) {
         try {
+          // Fetch username from public profile
+          let username = currentUser.displayName || 'Anonymous';
+          try {
+            const profileResponse = await api.get('/public-profile/me');
+            username = profileResponse.data?.username || username;
+          } catch (profileError) {
+            console.log('Could not fetch username, using displayName');
+          }
+          
           await addUserToLinkupChat(
             linkup.id,
             currentUser.uid,
             {
-              name: currentUser.displayName || 'Anonymous',
+              name: username,
               photoURL: currentUser.photoURL || null,
             }
           );
           
-          console.log('User added to private linkup group chat');
+          console.log('User added to private linkup group chat with username:', username);
         } catch (chatError) {
           console.error('Error adding user to group chat:', chatError);
         }

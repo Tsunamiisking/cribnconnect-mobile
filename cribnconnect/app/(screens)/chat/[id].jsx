@@ -1,12 +1,14 @@
 import BackHeader from "@/components/BackHeader";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   markLinkupChatAsRead,
   sendMessageToLinkupChat,
   subscribeLinkupChat,
   subscribeLinkupMessages
 } from "@/services/linkupChatService";
+import api from "@/api/api";
 import { useLocalSearchParams } from "expo-router";
 import { Info, Paperclip, Send, Users } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
@@ -25,11 +27,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams();
+  const { publicProfileId } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [chatData, setChatData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [username, setUsername] = useState(null);
   const flatListRef = useRef(null);
 
   useEffect(() => {
@@ -42,6 +46,21 @@ export default function ChatScreen() {
       setLoading(false);
       return;
     }
+    
+    // Fetch user's public profile to get username
+    const fetchUsername = async () => {
+      try {
+        const response = await api.get('/public-profile/me');
+        const userProfile = response.data;
+        setUsername(userProfile?.username || currentUser.displayName || 'Anonymous');
+        console.log('Fetched username:', userProfile?.username);
+      } catch (error) {
+        console.log('Could not fetch public profile, using displayName:', error);
+        setUsername(currentUser.displayName || 'Anonymous');
+      }
+    };
+    
+    fetchUsername();
     
     console.log('Loading chat for linkup ID:', id);
     
@@ -106,11 +125,11 @@ export default function ChatScreen() {
     }
     
     try {
-      // Send message to Firebase
+      // Send message to Firebase with username from public profile
       await sendMessageToLinkupChat(id, {
         text: inputText.trim(),
         senderId: currentUser.uid,
-        senderName: currentUser.displayName || 'Anonymous',
+        senderName: username || currentUser.displayName || 'Anonymous',
         senderPhoto: currentUser.photoURL || null,
         type: 'text',
       });
@@ -211,11 +230,11 @@ export default function ChatScreen() {
           ]}
           className="px-4 py-2"
         >
-          {/* Show sender name for group chats */}
+          {/* Show sender name for group chats (above the message bubble) */}
           {showSenderName && (
             <View style={styles.senderNameContainer}>
               <Text style={styles.senderName}>
-                {item.senderName}
+                {item.senderName || 'Unknown'}
               </Text>
             </View>
           )}
