@@ -27,8 +27,9 @@ export default function UserLinkupsCarousel() {
       
       // Use the dedicated endpoint for user's owned linkups
       const response = await api.get(`/linkups/${currentUserId}/owned`);
-      
-      // Map the response data to the format needed for the carousel
+      // console.log("Response data for user linkups:", response.data);
+      // consol
+      // Map the response data to  the format needed for the carousel
       const formattedLinkups = response.data.map(linkup => ({
         id: linkup._id,
         title: linkup.name,
