@@ -1,14 +1,14 @@
 import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
-import JoinConfirmationModal from "@/components/linkup/JoinConfirmationModal";
 import JoinCodeModal from "@/components/linkup/JoinCodeModal";
+import JoinConfirmationModal from "@/components/linkup/JoinConfirmationModal";
 import LinkupActionBar from "@/components/linkup/LinkupActionBar";
 import LinkupDetails from "@/components/linkup/LinkupDetails";
 import LinkupHeader from "@/components/linkup/LinkupHeader";
 import LinkupInfo from "@/components/linkup/LinkupInfo";
 import { auth } from "@/config/firebase";
-import { addUserToLinkupChat, createLinkupGroupChat } from "@/services/linkupChatService";
 import { Colors } from "@/constants/Colors";
+import { addUserToLinkupChat, createLinkupGroupChat } from "@/services/linkupChatService";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {

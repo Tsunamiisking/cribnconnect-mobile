@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Globe, Heart, Lock } from "lucide-react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function LinkupHeader({ linkup, isBookmarked, onBookmark }) {
   return (

@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
-import { StyleSheet, Text, View } from "react-native";
 import { Users } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function LinkupInfo({ linkup }) {
   return (

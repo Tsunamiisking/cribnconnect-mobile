@@ -1,11 +1,11 @@
 import BackHeader from "@/components/BackHeader";
-import { Colors } from "@/constants/Colors";
 import { auth } from "@/config/firebase";
-import { 
-  subscribeLinkupChat, 
-  subscribeLinkupMessages, 
+import { Colors } from "@/constants/Colors";
+import {
+  markLinkupChatAsRead,
   sendMessageToLinkupChat,
-  markLinkupChatAsRead 
+  subscribeLinkupChat,
+  subscribeLinkupMessages
 } from "@/services/linkupChatService";
 import { useLocalSearchParams } from "expo-router";
 import { Info, Paperclip, Send, Users } from "lucide-react-native";

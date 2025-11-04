@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Share2 } from "lucide-react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function LinkupActionBar({
   hasJoined,

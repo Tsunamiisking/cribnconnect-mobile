@@ -1,12 +1,13 @@
 import NormalHeader from '@/components/NormalHeader';
 import UserLinkupsCarousel from '@/components/UserLinkupsCarousel';
-import { Colors } from '@/constants/Colors';
 import { auth } from '@/config/firebase';
+import { Colors } from '@/constants/Colors';
 import { subscribeUserLinkupChats } from '@/services/linkupChatService';
 import { router } from 'expo-router';
 import { MessageCircle, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Platform,
@@ -16,7 +17,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
