@@ -1,9 +1,11 @@
 import NormalHeader from '@/components/NormalHeader';
 import UserLinkupsCarousel from '@/components/UserLinkupsCarousel';
 import { Colors } from '@/constants/Colors';
+import { auth } from '@/config/firebase';
+import { subscribeUserLinkupChats } from '@/services/linkupChatService';
 import { router } from 'expo-router';
 import { MessageCircle, Users } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -14,6 +16,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -80,34 +83,8 @@ const EVENT_CONVERSATIONS = [
 ];
 
 // Conversations from linkups that the user has joined (but not created)
-const LINKUP_CONVERSATIONS = [
-  {
-    id: 'group2',
-    type: 'group',
-    name: 'Coffee & Code Buddies',
-    avatar: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
-    participants: 12,
-    lastMessage: {
-      text: 'Emma: Who\'s joining us for tomorrow\'s session?',
-      timestamp: '15 min ago',
-      unread: true,
-    },
-    context: 'Linkup Group',
-  },
-  {
-    id: 'group5',
-    type: 'group',
-    name: 'Coffee & Code Buddies',
-    avatar: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
-    participants: 12,
-    lastMessage: {
-      text: 'Emma: Who\'s joining us for tomorrow\'s session?',
-      timestamp: '15 min ago',
-      unread: true,
-    },
-    context: 'Linkup Group',
-  },
-];
+// This will be replaced with real Firestore data
+const LINKUP_CONVERSATIONS = [];
 
 const MESSAGE_TABS = [
   { id: 'apartments', title: 'Apartments', icon: 'building' },
@@ -118,11 +95,81 @@ const MESSAGE_TABS = [
 export default function MessagesScreen() {
   const [selectedTab, setSelectedTab] = useState('apartments');
   const [refreshing, setRefreshing] = useState(false);
+  const [linkupChats, setLinkupChats] = useState([]);
+  const [loadingLinkups, setLoadingLinkups] = useState(true);
+
+  // Subscribe to user's linkup chats
+  useEffect(() => {
+    const currentUser = auth?.currentUser;
+    
+    if (!currentUser) {
+      console.log('No authenticated user');
+      setLoadingLinkups(false);
+      return;
+    }
+
+    console.log('Subscribing to linkup chats for user:', currentUser.uid);
+    
+    const unsubscribe = subscribeUserLinkupChats(currentUser.uid, (chats) => {
+      console.log('Received linkup chats:', chats.length);
+      setLinkupChats(chats);
+      setLoadingLinkups(false);
+    });
+
+    return () => {
+      console.log('Unsubscribing from linkup chats');
+      unsubscribe();
+    };
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    // TODO: Refresh messages data from API
+    // The real-time listener will automatically update the data
+    // Just simulate a refresh delay for UX
     setTimeout(() => setRefreshing(false), 1000);
+  };
+
+  // Format timestamp to relative time (e.g., "2 min ago", "3 hours ago")
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const now = Date.now();
+    const diff = now - timestamp;
+    
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return 'Just now';
+  };
+
+  // Format linkup chats to match the conversation card format
+  const formatLinkupChats = () => {
+    const currentUserId = auth?.currentUser?.uid;
+    
+    return linkupChats.map(chat => ({
+      id: chat.id, // This is the linkup ID
+      type: 'group',
+      name: chat.name,
+      avatar: chat.photo || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
+      participants: chat.participantIds?.length || 0,
+      lastMessage: chat.lastMessage ? {
+        text: chat.lastMessage.senderName === 'System' 
+          ? chat.lastMessage.text 
+          : `${chat.lastMessage.senderName}: ${chat.lastMessage.text}`,
+        timestamp: formatTimestamp(chat.lastMessage.timestamp),
+        unread: chat.unreadBy?.includes(currentUserId) || false,
+      } : {
+        text: 'No messages yet',
+        timestamp: '',
+        unread: false,
+      },
+      context: 'Linkup Group',
+    }));
   };
 
   const getStatusColor = (status) => {
@@ -138,7 +185,7 @@ export default function MessagesScreen() {
     switch (selectedTab) {
       case 'apartments': return APARTMENT_CONVERSATIONS;
       case 'events': return EVENT_CONVERSATIONS;
-      case 'linkups': return LINKUP_CONVERSATIONS;
+      case 'linkups': return formatLinkupChats();
       default: return [];
     }
   };
@@ -164,7 +211,16 @@ export default function MessagesScreen() {
   const renderConversationCard = ({ item }) => (
     <TouchableOpacity 
       style={styles.conversationCard}
-      onPress={() => router.push(`/(screens)/chat/${item.id}`)}
+      onPress={() => {
+        // Navigate to chat screen with the conversation/linkup ID
+        if (selectedTab === 'linkups') {
+          // For linkup chats, pass the linkup ID
+          router.push(`/(screens)/chat/${item.id}`);
+        } else {
+          // For other chats, use the existing ID
+          router.push(`/(screens)/chat/${item.id}`);
+        }
+      }}
     >
       <View style={styles.avatarContainer}>
         {item.type === 'direct' ? (
@@ -252,13 +308,29 @@ export default function MessagesScreen() {
             {/* Linkup Conversations - Groups that the user has joined */}
             <View style={styles.conversationsSection}>
               <Text style={styles.sectionTitle}>Linkup Conversations</Text>
-              <FlatList
-                data={getCurrentConversations()}
-                renderItem={renderConversationCard}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-                showsVerticalScrollIndicator={false}
-              />
+              
+              {loadingLinkups ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={Colors.primary} />
+                  <Text style={styles.loadingText}>Loading conversations...</Text>
+                </View>
+              ) : getCurrentConversations().length > 0 ? (
+                <FlatList
+                  data={getCurrentConversations()}
+                  renderItem={renderConversationCard}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  showsVerticalScrollIndicator={false}
+                />
+              ) : (
+                <View style={styles.emptyState}>
+                  <MessageCircle size={48} color={Colors.gray400} />
+                  <Text style={styles.emptyTitle}>No linkup conversations yet</Text>
+                  <Text style={styles.emptySubtitle}>
+                    Join linkups to start chatting with other members!
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         ) : (
@@ -457,11 +529,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptySubtitle: {
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     fontSize: 16,
     color: Colors.gray500,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray600,
   },
   bottomSpacing: {
     height: Platform.OS === 'ios' ? 85 : 60,

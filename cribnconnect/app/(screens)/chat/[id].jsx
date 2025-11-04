@@ -1,5 +1,12 @@
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
+import { auth } from "@/config/firebase";
+import { 
+  subscribeLinkupChat, 
+  subscribeLinkupMessages, 
+  sendMessageToLinkupChat,
+  markLinkupChatAsRead 
+} from "@/services/linkupChatService";
 import { useLocalSearchParams } from "expo-router";
 import { Info, Paperclip, Send, Users } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
@@ -27,224 +34,97 @@ export default function ChatScreen() {
 
   useEffect(() => {
     setLoading(true);
-    // TODO: Fetch chat data from API
-    // Example API call:
-    // const fetchChatData = async () => {
-    //   try {
-    //     const response = await api.getChatData(id);
-    //     setChatData(response.data);
-    //     setMessages(response.data.messages);
-    //   } catch (error) {
-    //     console.error('Error fetching chat data:', error);
-    //     setError('Failed to load chat data');
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // fetchChatData();
-
-    // Mock data - Determine if group chat based on ID
-    // In a real app, you'd get this from your API
-    setTimeout(() => {
-      try {
-        // For testing, treat any ID with "group" in it as a group chat
-        const isGroup = id.includes("group") || id === "2" || id === "3" || id === "7" || id === "5";
+    
+    const currentUser = auth?.currentUser;
+    
+    if (!currentUser) {
+      setError('You must be logged in to view this chat');
+      setLoading(false);
+      return;
+    }
+    
+    console.log('Loading chat for linkup ID:', id);
+    
+    // Subscribe to linkup chat data
+    const unsubscribeChat = subscribeLinkupChat(id, (chatData) => {
+      if (chatData) {
+        console.log('Received linkup chat data:', chatData.name);
+        setChatData({
+          id: chatData.linkupId,
+          type: 'group',
+          name: chatData.name,
+          participants: chatData.participantIds?.length || 0,
+          online: 0, // Could be calculated from lastSeen timestamps
+          admin: chatData.creatorId,
+          photo: chatData.photo,
+        });
+        setLoading(false);
         
-        if (isGroup) {
-          // Mock group chat data
-          const groupData = {
-            id,
-            type: "group",
-            name: id === "group1" ? "Coffee & Code Buddies" : 
-                  id === "group2" ? "Downtown Apartment Hunters" : 
-                  id === "2" ? "Tech Enthusiasts" :
-                  id === "4" ? "Fitness Group" :
-                  id === "7" ? "Book Club" :
-                  "Photography Meetup",
-            participants: id === "group1" ? 12 : id === "group2" ? 8 : 
-                         id === "2" ? 18 : id === "4" ? 9 : id === "7" ? 14 : 15,
-            online: Math.floor(Math.random() * 5) + 1,
-            admin: "Alex Chen",
-            messages: [
-              {
-                id: "1",
-                text: "Hey everyone! Welcome to the group chat.",
-                sender: "other",
-                senderName: "Alex",
-                timestamp: new Date(Date.now() - 86400000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "2",
-                text: "Thanks for adding me! Looking forward to connecting with you all.",
-                sender: "me",
-                senderName: "You",
-                timestamp: new Date(Date.now() - 76400000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "3",
-                text: "Has anyone checked out the new resources I shared last week?",
-                sender: "other",
-                senderName: "Emma",
-                timestamp: new Date(Date.now() - 36400000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "4",
-                text: "Yes! They were really helpful. Thanks for sharing.",
-                sender: "other",
-                senderName: "Michael",
-                timestamp: new Date(Date.now() - 26400000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "5",
-                text: "I'm thinking of organizing another meetup soon. What days work best for everyone?",
-                sender: "other",
-                senderName: "Alex",
-                timestamp: new Date(Date.now() - 3600000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "6",
-                text: "Weekends work best for me. Saturday afternoon?",
-                sender: "other",
-                senderName: "Jessica",
-                timestamp: new Date(Date.now() - 2400000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "7",
-                text: "I could do Sunday too if that works better for everyone.",
-                sender: "other",
-                senderName: "David",
-                timestamp: new Date(Date.now() - 1200000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "8",
-                text: "Saturday works for me as well!",
-                sender: "me",
-                senderName: "You",
-                timestamp: new Date(Date.now() - 600000),
-                delivered: true,
-                read: true,
-              },
-            ],
-          };
-          setChatData(groupData);
-          setMessages(groupData.messages);
-        } else {
-          // Mock direct message data
-          const directMessageData = {
-            id,
-            type: "direct",
-            participant: {
-              id: id,
-              name: id === "organizer" ? "Sarah Johnson" :
-                   id === "host" ? "Alex Chen" : 
-                   id === "user1" ? "Mike Johnson" :
-                   id === "user2" ? "Lisa Rodriguez" : "Chat Partner",
-              isOnline: Math.random() > 0.5,
-              lastSeen: new Date(Date.now() - Math.floor(Math.random() * 3600000)),
-            },
-            messages: [
-              {
-                id: "1",
-                text: "Hey! Thanks for your interest in the event/linkup!",
-                sender: "them",
-                timestamp: new Date(Date.now() - 3600000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "2",
-                text: "Hi! I'm really excited about it. Can you tell me more details?",
-                sender: "me",
-                timestamp: new Date(Date.now() - 3500000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "3",
-                text: "Absolutely! We usually meet around 7 PM and the vibe is really friendly. Perfect for meeting new people.",
-                sender: "them",
-                timestamp: new Date(Date.now() - 3400000),
-                delivered: true,
-                read: true,
-              },
-              {
-                id: "4",
-                text: "That sounds perfect! What should I bring or prepare?",
-                sender: "me",
-                timestamp: new Date(Date.now() - 3300000),
-                delivered: true,
-                read: false,
-              },
-            ],
-          };
-          setChatData(directMessageData);
-          setMessages(directMessageData.messages);
-        }
-      } catch (error) {
-        console.error('Error creating mock data:', error);
-        setError('Something went wrong');
-      } finally {
+        // Mark as read when opened
+        markLinkupChatAsRead(id, currentUser.uid);
+      } else {
+        setError('Chat not found');
         setLoading(false);
       }
-    }, 800); // Simulate loading delay
+    });
+    
+    // Subscribe to linkup messages
+    const unsubscribeMessages = subscribeLinkupMessages(id, (messagesData) => {
+      console.log('Received messages:', messagesData.length);
+      
+      // Transform Firestore messages to match component format
+      const transformedMessages = messagesData.map(msg => ({
+        id: msg.id,
+        text: msg.text,
+        sender: msg.senderId === currentUser.uid ? 'me' : msg.senderId === 'system' ? 'system' : 'other',
+        senderName: msg.senderName,
+        timestamp: new Date(msg.timestamp),
+        delivered: true,
+        read: msg.isRead || false,
+        type: msg.type || 'text',
+        imageUrl: msg.imageUrl,
+      }));
+      
+      setMessages(transformedMessages);
+    });
+    
+    return () => {
+      console.log('Cleaning up chat subscriptions');
+      unsubscribeChat();
+      unsubscribeMessages();
+    };
   }, [id]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputText.trim() === "") return;
 
-    // TODO: Add API integration to send message
-    // Example API call:
-    // try {
-    //   const response = await api.sendMessage(id, inputText.trim());
-    //   if (response.success) {
-    //     // Message sent successfully
-    //   }
-    // } catch (error) {
-    //   console.error('Error sending message:', error);
-    // }
-
-    const isGroupChat = chatData?.type === "group";
+    const currentUser = auth?.currentUser;
     
-    const newMessage = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
-      sender: "me",
-      ...(isGroupChat && { senderName: "You" }), // Add sender name for group chats
-      timestamp: new Date(),
-      delivered: false,
-      read: false,
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setInputText("");
-
-    // Simulate message delivery
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, delivered: true } : msg
-        )
-      );
-    }, 1000);
-
-    // Auto-scroll to bottom
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    if (!currentUser) {
+      console.error('No authenticated user');
+      return;
+    }
+    
+    try {
+      // Send message to Firebase
+      await sendMessageToLinkupChat(id, {
+        text: inputText.trim(),
+        senderId: currentUser.uid,
+        senderName: currentUser.displayName || 'Anonymous',
+        senderPhoto: currentUser.photoURL || null,
+        type: 'text',
+      });
+      
+      setInputText("");
+      
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // You could show an error toast here
+    }
   };
   
   // Function to view group information
@@ -277,17 +157,39 @@ export default function ChatScreen() {
 
   const renderMessage = ({ item, index }) => {
     const isMe = item.sender === "me";
+    const isSystem = item.sender === "system" || item.type === "system";
     const showDate =
       index === 0 ||
       formatDate(item.timestamp) !== formatDate(messages[index - 1]?.timestamp);
     
     // For group chats, determine if we should show the sender name
     const isGroupChat = chatData?.type === "group";
-    const showSenderName = isGroupChat && !isMe && (
+    const showSenderName = isGroupChat && !isMe && !isSystem && (
       index === 0 || 
       messages[index - 1]?.sender !== item.sender ||
       showDate
     );
+
+    // System messages (user joined, user left, etc.)
+    if (isSystem) {
+      return (
+        <View>
+          {showDate && (
+            <View style={styles.dateContainer} className="py-2">
+              <Text
+                style={styles.dateText}
+                className="text-center text-gray-500 text-sm"
+              >
+                {formatDate(item.timestamp)}
+              </Text>
+            </View>
+          )}
+          <View style={styles.systemMessageContainer}>
+            <Text style={styles.systemMessageText}>{item.text}</Text>
+          </View>
+        </View>
+      );
+    }
 
     return (
       <View>
@@ -703,5 +605,18 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-SemiBold",
     fontSize: 13,
     color: Colors.primary,
+  },
+  // System message styles
+  systemMessageContainer: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  systemMessageText: {
+    fontSize: 13,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

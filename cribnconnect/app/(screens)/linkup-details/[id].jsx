@@ -1,20 +1,21 @@
 import api from "@/api/api";
 import BackHeader from "@/components/BackHeader";
+import JoinConfirmationModal from "@/components/linkup/JoinConfirmationModal";
+import JoinCodeModal from "@/components/linkup/JoinCodeModal";
+import LinkupActionBar from "@/components/linkup/LinkupActionBar";
+import LinkupDetails from "@/components/linkup/LinkupDetails";
+import LinkupHeader from "@/components/linkup/LinkupHeader";
+import LinkupInfo from "@/components/linkup/LinkupInfo";
 import { auth } from "@/config/firebase";
+import { addUserToLinkupChat, createLinkupGroupChat } from "@/services/linkupChatService";
 import { Colors } from "@/constants/Colors";
 import { router, useLocalSearchParams } from "expo-router";
-import { Globe, Heart, Lock, Share2, Users } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -25,7 +26,9 @@ export default function LinkupDetailsScreen() {
   const [linkup, setLinkup] = useState(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
+  const [joinCodeModalVisible, setJoinCodeModalVisible] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
+  const [joinCode, setJoinCode] = useState("");
   const [requestSent, setRequestSent] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [hasJoined, setHasJoined] = useState(false);
@@ -89,50 +92,102 @@ export default function LinkupDetailsScreen() {
 
   const handleJoinGroup = async () => {
     if (hasJoined) {
-      // If already joined, perhaps show leave group confirmation
       console.log("You are already a member of this group");
       return;
     }
 
     // Check if group is private
     if (linkup?.privacy === "private" || linkup?.isPrivate) {
-      // Show request modal instead of direct join
+      // Show request modal for private groups
       setJoinModalVisible(true);
     } else {
-      // Public group - join immediately
-      try {
-        await api.post(`/linkups/${linkup.id}/join`);
-        setHasJoined(true);
-        
-        // Update local state
-        setLinkup(prev => ({
-          ...prev,
-          groupSize: {
-            ...prev.groupSize,
-            current: prev.groupSize.current + 1
-          },
-          memberCount: prev.memberCount + 1
-        }));
-      } catch (error) {
-        console.error('Error joining linkup:', error);
-        alert(error.response?.data?.message || 'Failed to join group');
-      }
+      // Public group - show confirmation popup
+      setJoinModalVisible(true);
     }
   };
 
+  // Handle joining public group after confirmation
+  const handleConfirmPublicJoin = async () => {
+    try {
+      const currentUser = auth?.currentUser;
+      
+      await api.post(`/linkups/${linkup.id}/join`);
+      setHasJoined(true);
+      
+      // Add user to Firebase group chat
+      if (currentUser) {
+        try {
+          // First, ensure group chat exists (in case it wasn't created)
+          await createLinkupGroupChat(
+            linkup.id,
+            {
+              name: linkup.title,
+              photo: linkup.imageUri,
+              description: linkup.description,
+            },
+            linkup.hostId,
+            {
+              name: linkup.hostName,
+              photoURL: null,
+            }
+          );
+          
+          // Then add the current user to the chat
+          await addUserToLinkupChat(
+            linkup.id,
+            currentUser.uid,
+            {
+              name: currentUser.displayName || 'Anonymous',
+              photoURL: currentUser.photoURL || null,
+            }
+          );
+          
+          console.log('User added to linkup group chat');
+        } catch (chatError) {
+          console.error('Error adding user to group chat:', chatError);
+          // Don't fail the join if chat fails
+        }
+      }
+      
+      // Update local state
+      setLinkup(prev => ({
+        ...prev,
+        groupSize: {
+          ...prev.groupSize,
+          current: prev.groupSize.current + 1
+        },
+        memberCount: prev.memberCount + 1
+      }));
+      
+      // Close modal
+      setJoinModalVisible(false);
+    } catch (error) {
+      console.error('Error joining linkup:', error);
+      setJoinError(error.response?.data?.message || 'Failed to join group');
+      
+      setTimeout(() => {
+        setJoinError("");
+      }, 3000);
+    }
+  };
+
+  // Handle sending join request for private groups
   const handleSubmitRequest = async () => {
     try {
-      // Send join request to the backend
+      // Send join request with notification to admin/creator
       await api.post(`/linkups/${linkup.id}/request`, {
-        message: requestMessage
+        message: requestMessage,
+        userId: auth?.currentUser?.uid,
+        userName: auth?.currentUser?.displayName || 'Anonymous',
+        userPhoto: auth?.currentUser?.photoURL || null,
       });
 
-      console.log("Join request sent to group admin with message:", requestMessage);
+      console.log("Join request sent to group admin");
 
       // Show success state
       setRequestSent(true);
 
-      // Close the modal after a delay to allow the user to see the success message
+      // Close the modal after a delay
       setTimeout(() => {
         setJoinModalVisible(false);
         setRequestMessage("");
@@ -149,6 +204,70 @@ export default function LinkupDetailsScreen() {
     }
   };
 
+  // Handle joining with one-time code (for private groups after approval)
+  const handleJoinWithCode = async () => {
+    if (!joinCode.trim()) {
+      setJoinError("Please enter the join code");
+      setTimeout(() => setJoinError(""), 3000);
+      return;
+    }
+
+    try {
+      const currentUser = auth?.currentUser;
+      
+      // Verify and use the one-time code
+      await api.post(`/linkups/${linkup.id}/join-with-code`, {
+        code: joinCode.trim(),
+      });
+      
+      setHasJoined(true);
+      
+      // Add user to Firebase group chat
+      if (currentUser) {
+        try {
+          await addUserToLinkupChat(
+            linkup.id,
+            currentUser.uid,
+            {
+              name: currentUser.displayName || 'Anonymous',
+              photoURL: currentUser.photoURL || null,
+            }
+          );
+          
+          console.log('User added to private linkup group chat');
+        } catch (chatError) {
+          console.error('Error adding user to group chat:', chatError);
+        }
+      }
+      
+      // Update local state
+      setLinkup(prev => ({
+        ...prev,
+        groupSize: {
+          ...prev.groupSize,
+          current: prev.groupSize.current + 1
+        },
+        memberCount: prev.memberCount + 1
+      }));
+      
+      // Close modal and clear code
+      setJoinCodeModalVisible(false);
+      setJoinCode("");
+    } catch (error) {
+      console.error('Error joining with code:', error);
+      setJoinError(error.response?.data?.message || 'Invalid or expired code');
+      
+      setTimeout(() => {
+        setJoinError("");
+      }, 3000);
+    }
+  };
+
+  // Show code entry modal for users who have an approval code
+  const handleEnterCode = () => {
+    setJoinCodeModalVisible(true);
+  };
+
   const handleBookmark = async () => {
     try {
       // TODO: Add API integration for bookmarking when endpoint is ready
@@ -163,7 +282,6 @@ export default function LinkupDetailsScreen() {
     // TODO: Navigate to messaging or contact options based on contact method
     if (linkup?.contactMethod === "App Messaging") {
       router.push(`/(screens)/chat/${linkup?.id || "host"}`);
-      setJoinModalVisible(false);
     } else {
       // Handle other contact methods
       console.log("Contact via:", linkup?.contactMethod);
@@ -178,6 +296,18 @@ export default function LinkupDetailsScreen() {
   const handleViewMembers = () => {
     // TODO: Navigate to members list
     console.log("View members for linkup:", id);
+  };
+
+  const handleCloseJoinModal = () => {
+    setJoinModalVisible(false);
+    setRequestMessage("");
+    setJoinError("");
+  };
+
+  const handleCloseCodeModal = () => {
+    setJoinCodeModalVisible(false);
+    setJoinCode("");
+    setJoinError("");
   };
 
   if (loading) {
@@ -228,295 +358,59 @@ export default function LinkupDetailsScreen() {
     <SafeAreaView style={styles.container}>
       <BackHeader title="Group Details" showUser={false} />
 
-      {/* Join Group Request Modal */}
-      <Modal
-        visible={joinModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setJoinModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1 bg-white"
-        >
-          <View>
-            <View style={styles.modalContent}>
-              {!requestSent ? (
-                <>
-                  <Text style={styles.modalTitle}>Request to Join</Text>
-                  <Text style={styles.modalText}>
-                    This is a private group. Send a request to the group admin
-                    to join. Include a brief message about why you'd like to
-                    join.
-                  </Text>
-
-                  <TextInput
-                    style={[styles.passwordInput, styles.messageInput]}
-                    placeholder="Why would you like to join this group? (Optional)"
-                    multiline
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                    value={requestMessage}
-                    onChangeText={setRequestMessage}
-                    placeholderTextColor={Colors.gray500}
-                    maxLength={300}
-                  />
-
-                  <Text style={styles.charCount}>
-                    {requestMessage.length}/300
-                  </Text>
-
-                  {joinError && (
-                    <Text style={styles.errorText}>{joinError}</Text>
-                  )}
-
-                  <View style={styles.modalButtons}>
-                    <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={() => {
-                        setJoinModalVisible(false);
-                        setRequestMessage("");
-                      }}
-                    >
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.submitButton}
-                      onPress={handleSubmitRequest}
-                    >
-                      <Text style={styles.submitButtonText}>Send Request</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              ) : (
-                <View style={styles.successContainer}>
-                  <View style={styles.successIconContainer}>
-                    <Text style={styles.successIcon}>✓</Text>
-                  </View>
-                  <Text style={styles.successTitle}>Request Sent</Text>
-                  <Text style={styles.successText}>
-                    Your request to join this group has been sent to the admin.
-                    You'll be notified when your request is approved.
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => {
-                      setJoinModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.closeButtonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Cover Image */}
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: linkup.imageUri }}
-            style={styles.coverImage}
-            resizeMode="cover"
-          />
-
-          {/* Bookmark Button Overlay */}
-          <TouchableOpacity
-            style={styles.bookmarkButton}
-            onPress={handleBookmark}
-          >
-            <Heart
-              size={24}
-              color={isBookmarked ? Colors.white : Colors.white}
-              fill={isBookmarked ? Colors.emerald : "transparent"}
-            />
-          </TouchableOpacity>
-
-          {/* Privacy Badge Overlay */}
-          <View style={styles.privacyBadge}>
-            {linkup.privacy === "private" ? (
-              <Lock size={16} color={Colors.white} />
-            ) : (
-              <Globe size={16} color={Colors.white} />
-            )}
-            <Text style={styles.privacyText}>
-              {linkup.privacy === "private" ? "Private Group" : "Public Group"}
-            </Text>
-          </View>
-        </View>
+        <LinkupHeader 
+          linkup={linkup}
+          isBookmarked={isBookmarked}
+          onBookmark={handleBookmark}
+        />
 
         <View style={styles.detailsContainer}>
           {/* Header Info */}
-          <View style={styles.header}>
-            <View style={styles.typeBadge}>
-              <Text style={styles.typeText}>{linkup.interest}</Text>
-            </View>
+          <LinkupInfo linkup={linkup} />
 
-            <Text style={styles.title}>{linkup.title}</Text>
-
-            <Text style={styles.host}>Hosted by {linkup.hostName}</Text>
-
-            {/* Status Indicators */}
-            <View style={styles.statusRow}>
-              <View style={styles.statusItem}>
-                <Users size={16} color={Colors.gray700} />
-                <Text style={styles.statusText}>
-                  {linkup.groupSize.current}/{linkup.groupSize.max} members
-                </Text>
-              </View>
-
-              {linkup.online > 0 && (
-                <View style={styles.onlineStatusItem}>
-                  <View style={styles.onlineIndicator} />
-                  <Text style={styles.onlineStatusText}>
-                    {linkup.online} online now
-                  </Text>
-                </View>
-              )}
-
-              {linkup.isActive && (
-                <View
-                  style={[
-                    styles.activeBadge,
-                    linkup.activityLevel === "very-active"
-                      ? styles.veryActiveBadge
-                      : linkup.activityLevel === "active"
-                        ? styles.activeBadge
-                        : styles.lowActivityBadge,
-                  ]}
-                >
-                  <Text style={styles.activeText}>
-                    {linkup.activityLevel === "very-active"
-                      ? "Very Active"
-                      : linkup.activityLevel === "active"
-                        ? "Active"
-                        : "Low Activity"}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Description */}
-          <View style={styles.descriptionSection}>
-            <Text style={styles.sectionTitle}>About This Group</Text>
-            <Text style={styles.description}>{linkup.description}</Text>
-          </View>
-
-          {/* Key Details */}
-          <View style={styles.keyDetails}>
-            <Text style={styles.sectionTitle}>Group Details</Text>
-
-            <View style={styles.detailGrid}>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Interest/Topic</Text>
-                <Text style={styles.detailValue}>{linkup.interest}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Meeting Frequency</Text>
-                <Text style={styles.detailValue}>
-                  {linkup.meetingFrequency}
-                </Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Privacy</Text>
-                <Text style={styles.detailValue}>
-                  {linkup.privacy === "private" ? "Private" : "Public"}
-                </Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Group Size</Text>
-                <Text style={styles.detailValue}>
-                  {linkup.groupSize.current}/{linkup.groupSize.max} members
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Interests Section */}
-          {linkup.allInterests && linkup.allInterests.length > 0 && (
-            <View style={styles.interestsSection}>
-              <Text style={styles.sectionTitle}>Group Interests</Text>
-              <View style={styles.interestsTags}>
-                {linkup.allInterests.map((interest, index) => (
-                  <View key={index} style={styles.interestTag}>
-                    <Text style={styles.interestText}>{interest}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Members Section */}
-          <View style={styles.membersSection}>
-            <View style={styles.membersHeader}>
-              <Text style={styles.sectionTitle}>Group Members</Text>
-              <TouchableOpacity onPress={handleViewMembers}>
-                <Text style={styles.viewAllText}>View All</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.memberPreview}>
-              <Text style={styles.memberCount}>
-                {linkup.groupSize.current} current members,{" "}
-                {linkup.groupSize.max - linkup.groupSize.current} spots
-                available
-              </Text>
-            </View>
-          </View>
-
-          {/* Contact Section */}
-          <View style={styles.contactSection}>
-            <Text style={styles.sectionTitle}>Contact Host</Text>
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={handleContactHost}
-            >
-              <View>
-                <Text style={styles.contactName}>{linkup.hostName}</Text>
-                <Text style={styles.contactInfo}>
-                  Message via {linkup.contactMethod}
-                </Text>
-              </View>
-              <Text style={styles.contactArrow}>→</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Details Sections */}
+          <LinkupDetails
+            linkup={linkup}
+            onViewMembers={handleViewMembers}
+            onContactHost={handleContactHost}
+          />
         </View>
       </ScrollView>
 
       {/* Bottom Action Bar */}
-      <View style={styles.actionBar}>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-            <Share2 size={20} color={Colors.gray700} />
-            <Text style={styles.shareButtonText}>Share</Text>
-          </TouchableOpacity>
+      <LinkupActionBar
+        hasJoined={hasJoined}
+        requestSent={requestSent}
+        onJoin={handleJoinGroup}
+        onShare={handleShare}
+      />
 
-          <TouchableOpacity
-            style={[
-              styles.joinButton,
-              hasJoined && styles.joinedButton,
-              requestSent && styles.requestSentButton,
-            ]}
-            onPress={handleJoinGroup}
-            disabled={requestSent}
-          >
-            <Text style={styles.joinButtonText}>
-              {hasJoined
-                ? "Joined ✓"
-                : requestSent
-                  ? "Request Sent ✓"
-                  : "Join Group"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Join Confirmation/Request Modal */}
+      <JoinConfirmationModal
+        visible={joinModalVisible}
+        onClose={handleCloseJoinModal}
+        linkup={linkup}
+        isPrivate={linkup?.privacy === "private" || linkup?.isPrivate}
+        requestMessage={requestMessage}
+        onRequestMessageChange={setRequestMessage}
+        requestSent={requestSent}
+        joinError={joinError}
+        onSubmitRequest={handleSubmitRequest}
+        onConfirmPublicJoin={handleConfirmPublicJoin}
+        onEnterCode={handleEnterCode}
+      />
+
+      {/* Join Code Entry Modal */}
+      <JoinCodeModal
+        visible={joinCodeModalVisible}
+        onClose={handleCloseCodeModal}
+        joinCode={joinCode}
+        onJoinCodeChange={setJoinCode}
+        joinError={joinError}
+        onSubmit={handleJoinWithCode}
+      />
     </SafeAreaView>
   );
 }
@@ -559,485 +453,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  imageContainer: {
-    height: 220,
-    width: "100%",
-    position: "relative",
-  },
-  coverImage: {
-    width: "100%",
-    height: "100%",
-  },
-  bookmarkButton: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  privacyBadge: {
-    position: "absolute",
-    bottom: 16,
-    left: 16,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  privacyText: {
-    color: Colors.white,
-    marginLeft: 6,
-    fontFamily: "Sora-Medium",
-    fontSize: 14,
-  },
   detailsContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  typeBadge: {
-    backgroundColor: Colors.blue50,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 50,
-    alignSelf: "flex-start",
-    marginBottom: 12,
-  },
-  typeText: {
-    color: Colors.primary,
-    fontSize: 14,
-    fontFamily: "Sora-Medium",
-  },
-  title: {
-    fontSize: 24,
-    fontFamily: "Urbanist-Bold",
-    color: Colors.gray900,
-    marginBottom: 8,
-  },
-  host: {
-    color: Colors.gray600,
-    fontFamily: "Sora-Regular",
-    marginBottom: 16,
-    fontSize: 15,
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  statusItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  onlineStatusItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  onlineIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.emerald,
-    marginRight: 6,
-  },
-  statusText: {
-    color: Colors.gray700,
-    fontSize: 14,
-    fontFamily: "Sora-Regular",
-    marginLeft: 8,
-  },
-  onlineStatusText: {
-    color: Colors.emerald,
-    fontSize: 14,
-    fontFamily: "Sora-Medium",
-  },
-  activeBadge: {
-    backgroundColor: Colors.blue50,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  veryActiveBadge: {
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-  },
-  lowActivityBadge: {
-    backgroundColor: "rgba(245, 158, 11, 0.1)",
-  },
-  activeText: {
-    fontFamily: "Sora-Medium",
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  lastActive: {
-    fontSize: 13,
-    fontFamily: "Sora-Regular",
-    color: Colors.gray500,
-  },
-  descriptionSection: {
-    marginBottom: 24,
-    paddingTop: 16,
-  },
-  keyDetails: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: "Urbanist-Bold",
-    color: Colors.primary,
-    marginBottom: 16,
-  },
-  description: {
-    color: Colors.gray700,
-    lineHeight: 22,
-    fontFamily: "Sora-Regular",
-    fontSize: 15,
-  },
-  detailGrid: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray100,
-  },
-  detailLabel: {
-    color: Colors.gray600,
-    fontFamily: "Sora-Medium",
-    fontSize: 14,
-  },
-  detailValue: {
-    color: Colors.gray900,
-    fontFamily: "Sora-SemiBold",
-    fontSize: 14,
-  },
-  topicsSection: {
-    marginBottom: 24,
-  },
-  topicsList: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 12,
-    padding: 12,
-  },
-  topicItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  topicIcon: {
-    marginRight: 12,
-  },
-  topicText: {
-    fontFamily: "Sora-Regular",
-    fontSize: 15,
-    color: Colors.gray800,
-  },
-  rulesSection: {
-    marginBottom: 24,
-  },
-  rulesList: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 12,
-    padding: 12,
-  },
-  ruleItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 8,
-  },
-  ruleNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary,
-    color: Colors.white,
-    textAlign: "center",
-    lineHeight: 24,
-    marginRight: 12,
-    fontFamily: "Sora-Medium",
-    fontSize: 12,
-  },
-  ruleText: {
-    flex: 1,
-    fontFamily: "Sora-Regular",
-    fontSize: 15,
-    color: Colors.gray800,
-    lineHeight: 22,
-  },
-  interestsSection: {
-    marginBottom: 24,
-  },
-  interestsTags: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  interestTag: {
-    backgroundColor: Colors.blue50,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  interestText: {
-    color: Colors.primary,
-    fontFamily: "Sora-Medium",
-    fontSize: 14,
-  },
-  membersSection: {
-    marginBottom: 24,
-  },
-  membersHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  viewAllText: {
-    color: Colors.primary,
-    fontFamily: "Sora-SemiBold",
-    fontSize: 14,
-  },
-  memberPreview: {
-    backgroundColor: Colors.gray50,
-    padding: 16,
-    borderRadius: 12,
-  },
-  memberCount: {
-    color: Colors.gray700,
-    fontFamily: "Sora-Regular",
-    fontSize: 15,
-  },
-  contactSection: {
-    marginBottom: 24,
-  },
-  contactButton: {
-    backgroundColor: Colors.gray50,
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  contactName: {
-    color: Colors.gray900,
-    fontFamily: "Sora-SemiBold",
-    fontSize: 15,
-  },
-  contactInfo: {
-    color: Colors.gray600,
-    fontFamily: "Sora-Regular",
-    fontSize: 13,
-  },
-  contactArrow: {
-    color: Colors.gray400,
-    fontSize: 18,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 24,
-    width: "100%",
-    maxWidth: 400,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontFamily: "Urbanist-Bold",
-    color: Colors.gray900,
-    marginBottom: 10,
-  },
-  modalText: {
-    color: Colors.gray700,
-    fontFamily: "Sora-Regular",
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  passwordInput: {
-    borderWidth: 1,
-    borderColor: Colors.gray300,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontFamily: "Sora-Regular",
-    fontSize: 16,
-    color: Colors.gray900,
-    marginBottom: 10,
-  },
-  messageInput: {
-    height: 100,
-    textAlignVertical: "top",
-    paddingTop: 12,
-  },
-  charCount: {
-    alignSelf: "flex-end",
-    color: Colors.gray500,
-    fontFamily: "Sora-Regular",
-    fontSize: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: "#ef4444",
-    fontFamily: "Sora-Regular",
-    fontSize: 14,
-    marginBottom: 10,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-    marginBottom: 16,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: Colors.gray100,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 8,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    color: Colors.gray700,
-    fontFamily: "Sora-SemiBold",
-    fontSize: 15,
-  },
-  submitButton: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginLeft: 8,
-    alignItems: "center",
-  },
-  submitButtonText: {
-    color: Colors.white,
-    fontFamily: "Sora-SemiBold",
-    fontSize: 15,
-  },
-  contactAdminButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-  },
-  contactAdminText: {
-    color: Colors.primary,
-    fontFamily: "Sora-Medium",
-    fontSize: 14,
-    marginLeft: 6,
-  },
-  successContainer: {
-    alignItems: "center",
-    padding: 10,
-  },
-  successIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.emerald,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  successIcon: {
-    color: Colors.white,
-    fontSize: 30,
-    fontWeight: "bold",
-  },
-  successTitle: {
-    fontSize: 20,
-    fontFamily: "Urbanist-Bold",
-    color: Colors.gray900,
-    marginBottom: 10,
-  },
-  successText: {
-    color: Colors.gray700,
-    fontFamily: "Sora-Regular",
-    fontSize: 15,
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  closeButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: Colors.white,
-    fontFamily: "Sora-SemiBold",
-    fontSize: 15,
-  },
-  bottomSpacing: {
-    height: 100,
-  },
-  actionBar: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: Colors.white,
-    borderTopColor: Colors.gray200,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  shareButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: Colors.gray100,
-    marginRight: 12,
-  },
-  shareButtonText: {
-    color: Colors.gray700,
-    fontFamily: "Sora-SemiBold",
-    fontSize: 15,
-    marginLeft: 8,
-  },
-  joinButton: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  joinedButton: {
-    backgroundColor: Colors.emerald,
-  },
-  requestSentButton: {
-    backgroundColor: Colors.amber,
-  },
-  joinButtonText: {
-    color: Colors.white,
-    fontFamily: "Sora-Bold",
-    fontSize: 16,
   },
 });
