@@ -22,6 +22,17 @@ export default function LinkupActionBar({
 
   return (
     <View style={styles.actionBar}>
+      {/* Admin/Creator Badge - Show at top if user is admin */}
+      {hasJoined && isAdmin && (
+        <View style={styles.badgeContainer}>
+          <View style={styles.adminBadge}>
+            <Text style={styles.adminBadgeText}>
+              {isCreator ? "👑 Creator" : "⭐ Admin"}
+            </Text>
+          </View>
+        </View>
+      )}
+
       <View style={styles.actionButtons}>
         <TouchableOpacity style={styles.shareButton} onPress={onShare}>
           <Share2 size={20} color={Colors.gray700} />
@@ -73,15 +84,6 @@ export default function LinkupActionBar({
             <Text style={styles.manageButtonText}>Manage Requests</Text>
           </TouchableOpacity>
         )}
-
-        {/* Joined Badge - For members who are admins */}
-        {hasJoined && isAdmin && (
-          <View style={styles.adminBadge}>
-            <Text style={styles.adminBadgeText}>
-              {isCreator ? "Creator" : "Admin"}
-            </Text>
-          </View>
-        )}
       </View>
     </View>
   );
@@ -93,6 +95,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: Colors.white,
     borderTopColor: Colors.gray200,
+  },
+  badgeContainer: {
+    alignItems: "center",
+    marginBottom: 12,
   },
   actionButtons: {
     flexDirection: "row",
@@ -175,15 +181,24 @@ const styles = StyleSheet.create({
   },
   adminBadge: {
     backgroundColor: Colors.emerald,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: Colors.emerald,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   adminBadgeText: {
     color: Colors.white,
     fontFamily: "Sora-Bold",
-    fontSize: 16,
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
 });

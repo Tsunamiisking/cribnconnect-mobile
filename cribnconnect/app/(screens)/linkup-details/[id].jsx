@@ -59,7 +59,7 @@ export default function LinkupDetailsScreen() {
         
         // Check if current user is the creator (compare Firebase uid with linkup.uid)
         const isGroupCreator = currentUserId === linkupData.uid;
-        
+      
         // For now, creator is the only admin (can be extended with admins array later)
         const isGroupAdmin = isGroupCreator;
         
