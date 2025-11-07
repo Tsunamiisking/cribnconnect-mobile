@@ -457,7 +457,7 @@ export default function LinkupDetailsScreen() {
 
         <View style={styles.detailsContainer}>
           {/* Header Info */}
-          <LinkupInfo linkup={linkup} />
+          <LinkupInfo linkup={linkup} isCreator={isCreator} isAdmin={isAdmin} />
 
           {/* Details Sections */}
           <LinkupDetails

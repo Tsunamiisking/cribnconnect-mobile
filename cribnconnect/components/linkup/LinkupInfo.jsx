@@ -2,11 +2,22 @@ import { Colors } from "@/constants/Colors";
 import { Users } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 
-export default function LinkupInfo({ linkup }) {
+export default function LinkupInfo({ linkup, isCreator = false, isAdmin = false }) {
   return (
     <View style={styles.header}>
-      <View style={styles.typeBadge}>
-        <Text style={styles.typeText}>{linkup.interest}</Text>
+      <View style={styles.topRow}>
+        <View style={styles.typeBadge}>
+          <Text style={styles.typeText}>{linkup.interest}</Text>
+        </View>
+
+        {/* Role Badge - Show if user is creator or admin */}
+        {(isCreator || isAdmin) && (
+          <View style={[styles.roleBadge, isCreator ? styles.creatorBadge : styles.adminBadge]}>
+            <Text style={styles.roleBadgeText}>
+              {isCreator ? "👑 Creator" : "⭐ Admin"}
+            </Text>
+          </View>
+        )}
       </View>
 
       <Text style={styles.title}>{linkup.title}</Text>
@@ -60,18 +71,48 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 24,
   },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    flexWrap: "wrap",
+    gap: 8,
+  },
   typeBadge: {
     backgroundColor: Colors.blue50,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 50,
-    alignSelf: "flex-start",
-    marginBottom: 12,
   },
   typeText: {
     color: Colors.primary,
     fontSize: 14,
     fontFamily: "Sora-Medium",
+  },
+  roleBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 1.5,
+    elevation: 2,
+  },
+  creatorBadge: {
+    backgroundColor: Colors.emerald,
+  },
+  adminBadge: {
+    backgroundColor: "#f59e0b",
+  },
+  roleBadgeText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontFamily: "Sora-Bold",
+    letterSpacing: 0.3,
   },
   title: {
     fontSize: 24,
