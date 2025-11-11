@@ -11,12 +11,13 @@ export default function EventTicket({ styles }) {
   const [showCustomTicket, setShowCustomTicket] = useState(false);
   const [customTicketName, setCustomTicketName] = useState("");
   const [customTicketPrice, setCustomTicketPrice] = useState("");
+  const [customTicketQuantity, setCustomTicketQuantity] = useState("");
 
   // Predefined ticket types
   const predefinedTypes = [
-    { id: 'regular', name: 'Regular', price: '' },
-    { id: 'vip', name: 'VIP', price: '' },
-    { id: 'vvip', name: 'VVIP', price: '' }
+    { id: 'regular', name: 'Regular', price: '', quantity: '' },
+    { id: 'vip', name: 'VIP', price: '', quantity: '' },
+    { id: 'vvip', name: 'VVIP', price: '', quantity: '' }
   ];
 
   // Update store when ticket data changes
@@ -54,6 +55,11 @@ export default function EventTicket({ styles }) {
     return value.replace(/[^0-9.]/g, '');
   };
 
+  const handleQuantityChange = (value) => {
+    // Only allow whole numbers
+    return value.replace(/[^0-9]/g, '');
+  };
+
   const toggleFree = () => {
     const newIsFree = !isFree;
     setIsFree(newIsFree);
@@ -65,7 +71,12 @@ export default function EventTicket({ styles }) {
   const addPredefinedTicket = (typeId) => {
     const type = predefinedTypes.find(t => t.id === typeId);
     if (type && !ticketTypes.find(t => t.id === typeId)) {
-      setTicketTypes(prev => [...prev, { ...type, price: '' }]);
+      setTicketTypes(prev => [...prev, { 
+        ...type, 
+        price: '', 
+        quantity: '',
+        isActive: true // Default to active when created
+      }]);
     }
   };
 
@@ -75,16 +86,29 @@ export default function EventTicket({ styles }) {
       return;
     }
     
+    if (!customTicketPrice || parseFloat(customTicketPrice) <= 0) {
+      Alert.alert('Error', 'Please enter a valid price');
+      return;
+    }
+
+    if (!customTicketQuantity || parseInt(customTicketQuantity) <= 0) {
+      Alert.alert('Error', 'Please enter a valid quantity (at least 1)');
+      return;
+    }
+    
     const customId = `custom_${Date.now()}`;
     const newTicket = {
       id: customId,
       name: customTicketName.trim(),
-      price: customTicketPrice
+      price: customTicketPrice,
+      quantity: customTicketQuantity,
+      isActive: true // Default to active when created
     };
     
     setTicketTypes(prev => [...prev, newTicket]);
     setCustomTicketName("");
     setCustomTicketPrice("");
+    setCustomTicketQuantity("");
     setShowCustomTicket(false);
   };
 
@@ -96,6 +120,14 @@ export default function EventTicket({ styles }) {
     setTicketTypes(prev => prev.map(ticket => 
       ticket.id === ticketId 
         ? { ...ticket, price: handlePriceChange(price) }
+        : ticket
+    ));
+  };
+
+  const updateTicketQuantity = (ticketId, quantity) => {
+    setTicketTypes(prev => prev.map(ticket => 
+      ticket.id === ticketId 
+        ? { ...ticket, quantity: handleQuantityChange(quantity) }
         : ticket
     ));
   };
@@ -142,15 +174,41 @@ export default function EventTicket({ styles }) {
                 <View style={styles.typeOptionRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.labelText}>{ticket.name}</Text>
-                    <TextInput
-                      style={[styles.input, { marginTop: 8, height: 45 }]}
-                      placeholder="Enter price"
-                      keyboardType="numeric"
-                      value={ticket.price}
-                      onChangeText={(value) => updateTicketPrice(ticket.id, value)}
-                    />
-                    <Text style={styles.typeOptionDescription}>
-                      Price: {ticket.price ? formatNaira(ticket.price) : "₦0.00"}
+                    
+                    {/* Price Input */}
+                    <View style={{ marginTop: 8 }}>
+                      <Text style={[styles.typeOptionDescription, { marginBottom: 4 }]}>
+                        Price (₦)
+                      </Text>
+                      <TextInput
+                        style={[styles.input, { height: 45 }]}
+                        placeholder="Enter price"
+                        keyboardType="numeric"
+                        value={ticket.price}
+                        onChangeText={(value) => updateTicketPrice(ticket.id, value)}
+                      />
+                    </View>
+
+                    {/* Quantity Input */}
+                    <View style={{ marginTop: 8 }}>
+                      <Text style={[styles.typeOptionDescription, { marginBottom: 4 }]}>
+                        Available Tickets
+                      </Text>
+                      <TextInput
+                        style={[styles.input, { height: 45 }]}
+                        placeholder="Enter quantity"
+                        keyboardType="numeric"
+                        value={ticket.quantity}
+                        onChangeText={(value) => updateTicketQuantity(ticket.id, value)}
+                      />
+                    </View>
+
+                    {/* Display Summary */}
+                    <Text style={[styles.typeOptionDescription, { marginTop: 8 }]}>
+                      {ticket.price && ticket.quantity 
+                        ? `${formatNaira(ticket.price)} • ${ticket.quantity} tickets available`
+                        : "Complete price and quantity"
+                      }
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -205,19 +263,43 @@ export default function EventTicket({ styles }) {
               ) : (
                 <View style={[styles.typeOption, styles.selectedTypeOption]}>
                   <Text style={styles.label}>Custom Ticket Type</Text>
+                  
+                  {/* Ticket Name */}
                   <TextInput
                     style={[styles.input, { marginTop: 8 }]}
                     placeholder="Enter ticket type name (e.g., Early Bird, Student)"
                     value={customTicketName}
                     onChangeText={setCustomTicketName}
                   />
-                  <TextInput
-                    style={[styles.input, { marginTop: 8 }]}
-                    placeholder="Enter price"
-                    keyboardType="numeric"
-                    value={customTicketPrice}
-                    onChangeText={(value) => setCustomTicketPrice(handlePriceChange(value))}
-                  />
+                  
+                  {/* Price */}
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={[styles.typeOptionDescription, { marginBottom: 4 }]}>
+                      Price (₦)
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter price"
+                      keyboardType="numeric"
+                      value={customTicketPrice}
+                      onChangeText={(value) => setCustomTicketPrice(handlePriceChange(value))}
+                    />
+                  </View>
+
+                  {/* Quantity */}
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={[styles.typeOptionDescription, { marginBottom: 4 }]}>
+                      Available Tickets
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter quantity"
+                      keyboardType="numeric"
+                      value={customTicketQuantity}
+                      onChangeText={(value) => setCustomTicketQuantity(handleQuantityChange(value))}
+                    />
+                  </View>
+
                   <View style={{ flexDirection: 'row', marginTop: 12, gap: 8 }}>
                     <TouchableOpacity
                       onPress={addCustomTicket}
@@ -236,6 +318,7 @@ export default function EventTicket({ styles }) {
                         setShowCustomTicket(false);
                         setCustomTicketName("");
                         setCustomTicketPrice("");
+                        setCustomTicketQuantity("");
                       }}
                       style={{
                         flex: 1,
@@ -258,11 +341,28 @@ export default function EventTicket({ styles }) {
                 <Text style={[styles.labelText, { color: Colors.primary, marginBottom: 8 }]}>
                   Ticket Summary ({ticketTypes.length} types)
                 </Text>
-                {ticketTypes.map((ticket) => (
-                  <Text key={ticket.id} style={styles.typeOptionDescription}>
-                    • {ticket.name}: {ticket.price ? formatNaira(ticket.price) : "Price not set"}
+                {ticketTypes.map((ticket) => {
+                  const hasPrice = ticket.price && parseFloat(ticket.price) > 0;
+                  const hasQuantity = ticket.quantity && parseInt(ticket.quantity) > 0;
+                  const isComplete = hasPrice && hasQuantity;
+                  
+                  return (
+                    <Text key={ticket.id} style={styles.typeOptionDescription}>
+                      • {ticket.name}: {
+                        isComplete 
+                          ? `${formatNaira(ticket.price)} • ${ticket.quantity} tickets`
+                          : "⚠️ Incomplete (add price & quantity)"
+                      }
+                    </Text>
+                  );
+                })}
+                
+                {/* Total Tickets Available */}
+                {ticketTypes.some(t => t.quantity) && (
+                  <Text style={[styles.typeOptionDescription, { marginTop: 8, fontFamily: 'Sora-SemiBold' }]}>
+                    Total Tickets: {ticketTypes.reduce((sum, t) => sum + (parseInt(t.quantity) || 0), 0)}
                   </Text>
-                ))}
+                )}
               </View>
             )}
           </View>
