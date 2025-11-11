@@ -30,56 +30,78 @@ export default function EventType({ styles }) {
     }
   }, []);
 
-  const eventCategories = {
-    "Entertainment & Nightlife": [
-      "Concerts & Live Music",
-      "Club Night / Rave",
-      "House Party",
-      "Karaoke Night",
-      "Comedy Show",
-      "Open Mic",
-    ],
-    "Education & Professional": [
-      "Tech Conference",
-      "Networking Event",
-      "Workshops & Training",
-      "Startup Pitch Event",
-      "Career Fair",
-    ],
-    "Arts & Culture": [
-      "Art Exhibition",
-      "Poetry Slams",
-      "Cultural Festival",
-      "Photography Show",
-    ],
-    "Sports & Fitness": [
-      "Football Match / Viewing Party",
-      "Marathons & Runs",
-      "Fitness Bootcamp",
-      "Yoga / Wellness Sessions",
-      "Esports Tournament",
-    ],
-    "Food & Drink": [
-      "Food & Drink",
-      "Wine / Cocktail Tasting",
-      "Cooking Classes",
-      "Pop-up Restaurants",
-    ],
-    "Lifestyle & Celebrations": [
-      "Wedding",
-      "Birthday",
-      "Anniversary",
-      "Fashion show",
-      "Charity Gala",
-    ],
-    "Special Interests": [
-      "Book Club",
-      "Gaming Meetup",
-      "Dance Classes",
-      "Language Exchange",
-      "Travel and Adventure trips",
-    ],
-  };
+const eventCategories = { 
+  "Entertainment & Nightlife": [
+    "Concerts & Live Music (Afrobeats, Amapiano, Hip-Hop)",
+    "Rave / Club Night",
+    "Beach Party",
+    "House Party",
+    "Silent Disco",
+    "Karaoke Night",
+    "Comedy Show",
+    "Open Mic & Talent Showcase"
+  ],
+
+  "Education & Professional": [
+    "Tech Conference / Hackathon",
+    "Networking Mixer",
+    "Workshops & Skill Training",
+    "Startup Pitch Event",
+    "Career Fair / Internship Recruitment",
+    "Personal Development Seminar"
+  ],
+
+  "Arts & Culture": [
+    "Art Exhibition / Gallery Showing",
+    "Poetry Slam & Spoken Word",
+    "Theatre & Stage Performances",
+    "Cultural Festival / Heritage Day",
+    "Photography & Creative Showcase",
+    "Sip & Paint / Creative Hangout"
+  ],
+
+  "Sports & Fitness": [
+    "Football Match / Viewing Party",
+    "Fitness Bootcamp / Aerobics Session",
+    "Dance Fitness (Afrobeats, Amapiano, Zumba)",
+    "Yoga / Meditation Retreat",
+    "Cycling & Marathon Events",
+    "Esports & Gaming Tournament"
+  ],
+
+  "Food & Drink": [
+    "Brunch & Chill",
+    "Food Festival / Street Food Fair",
+    "Wine / Cocktail Tasting",
+    "Backyard Grill / Cookout",
+    "Pop-up Restaurant Experience"
+  ],
+
+  "Lifestyle & Celebrations": [
+    "Owambe / Traditional Party",
+    "Wedding / Engagement Party",
+    "Birthday / Private Celebration",
+    "Anniversary Dinner / Surprise Event",
+    "Fashion Runway / Style Showcase",
+    "Charity Gala / Fundraiser"
+  ],
+
+  "Faith & Community": [
+    "Faith Conference / Camp Meeting",
+    "Worship Night / Gospel Concert",
+    "Youth Fellowship Hangout",
+    "Community Outreach & Volunteering"
+  ],
+
+  "Special Interests": [
+    "Book Club Meetup",
+    "Anime & Movie Hangout",
+    "Chess / Board Game Meetup",
+    "Dance Classes & Workshops",
+    "Photography Walks",
+    "Road Trips & Travel Group Adventures"
+  ]
+};
 
   // Handle category selection
   const selectCategory = (category) => {
