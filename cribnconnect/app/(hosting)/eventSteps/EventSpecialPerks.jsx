@@ -7,32 +7,49 @@ import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 const EventSpecialPerks = ({ styles }) => {
   const { eventData, updateEventData, nextStep, previousStep } = useHostingStore();
 
-  const perkCategories = {
-    'Entertainment': [
-      { id: 'live_music', name: 'Live Music', icon: Music },
-      { id: 'photography', name: 'Professional Photography', icon: Camera },
-      { id: 'live_dj', name: 'Live DJ', icon: Zap },
-      { id: 'games', name: 'Games & Activities', icon: Star }
-    ],
-    'Food & Drink': [
-      { id: 'catering', name: 'Catering Service', icon: Utensils },
-      { id: 'bar_service', name: 'Bar Service', icon: Wine },
-      { id: 'coffee_station', name: 'Coffee Station', icon: Coffee },
-      { id: 'welcome_drinks', name: 'Welcome Drinks', icon: Gift }
-    ],
-    'Experience': [
-      { id: 'vip_access', name: 'VIP Access', icon: Star },
-      { id: 'meet_greet', name: 'Meet & Greet', icon: Users },
-      { id: 'exclusive_content', name: 'Exclusive Content', icon: Sparkles },
-      { id: 'networking', name: 'Networking Session', icon: Users }
-    ],
-    'Facilities': [
-      { id: 'wifi', name: 'Free WiFi', icon: Wifi },
-      { id: 'parking', name: 'Parking Available', icon: Car },
-      { id: 'accessibility', name: 'Wheelchair Accessible', icon: Star },
-      { id: 'coat_check', name: 'Coat Check', icon: Gift }
-    ]
-  };
+const perkCategories = {
+  'Entertainment': [
+    { id: 'live_music', name: 'Live Music', icon: Music },
+    { id: 'live_dj', name: 'Live DJ / Set', icon: Zap },
+    { id: 'mc_host', name: 'MC / Host', icon: Mic },
+    { id: 'photo_booth', name: 'Photo Booth / Content Setup', icon: Camera },
+    { id: 'games', name: 'Games & Fun Activities', icon: Gamepad },
+    { id: 'performances', name: 'Guest Performances', icon: Star }
+  ],
+
+  'Food & Drink': [
+    { id: 'catering', name: 'Food Catering', icon: Utensils },
+    { id: 'open_bar', name: 'Open Bar', icon: Wine },
+    { id: 'snacks_pastries', name: 'Snacks & Small Chops', icon: Cookie },
+    { id: 'welcome_drinks', name: 'Welcome Drinks', icon: Gift },
+    { id: 'bottle_service', name: 'VIP / Bottle Service', icon: Beer }
+  ],
+
+  'Experience': [
+    { id: 'vip_access', name: 'VIP Access', icon: Crown },
+    { id: 'afterparty', name: 'Afterparty Access', icon: Moon },
+    { id: 'meet_greet', name: 'Meet & Greet', icon: Users },
+    { id: 'exclusive_content', name: 'Exclusive Photos / Recap', icon: Sparkles },
+    { id: 'networking', name: 'Networking Sessions', icon: Share }
+  ],
+
+  'Comfort & Convenience': [
+    { id: 'wifi', name: 'Free WiFi', icon: Wifi },
+    { id: 'parking', name: 'Parking Available', icon: Car },
+    { id: 'shuttle', name: 'Shuttle/Transport to Venue', icon: Bus },
+    { id: 'ac', name: 'AC / Climate Control', icon: Wind },
+    { id: 'first_aid', name: 'On-site First Aid / Medical', icon: Heart },
+    { id: 'rest_areas', name: 'Rest Area / Lounge Space', icon: Sofa }
+  ],
+
+  'Security & Logistics': [
+    { id: 'security_team', name: 'Security Team Present', icon: Shield },
+    { id: 'id_check', name: 'ID / Verification at Gate', icon: Badge },
+    { id: 'bag_check', name: 'Bag Check & Controlled Entry', icon: Lock },
+    { id: 'crowd_control', name: 'Hostess & Crowd Management', icon: Users }
+  ]
+};
+
 
   const togglePerk = (perkId) => {
     const currentPerks = eventData.eventSpecialPerks || [];
