@@ -28,21 +28,35 @@ import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Step6({ styles }) {
   const { apartmentData, updateApartmentData } = useHostingStore();
-  const [selectedAmenities, setSelectedAmenities] = useState(apartmentData.amenities.selected || []);
+  
+  const [selectedBasicAmenities, setSelectedBasicAmenities] = useState(apartmentData.basicAmenities || []);
+  const [selectedLuxuryAmenities, setSelectedLuxuryAmenities] = useState(apartmentData.luxuryAmenities || []);
+  const [selectedSharedAmenities, setSelectedSharedAmenities] = useState(apartmentData.sharedAmenities || []);
+  const [otherAmenitiesText, setOtherAmenitiesText] = useState(
+    apartmentData.otherAmenities?.join(", ") || ""
+  );
 
-  // Update store when selectedAmenities changes
+  // Update store when amenities change
   useEffect(() => {
-    updateApartmentData('amenities', {
-      ...apartmentData.amenities,
-      selected: selectedAmenities
-    });
-  }, [selectedAmenities]);
+    updateApartmentData('basicAmenities', selectedBasicAmenities);
+  }, [selectedBasicAmenities]);
+
+  useEffect(() => {
+    updateApartmentData('luxuryAmenities', selectedLuxuryAmenities);
+  }, [selectedLuxuryAmenities]);
+
+  useEffect(() => {
+    updateApartmentData('sharedAmenities', selectedSharedAmenities);
+  }, [selectedSharedAmenities]);
 
   const handleOtherAmenitiesChange = (text) => {
-    updateApartmentData('amenities', {
-      ...apartmentData.amenities,
-      other: text
-    });
+    setOtherAmenitiesText(text);
+    // Convert comma-separated string to array
+    const amenitiesArray = text
+      .split(",")
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+    updateApartmentData('otherAmenities', amenitiesArray);
   };
 
   const basicAmenities = [
@@ -91,8 +105,20 @@ export default function Step6({ styles }) {
     return rows;
   }
 
-  const handleSelect = (name) => {
-    setSelectedAmenities((prev) =>
+  const handleBasicAmenitySelect = (name) => {
+    setSelectedBasicAmenities((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  };
+
+  const handleLuxuryAmenitySelect = (name) => {
+    setSelectedLuxuryAmenities((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  };
+
+  const handleSharedAmenitySelect = (name) => {
+    setSelectedSharedAmenities((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
     );
   };
@@ -117,7 +143,7 @@ export default function Step6({ styles }) {
             style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
           >
             {row.map((amenity) => {
-              const selected = selectedAmenities.includes(amenity.name);
+              const selected = selectedBasicAmenities.includes(amenity.name);
               return (
                 <TouchableOpacity
                   key={amenity.name}
@@ -127,7 +153,7 @@ export default function Step6({ styles }) {
                     { flex: 1, alignItems: "center", justifyContent: "center" },
                   ]}
                   activeOpacity={0.85}
-                  onPress={() => handleSelect(amenity.name)}
+                  onPress={() => handleBasicAmenitySelect(amenity.name)}
                 >
                   <View style={{ marginBottom: 8 }}>
                     <amenity.icon width={32} height={32} />
@@ -151,7 +177,7 @@ export default function Step6({ styles }) {
             style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
           >
             {row.map((amenity) => {
-              const selected = selectedAmenities.includes(amenity.name);
+              const selected = selectedLuxuryAmenities.includes(amenity.name);
               return (
                 <TouchableOpacity
                   key={amenity.name}
@@ -161,7 +187,7 @@ export default function Step6({ styles }) {
                     { flex: 1, alignItems: "center", justifyContent: "center" },
                   ]}
                   activeOpacity={0.85}
-                  onPress={() => handleSelect(amenity.name)}
+                  onPress={() => handleLuxuryAmenitySelect(amenity.name)}
                 >
                   <View style={{ marginBottom: 8 }}>
                     <amenity.icon width={32} height={32} />
@@ -185,7 +211,7 @@ export default function Step6({ styles }) {
             style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
           >
             {row.map((amenity) => {
-              const selected = selectedAmenities.includes(amenity.name);
+              const selected = selectedSharedAmenities.includes(amenity.name);
               return (
                 <TouchableOpacity
                   key={amenity.name}
@@ -195,7 +221,7 @@ export default function Step6({ styles }) {
                     { flex: 1, alignItems: "center", justifyContent: "center" },
                   ]}
                   activeOpacity={0.85}
-                  onPress={() => handleSelect(amenity.name)}
+                  onPress={() => handleSharedAmenitySelect(amenity.name)}
                 >
                   <View style={{ marginBottom: 8 }}>
                     <amenity.icon width={32} height={32} />
@@ -216,12 +242,12 @@ export default function Step6({ styles }) {
         <TextInput 
           style={styles.input} 
           placeholder="Other Amenities" 
-          value={apartmentData.amenities.other || ""}
+          value={otherAmenitiesText}
           onChangeText={handleOtherAmenitiesChange}
         />
         <Text style={styles.typeOptionDescription}>
           Have something unique in your space? Add it here (e.g., solar panels,
-          inverter, pet-friendly area), Make sure to separate each item with a comma.
+          inverter, pet-friendly area). Make sure to separate each item with a comma.
         </Text>
       </View>
     </View>

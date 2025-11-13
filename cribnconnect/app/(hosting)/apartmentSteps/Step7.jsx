@@ -4,11 +4,12 @@ import { Text, TextInput, View } from "react-native";
 export default function Step7({ styles }) {
   const { apartmentData, updateApartmentData } = useHostingStore();
 
-  const handlePricingChange = (field, value) => {
-    updateApartmentData('pricing', {
-      ...apartmentData.pricing,
-      [field]: value
-    });
+  const handlePricePerNightChange = (value) => {
+    updateApartmentData('pricePerNight', value);
+  };
+
+  const handlePricePerWeekChange = (value) => {
+    updateApartmentData('pricePerWeek', value);
   };
 
   // Helper to format price with naira sign, commas, and .00
@@ -30,10 +31,10 @@ export default function Step7({ styles }) {
           placeholder="Enter Price Per Night"
           placeholderTextColor="#B0B0B0"
           keyboardType="numeric"
-          value={apartmentData.pricing.perNight || ""}
-          onChangeText={(text) => handlePricingChange('perNight', text)}
+          value={apartmentData.pricePerNight || ""}
+          onChangeText={handlePricePerNightChange}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(apartmentData.pricing.perNight)}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(apartmentData.pricePerNight)}</Text>
       </View>
       <View style={{ marginVertical: 24, position: 'relative', justifyContent: 'center', alignItems: 'center', height: 24 }}>
         <View style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, backgroundColor: '#B0B0B0' }} />
@@ -49,10 +50,10 @@ export default function Step7({ styles }) {
           placeholder="Enter Price Per Week"
           placeholderTextColor="#B0B0B0"
           keyboardType="numeric"
-          value={apartmentData.pricing.perWeek || ""}
-          onChangeText={(text) => handlePricingChange('perWeek', text)}
+          value={apartmentData.pricePerWeek || ""}
+          onChangeText={handlePricePerWeekChange}
         />
-        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(apartmentData.pricing.perWeek)}</Text>
+        <Text style={[styles.labelText, { marginTop: 8, marginLeft: 12 } ]}>{formatNaira(apartmentData.pricePerWeek)}</Text>
       </View>
     </View>
   );

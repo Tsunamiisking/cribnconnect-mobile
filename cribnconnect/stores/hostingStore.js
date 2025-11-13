@@ -4,36 +4,43 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 // Initial state for apartment data
 const initialApartmentData = {
+  // Basic Info
   apartmentType: "",
-  space: "",
-  rooms: {
-    beds: "",
-    rooms: "",
-    privateBathIn: "",
-    privateBathOut: "",
-    sharedBath: "",
-  },
-  location: {
-    complexType: "",
-    complexName: "",
-    address: "",
-    state: "",
+  apartmentCategory: "", // Changed from "space"
+  
+  // Rooms
+  bedrooms: "", // Changed from "rooms.rooms"
+  bathrooms: "", // Total bathrooms
+  privateBathrooms: "", // Changed from "privateBathIn + privateBathOut"
+  publicBathrooms: "",
+  sharedBathrooms: "", // Changed from "sharedBath"
+  
+  // Location
+  address: {
+    street: "", // Changed from "location.address"
     city: "",
-    zip: "",
-    country: "",
+    state: "",
+    lga: "", // Local Government Area
   },
-  details: {
-    title: "",
-    description: "",
+  complex: {
+    name: "", // Changed from "location.complexName"
   },
-  amenities: {
-    selected: [],
-    other: "",
-  },
-  pricing: {
-    perNight: "",
-    perWeek: "",
-  },
+  
+  // Details (flattened)
+  title: "", // Flattened from details.title
+  description: "", // Flattened from details.description
+  
+  // Amenities (split by category)
+  basicAmenities: [], // Changed from amenities.selected
+  sharedAmenities: [],
+  luxuryAmenities: [],
+  otherAmenities: [], // Changed from amenities.other (now array)
+  
+  // Pricing (flattened)
+  pricePerNight: "", // Flattened from pricing.perNight
+  pricePerWeek: "", // Flattened from pricing.perWeek
+  
+  // Media & Others
   media: [],
   specialPerks: [],
   houseRules: [],
@@ -43,6 +50,10 @@ const initialApartmentData = {
   },
   maxGuests: "",
   isAvailable: true,
+  isPublished: false,
+  
+  // Will be set by backend from Firebase auth
+  // hostId: null
 };
 
 // Initial state for event data
@@ -395,7 +406,7 @@ const useHostingStore = create(
         });
         
         // Also limit total number of drafts to prevent bloat
-        const maxDrafts = 50;
+        const maxDrafts = 20;
         const sortedDrafts = cleanedDrafts
           .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
           .slice(0, maxDrafts);
@@ -477,12 +488,12 @@ const useHostingStore = create(
         if (state.hostingType === 'apartment') {
           switch (step) {
             case 1: return Boolean(data.apartmentType);
-            case 2: return Boolean(data.space);
-            case 3: return Boolean(data.rooms.beds && data.rooms.rooms);
-            case 4: return Boolean(data.location.address && data.location.city && data.location.state);
-            case 5: return Boolean(data.details.title && data.details.description);
-            case 6: return data.amenities.selected.length > 0;
-            case 7: return Boolean(data.pricing.perNight);
+            case 2: return Boolean(data.apartmentCategory);
+            case 3: return Boolean(data.bedrooms && data.bathrooms);
+            case 4: return Boolean(data.address.street && data.address.city && data.address.state);
+            case 5: return Boolean(data.title && data.description);
+            case 6: return (data.basicAmenities.length > 0 || data.sharedAmenities.length > 0 || data.luxuryAmenities.length > 0);
+            case 7: return Boolean(data.pricePerNight);
             case 8: return data.media.length > 0;
             case 9: return true; // Special perks and house rules are optional
             default: return false;

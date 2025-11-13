@@ -4,8 +4,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 export default function StepSpace({ styles }) {
   const { apartmentData, updateApartmentData } = useHostingStore();
 
-  const handleSelect = (space) => {
-    updateApartmentData('space', space);
+  const handleSelect = (category) => {
+    updateApartmentData('apartmentCategory', category);
   };
   const apartmentOption = [
     {
@@ -30,7 +30,7 @@ export default function StepSpace({ styles }) {
 
       <View style={styles.verticalOptions}>
         {apartmentOption.map((option) => {
-          const selected = apartmentData.space === option.label;
+          const selected = apartmentData.apartmentCategory === option.label;
           return (
             <TouchableOpacity
               key={option.label}
