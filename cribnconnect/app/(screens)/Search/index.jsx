@@ -1,142 +1,293 @@
-import React, { useState } from "react"
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Search as SearchIcon, MapPin, Home, Users } from "lucide-react-native"
-import BackHeader from "@/components/BackHeader"
+﻿import BackHeader from "@/components/BackHeader"
 import { Colors } from "@/constants/Colors"
+import locationsData from "@/constants/locationsData.json"
+import { ChevronDown, Globe, MapPin, Search as SearchIcon, Users, Locate } from "lucide-react-native"
+import React, { useState } from "react"
+import { Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View, KeyboardAvoidingView} from "react-native"
+import { SafeAreaView } from "react-native-safe-area-context"
 
-/**
- * SearchScreen
- * - Comprehensive search page with filters
- * - Location, apartment type, and party allowance options
- */
 export default function SearchScreen() {
-  const [selectedLocation, setSelectedLocation] = useState(null)
+  const [selectedCountry, setSelectedCountry] = useState(null)
+  const [selectedState, setSelectedState] = useState(null)
+  const [selectedCity, setSelectedCity] = useState("")
   const [selectedApartmentType, setSelectedApartmentType] = useState(null)
-  const [selectedPartyAllowance, setSelectedPartyAllowance] = useState(null)
+  const [selectedPartyPolicy, setSelectedPartyPolicy] = useState(null)
+  const [maxGuests, setMaxGuests] = useState("")
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false)
+  const [showStateDropdown, setShowStateDropdown] = useState(false)
 
-  const locations = [
-    { id: 1, name: "Near University", distance: "0.5 km" },
-    { id: 2, name: "Downtown", distance: "2.1 km" },
-    { id: 3, name: "Residential Area", distance: "3.7 km" },
-    { id: 4, name: "Campus District", distance: "1.2 km" },
-  ]
+  const countries = locationsData.countries
 
+  const getStatesForCountry = () => {
+    if (!selectedCountry) return []
+    const country = countries.find(c => c.id === selectedCountry)
+    return country ? country.states : []
+  }
+
+  // Real Nigerian apartment types
   const apartmentTypes = [
-    { id: 1, name: "Studio", icon: "🏠" },
-    { id: 2, name: "1 Bedroom", icon: "🛏️" },
-    { id: 3, name: "2 Bedroom", icon: "🏡" },
-    { id: 4, name: "Shared Room", icon: "🚪" },
+    { id: 1, name: "Self-Contain", icon: "🏠", description: "Single room with bathroom" },
+    { id: 2, name: "Mini Flat", icon: "🏘️", description: "Room, parlour, kitchen" },
+    { id: 3, name: "BQ (Boys Quarter)", icon: "🚪", description: "Servant quarters" },
+    { id: 4, name: "Duplex", icon: "🏡", description: "Two-story building" },
+    { id: 5, name: "Terrace", icon: "🏢", description: "Row house" },
+    { id: 6, name: "Detached House", icon: "🏠", description: "Standalone building" },
+    { id: 7, name: "Semi-Detached", icon: "🏘️", description: "Shared wall house" },
+    { id: 8, name: "Bungalow", icon: "🏡", description: "Single-story house" },
+    { id: 9, name: "Penthouse", icon: "🏢", description: "Top floor luxury" },
+    { id: 10, name: "Shared Room", icon: "🛏️", description: "Multiple occupants" },
   ]
 
-  const partyOptions = [
-    { id: 1, name: "Party Friendly", description: "Events allowed" },
-    { id: 2, name: "Quiet Only", description: "No parties" },
-    { id: 3, name: "Weekends Only", description: "Limited events" },
+  // Party policy options
+  const partyPolicies = [
+    { id: 1, name: "Parties Allowed", description: "Social gatherings permitted", icon: "🎉" },
+    { id: 2, name: "No Parties", description: "Quiet environment only", icon: "🔇" },
+    // { id: 3, name: "Ask Host", description: "Prior approval required", icon: "💬" },
   ]
+
+  const handleCountrySelect = (countryId) => {
+    setSelectedCountry(countryId)
+    setSelectedState(null)
+    setSelectedCity("")
+    setShowCountryDropdown(false)
+  }
+
+  const handleStateSelect = (state) => {
+    setSelectedState(state)
+    setShowStateDropdown(false)
+  }
+
+  const getSelectedCountryName = () => {
+    if (!selectedCountry) return "Select Country"
+    return countries.find(c => c.id === selectedCountry)?.name || "Select Country"
+  }
+
+  const getSelectedStateName = () => {
+    return selectedState || "Select State"
+  }
 
   const handleSearch = () => {
-    // Implement search logic here
-    console.log("Search with:", { selectedLocation, selectedApartmentType, selectedPartyAllowance })
+    const searchParams = {
+      country: getSelectedCountryName(),
+      state: selectedState,
+      city: selectedCity,
+      apartmentType: apartmentTypes.find(t => t.id === selectedApartmentType)?.name,
+      partyPolicy: partyPolicies.find(p => p.id === selectedPartyPolicy)?.name,
+      maxGuests: maxGuests
+    }
+    console.log("Search with:", searchParams)
+    // TODO: Navigate to search results page with filters
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
+      <BackHeader title="Search Apartments" showUser={true}/>
       
-      <BackHeader title="Search Apartments"  showUser={true}/>
-      
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Location Filter */}
         <View style={styles.filterSection}>
           <Text style={styles.filterTitle}>Location</Text>
-          <Text style={styles.filterSubtitle}>Choose your preferred area</Text>
+          <Text style={styles.filterSubtitle}>Select country, state and city</Text>
           
-          <View style={styles.optionsGrid}>
-            {locations.map((location) => (
-              <Pressable
-                key={location.id}
-                style={[
-                  styles.optionCard,
-                  selectedLocation === location.id && styles.selectedCard
-                ]}
-                onPress={() => setSelectedLocation(location.id)}
-              >
-                <MapPin 
-                  size={18} 
-                  color={selectedLocation === location.id ? Colors.primary : "#6b7280"} 
-                />
-                <View style={styles.optionContent}>
-                  <Text style={[
-                    styles.optionName,
-                    selectedLocation === location.id && styles.selectedText
-                  ]}>
-                    {location.name}
-                  </Text>
-                  <Text style={styles.optionDistance}>{location.distance}</Text>
-                </View>
-              </Pressable>
-            ))}
+          {/* Country Dropdown */}
+          <View style={styles.locationSubSection}>
+            <View style={styles.locationHeader}>
+              <Globe size={16} color={Colors.primary} />
+              <Text style={styles.locationLabel}>Country</Text>
+            </View>
+            
+            <Pressable 
+              style={styles.dropdownButton}
+              onPress={() => {
+                setShowCountryDropdown(!showCountryDropdown)
+                setShowStateDropdown(false)
+              }}
+            >
+              <Text style={[
+                styles.dropdownButtonText,
+                !selectedCountry && styles.dropdownPlaceholder
+              ]}>
+                {getSelectedCountryName()}
+              </Text>
+              <ChevronDown 
+                size={20} 
+                color={Colors.gray600}
+                style={showCountryDropdown && { transform: [{ rotate: '180deg' }] }}
+              />
+            </Pressable>
+
+            {showCountryDropdown && (
+              <View style={styles.dropdownMenu}>
+                {countries.map((country) => (
+                  <Pressable
+                    key={country.id}
+                    style={[
+                      styles.dropdownItem,
+                      selectedCountry === country.id && styles.selectedDropdownItem
+                    ]}
+                    onPress={() => handleCountrySelect(country.id)}
+                  >
+                    <Text style={[
+                      styles.dropdownItemText,
+                      selectedCountry === country.id && styles.selectedDropdownText
+                    ]}>
+                      {country.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
+
+          {/* State Dropdown */}
+          {selectedCountry && (
+            <View style={styles.locationSubSection}>
+              <View style={styles.locationHeader}>
+                <MapPin size={16} color={Colors.primary} />
+                <Text style={styles.locationLabel}>State</Text>
+              </View>
+              
+              <Pressable 
+                style={styles.dropdownButton}
+                onPress={() => {
+                  setShowStateDropdown(!showStateDropdown)
+                  setShowCountryDropdown(false)
+                }}
+              >
+                <Text style={[
+                  styles.dropdownButtonText,
+                  !selectedState && styles.dropdownPlaceholder
+                ]}>
+                  {getSelectedStateName()}
+                </Text>
+                <ChevronDown 
+                  size={20} 
+                  color={Colors.gray600}
+                  style={showStateDropdown && { transform: [{ rotate: '180deg' }] }}
+                />
+              </Pressable>
+
+              {showStateDropdown && (
+                <ScrollView style={styles.dropdownMenu} nestedScrollEnabled>
+                  {getStatesForCountry().map((state, index) => (
+                    <Pressable
+                      key={index}
+                      style={[
+                        styles.dropdownItem,
+                        selectedState === state && styles.selectedDropdownItem
+                      ]}
+                      onPress={() => handleStateSelect(state)}
+                    >
+                      <Text style={[
+                        styles.dropdownItemText,
+                        selectedState === state && styles.selectedDropdownText
+                      ]}>
+                        {state}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          )}
+
+          {/* City Input */}
+          {selectedState && (
+            <View style={styles.locationSubSection}>
+              <View style={styles.locationHeader}>
+                <Locate  size={16} color={Colors.primary} />
+                <Text style={styles.locationLabel}>City (Optional)</Text>
+              </View>
+              <TextInput
+                style={styles.cityInput}
+                placeholder="Enter city name"
+                placeholderTextColor="#9ca3af"
+                value={selectedCity}
+                onChangeText={setSelectedCity}
+              />
+            </View>
+          )}
         </View>
 
         {/* Apartment Type Filter */}
         <View style={styles.filterSection}>
           <Text style={styles.filterTitle}>Apartment Type</Text>
-          <Text style={styles.filterSubtitle}>Select your living preference</Text>
+          <Text style={styles.filterSubtitle}>Choose your preferred accommodation</Text>
           
-          <View style={styles.optionsGrid}>
+          <View style={styles.apartmentTypesContainer}>
             {apartmentTypes.map((type) => (
               <Pressable
                 key={type.id}
                 style={[
-                  styles.optionCard,
+                  styles.apartmentTypeCard,
                   selectedApartmentType === type.id && styles.selectedCard
                 ]}
                 onPress={() => setSelectedApartmentType(type.id)}
               >
-                <Text style={styles.optionIcon}>{type.icon}</Text>
-                <Text style={[
-                  styles.optionName,
-                  selectedApartmentType === type.id && styles.selectedText
-                ]}>
-                  {type.name}
-                </Text>
+                <View style={styles.apartmentTypeHeader}>
+                  <Text style={styles.apartmentTypeIcon}>{type.icon}</Text>
+                  <Text style={[
+                    styles.apartmentTypeName,
+                    selectedApartmentType === type.id && styles.selectedText
+                  ]}>
+                    {type.name}
+                  </Text>
+                </View>
+                <Text style={styles.apartmentTypeDescription}>{type.description}</Text>
               </Pressable>
             ))}
           </View>
         </View>
 
-        {/* Party Allowance Filter */}
+        {/* Party Policy & Guest Limit */}
         <View style={styles.filterSection}>
-          <Text style={styles.filterTitle}>Party Policy</Text>
-          <Text style={styles.filterSubtitle}>Choose your lifestyle preference</Text>
+          <Text style={styles.filterTitle}>Guest & Party Preferences</Text>
+          <Text style={styles.filterSubtitle}>Set your social preferences</Text>
           
-          <View style={styles.optionsColumn}>
-            {partyOptions.map((option) => (
+          {/* Party Policy */}
+          <View style={styles.policyContainer}>
+            {partyPolicies.map((policy) => (
               <Pressable
-                key={option.id}
+                key={policy.id}
                 style={[
-                  styles.partyOptionCard,
-                  selectedPartyAllowance === option.id && styles.selectedCard
+                  styles.policyCard,
+                  selectedPartyPolicy === policy.id && styles.selectedCard
                 ]}
-                onPress={() => setSelectedPartyAllowance(option.id)}
+                onPress={() => setSelectedPartyPolicy(policy.id)}
               >
-                <Users 
-                  size={20} 
-                  color={selectedPartyAllowance === option.id ? Colors.primary : "#6b7280"} 
-                />
-                <View style={styles.partyOptionContent}>
+                <Text style={styles.policyIcon}>{policy.icon}</Text>
+                <View style={styles.policyContent}>
                   <Text style={[
-                    styles.optionName,
-                    selectedPartyAllowance === option.id && styles.selectedText
+                    styles.policyName,
+                    selectedPartyPolicy === policy.id && styles.selectedText
                   ]}>
-                    {option.name}
+                    {policy.name}
                   </Text>
-                  <Text style={styles.optionDescription}>{option.description}</Text>
+                  <Text style={styles.policyDescription}>{policy.description}</Text>
                 </View>
               </Pressable>
             ))}
+          </View>
+
+          {/* Max Guests */}
+          <View style={styles.guestsContainer}>
+            <View style={styles.guestsHeader}>
+              <Users size={18} color={Colors.primary} />
+              <Text style={styles.guestsLabel}>Maximum Guests</Text>
+            </View>
+            <View style={styles.guestsInputContainer}>
+              <TextInput
+                style={styles.guestsInput}
+                placeholder="e.g. 4"
+                placeholderTextColor="#9ca3af"
+                keyboardType="numeric"
+                value={maxGuests}
+                onChangeText={setMaxGuests}
+              />
+              <Text style={styles.guestsHint}>Leave empty for any number</Text>
+            </View>
           </View>
         </View>
 
@@ -148,6 +299,7 @@ export default function SearchScreen() {
           </Pressable>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -167,79 +319,212 @@ const styles = StyleSheet.create({
   },
   filterTitle: {
     fontFamily: 'Urbanist-Bold',
-    fontSize: 20,
-    color: Colors.black,
-    marginBottom: 4,
+    fontSize: 22,
+    color: Colors.primary,
+    marginBottom: 6,
   },
   filterSubtitle: {
     fontFamily: 'Sora-Regular',
     fontSize: 14,
-    color: Colors.darkgray,
-    marginBottom: 16,
+    color: Colors.gray600,
+    marginBottom: 20,
   },
-  optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+  
+  // Location Styles
+  locationSubSection: {
+    marginBottom: 20,
   },
-  optionsColumn: {
-    gap: 12,
-  },
-  optionCard: {
-    flex: 1,
-    minWidth: '47%',
+  locationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    marginBottom: 12,
   },
-  partyOptionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  selectedCard: {
-    backgroundColor: '#eff6ff',
-    borderColor: Colors.primary,
-  },
-  optionContent: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  partyOptionContent: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  optionIcon: {
-    fontSize: 20,
-  },
-  optionName: {
+  locationLabel: {
     fontFamily: 'Sora-SemiBold',
-    fontSize: 14,
+    fontSize: 16,
+    color: Colors.primary,
+    marginLeft: 8,
+  },
+  
+  // Dropdown Styles
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 54,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 16,
+  },
+  dropdownButtonText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 15,
+    color: Colors.primary,
+  },
+  dropdownPlaceholder: {
+    color: '#9ca3af',
+  },
+  dropdownMenu: {
+    marginTop: 8,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    maxHeight: 250,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  selectedDropdownItem: {
+    backgroundColor: Colors.blue50,
+  },
+  dropdownItemText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 15,
     color: '#111827',
+  },
+  selectedDropdownText: {
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.primary,
+  },
+  
+  cityInput: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 16,
+    fontFamily: 'Sora-Regular',
+    fontSize: 15,
+    color: Colors.primary,
+  },
+  
+  // Apartment Type Styles
+  apartmentTypesContainer: {
+    gap: 12,
+  },
+  apartmentTypeCard: {
+    padding: 16,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+  },
+  apartmentTypeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  apartmentTypeIcon: {
+    fontSize: 22,
+    marginRight: 10,
+  },
+  apartmentTypeName: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: '#111827',
+  },
+  apartmentTypeDescription: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 13,
+    color: Colors.gray600,
+    marginLeft: 32,
+  },
+  
+  // Party Policy Styles
+  policyContainer: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  policyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+  },
+  policyIcon: {
+    fontSize: 28,
+    marginRight: 14,
+  },
+  policyContent: {
+    flex: 1,
+  },
+  policyName: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: '#111827',
+    marginBottom: 2,
+  },
+  policyDescription: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 13,
+    color: Colors.gray600,
+  },
+  
+  // Guests Styles
+  guestsContainer: {
+    padding: 16,
+    backgroundColor: Colors.blue50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  guestsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  guestsLabel: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
+    marginLeft: 8,
+  },
+  guestsInputContainer: {
+    gap: 6,
+  },
+  guestsInput: {
+    height: 48,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.primary + '40',
+    paddingHorizontal: 16,
+    fontFamily: 'Sora-Medium',
+    fontSize: 16,
+    color: Colors.primary,
+  },
+  guestsHint: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 12,
+    color: Colors.gray600,
+  },
+  
+  // Common Styles
+  selectedCard: {
+    backgroundColor: Colors.blue50,
+    borderColor: Colors.primary,
   },
   selectedText: {
     color: Colors.primary,
   },
-  optionDistance: {
-    fontFamily: 'Sora-Regular',
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  optionDescription: {
-    fontFamily: 'Sora-Regular',
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 2,
-  },
+  
+  // Search Button
   searchButtonSection: {
     marginBottom: 32,
     paddingTop: 16,
@@ -248,14 +533,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 52,
+    height: 56,
     backgroundColor: Colors.primary,
-    borderRadius: 26,
+    borderRadius: 28,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   searchButtonText: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 16,
     color: 'white',
-    marginLeft: 8,
+    marginLeft: 10,
   },
 })
