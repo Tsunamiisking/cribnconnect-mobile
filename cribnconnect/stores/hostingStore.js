@@ -490,7 +490,18 @@ const useHostingStore = create(
           switch (step) {
             case 1: return Boolean(data.apartmentType);
             case 2: return Boolean(data.apartmentCategory);
-            case 3: return Boolean(data.bedrooms && data.bathrooms);
+            case 3: {
+              // Validate based on apartment category
+              const category = data.apartmentCategory;
+              if (category === "Whole Space ") {
+                return Boolean(data.bedrooms && data.bathrooms);
+              } else if (category === "One Room") {
+                return Boolean(data.bedrooms && (data.privateBathrooms || data.sharedBathrooms));
+              } else if (category === "Shared Room") {
+                return Boolean(data.bedrooms && data.sharedBathrooms);
+              }
+              return false;
+            }
             case 4: return Boolean(data.address.street && data.address.city && data.address.state);
             case 5: return Boolean(data.title && data.description);
             case 6: return (data.basicAmenities.length > 0 || data.sharedAmenities.length > 0 || data.luxuryAmenities.length > 0);
