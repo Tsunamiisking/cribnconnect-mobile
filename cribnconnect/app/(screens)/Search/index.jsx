@@ -11,6 +11,7 @@ export default function SearchScreen() {
   const [selectedState, setSelectedState] = useState(null)
   const [selectedCity, setSelectedCity] = useState("")
   const [selectedApartmentType, setSelectedApartmentType] = useState(null)
+  const [selectedApartmentCategory, setSelectedApartmentCategory] = useState(null)
   const [selectedPartyPolicy, setSelectedPartyPolicy] = useState(null)
   const [maxGuests, setMaxGuests] = useState("")
   const [showCountryDropdown, setShowCountryDropdown] = useState(false)
@@ -24,6 +25,13 @@ export default function SearchScreen() {
     return country ? country.states : []
   }
 
+  // Apartment Categories
+  const apartmentCategories = [
+    { id: 1, name: "Whole Space", icon: "🏠", description: "Entire apartment for yourself" },
+    { id: 2, name: "One Room", icon: "🚪", description: "Private room in shared apartment" },
+    { id: 3, name: "Shared Room", icon: "🛏️", description: "Room shared with others" },
+  ]
+
   // Real Nigerian apartment types
   const apartmentTypes = [
     { id: 1, name: "Self-Contain", icon: "🏠", description: "Single room with bathroom" },
@@ -35,7 +43,6 @@ export default function SearchScreen() {
     { id: 7, name: "Semi-Detached", icon: "🏘️", description: "Shared wall house" },
     { id: 8, name: "Bungalow", icon: "🏡", description: "Single-story house" },
     { id: 9, name: "Penthouse", icon: "🏢", description: "Top floor luxury" },
-    { id: 10, name: "Shared Room", icon: "🛏️", description: "Multiple occupants" },
   ]
 
   // Party policy options
@@ -71,6 +78,7 @@ export default function SearchScreen() {
       country: getSelectedCountryName(),
       state: selectedState,
       city: selectedCity,
+      apartmentCategory: apartmentCategories.find(c => c.id === selectedApartmentCategory)?.name,
       apartmentType: apartmentTypes.find(t => t.id === selectedApartmentType)?.name,
       partyPolicy: partyPolicies.find(p => p.id === selectedPartyPolicy)?.name,
       maxGuests: maxGuests
@@ -209,6 +217,36 @@ export default function SearchScreen() {
               />
             </View>
           )}
+        </View>
+
+        {/* Apartment Category Filter */}
+        <View style={styles.filterSection}>
+          <Text style={styles.filterTitle}>Apartment Category</Text>
+          <Text style={styles.filterSubtitle}>How would you like to stay?</Text>
+          
+          <View style={styles.apartmentTypesContainer}>
+            {apartmentCategories.map((category) => (
+              <Pressable
+                key={category.id}
+                style={[
+                  styles.apartmentTypeCard,
+                  selectedApartmentCategory === category.id && styles.selectedCard
+                ]}
+                onPress={() => setSelectedApartmentCategory(category.id)}
+              >
+                <View style={styles.apartmentTypeHeader}>
+                  <Text style={styles.apartmentTypeIcon}>{category.icon}</Text>
+                  <Text style={[
+                    styles.apartmentTypeName,
+                    selectedApartmentCategory === category.id && styles.selectedText
+                  ]}>
+                    {category.name}
+                  </Text>
+                </View>
+                <Text style={styles.apartmentTypeDescription}>{category.description}</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         {/* Apartment Type Filter */}
