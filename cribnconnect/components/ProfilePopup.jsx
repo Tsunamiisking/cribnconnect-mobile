@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logoutUser } from "@/services/authService";
 import { router } from "expo-router";
 import {
-  Bell,
   Home,
   LogIn,
   LogOut,
