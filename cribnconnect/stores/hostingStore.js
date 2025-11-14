@@ -21,6 +21,7 @@ const initialApartmentData = {
     city: "",
     state: "",
     lga: "", // Local Government Area
+    country: "",
   },
   complex: {
     name: "", // Changed from "location.complexName"

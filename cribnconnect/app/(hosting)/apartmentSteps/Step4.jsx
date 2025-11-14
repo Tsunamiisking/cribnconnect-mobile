@@ -77,6 +77,13 @@ export default function Step4({ styles }) {
               value={apartmentData.address?.lga || ""}
               onChangeText={(text) => handleAddressChange('lga', text)}
             />
+            <TextInput
+              style={styles.input}
+              placeholder="Country"
+              placeholderTextColor="#B0B0B0"
+              value={apartmentData.address?.country || ""}
+              onChangeText={(text) => handleAddressChange('country', text)}
+            />
           </View>
         </View>
       </View>
@@ -117,6 +124,13 @@ export default function Step4({ styles }) {
             placeholderTextColor="#B0B0B0"
             value={apartmentData.address?.lga || ""}
             onChangeText={(text) => handleAddressChange('lga', text)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Country"
+            placeholderTextColor="#B0B0B0"
+            value={apartmentData.address?.country || ""}
+            onChangeText={(text) => handleAddressChange('country', text)}
           />
         </View>
       </View>
