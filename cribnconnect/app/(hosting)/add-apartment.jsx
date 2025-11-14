@@ -3,8 +3,10 @@ import HostingButtonNav from "@/components/HostingButtonNav";
 import { Colors } from "@/constants/Colors";
 import useHostingStore from "@/stores/hostingStore";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -23,6 +25,8 @@ import Step9 from "./apartmentSteps/Step9";
 import StepApartmentType from "./apartmentSteps/StepApartmentType";
 
 export default function AddApartmentScreen() {
+  const [isSubmittingData, setIsSubmittingData] = useState(false);
+  
   // Get store state and actions
   const {
     getCurrentStep,
@@ -59,23 +63,77 @@ export default function AddApartmentScreen() {
   };
 
   const handleSubmit = async () => {
+    // Validate required fields
+    if (!apartmentData.title || !apartmentData.description) {
+      Alert.alert('Missing Information', 'Please provide a title and description for your apartment.');
+      return;
+    }
+    
+    if (!apartmentData.address?.city || !apartmentData.address?.state) {
+      Alert.alert('Missing Location', 'Please provide the location details.');
+      return;
+    }
+    
+    if (!apartmentData.pricePerNight || parseFloat(apartmentData.pricePerNight) <= 0) {
+      Alert.alert('Missing Price', 'Please set a valid price per night.');
+      return;
+    }
+    
+    if (!apartmentData.media || apartmentData.media.length === 0) {
+      Alert.alert('No Photos', 'Please add at least one photo of your apartment.');
+      return;
+    }
+    
+    setIsSubmittingData(true);
+    
     try {
       const result = await submitListing();
+      
       if (result.success) {
-        router.push("/(tabs)");
+        Alert.alert(
+          'Success! 🎉',
+          result.message || 'Your apartment has been listed successfully!',
+          [
+            {
+              text: 'View My Listings',
+              onPress: () => router.push("/(tabs)"),
+            },
+          ]
+        );
       } else {
-        // Handle error - show alert or toast
-        console.error('Submission failed:', result.error);
+        Alert.alert(
+          'Submission Failed',
+          result.error || 'Failed to submit your listing. Please try again.',
+          [
+            { text: 'OK' }
+          ]
+        );
       }
     } catch (error) {
       console.error('Submission error:', error);
+      Alert.alert(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsSubmittingData(false);
     }
   };
 
   const handleSaveDraft = () => {
-    const draftId = saveAsDraft();
-    // Show success message or toast
-    console.log('Draft saved with ID:', draftId);
+    try {
+      const draftId = saveAsDraft();
+      Alert.alert(
+        'Draft Saved',
+        'Your progress has been saved. You can continue editing later.',
+        [{ text: 'OK' }]
+      );
+      console.log('Draft saved with ID:', draftId);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save draft. Please try again.');
+      console.error('Save draft error:', error);
+    }
   };
 
   // Apartment type options moved to StepApartmentType.jsx
@@ -153,6 +211,11 @@ export default function AddApartmentScreen() {
         // keyboardVerticalOffset={80}
       >
         <ScrollView style={styles.content}>
+          {isSubmittingData && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+            </View>
+          )}
           {renderStepContent()}
           <HostingButtonNav
             onNext={handleNext}
@@ -161,7 +224,7 @@ export default function AddApartmentScreen() {
             onSaveDraft={handleSaveDraft}
             currentStep={currentStep}
             totalSteps={9}
-            isSubmitting={isSubmitting}
+            isSubmitting={isSubmitting || isSubmittingData}
             isStepValid={isStepValid(currentStep)}
           />
         </ScrollView>
@@ -342,5 +405,16 @@ const styles = StyleSheet.create({
     marginTop: 6,
     flexWrap: "wrap",
     width: "100%",
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
 });

@@ -1,11 +1,18 @@
 import useHostingStore from "@/stores/hostingStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Step9({ styles }) {
   const { apartmentData, updateApartmentData } = useHostingStore();
-  const [selected, setSelected] = useState(false);
+  const [partiesAllowed, setPartiesAllowed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Initialize state from store
+  useEffect(() => {
+    if (apartmentData.partiesAllowed !== undefined) {
+      setPartiesAllowed(apartmentData.partiesAllowed);
+    }
+  }, []);
 
   const handleHouseRulesChange = (text) => {
     updateApartmentData('houseRules', text ? [text] : []);
@@ -13,6 +20,12 @@ export default function Step9({ styles }) {
 
   const handleMaxGuestsChange = (text) => {
     updateApartmentData('maxGuests', text);
+  };
+
+  const handlePartiesToggle = () => {
+    const newValue = !partiesAllowed;
+    setPartiesAllowed(newValue);
+    updateApartmentData('partiesAllowed', newValue);
   };
 
   return (
@@ -36,8 +49,8 @@ export default function Step9({ styles }) {
       </View>
       <View className="flex-row items-center ">
         <TouchableOpacity
-          onPress={() => setSelected(!selected)}
-          className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${selected === true ? "bg-[#274046]" : "bg-white"}`}
+          onPress={handlePartiesToggle}
+          className={`w-10 h-10 border-[#e5e7eb] border-2 rounded-lg items-center justify-center mt-4 mr-4 ${partiesAllowed === true ? "bg-[#274046]" : "bg-white"}`}
         />
         <Text style={[styles.labelText, { marginTop: 14 }]}>
           Are parties allowed in your space?

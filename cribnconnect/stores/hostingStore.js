@@ -45,6 +45,7 @@ const initialApartmentData = {
   media: [],
   specialPerks: [],
   houseRules: [],
+  partiesAllowed: false,
   availability: {
     from: null,
     to: null,
@@ -533,6 +534,60 @@ const useHostingStore = create(
         return state.hostingType === 'apartment' ? state.apartmentData : state.eventData;
       },
 
+      // Transform apartment data for backend submission
+      getBackendApartmentData: () => {
+        const state = get();
+        const apartmentData = state.apartmentData;
+        
+        // Map frontend category names to backend enum values
+        const categoryMapping = {
+          "Whole Space ": "whole",
+          "Whole Space": "whole",
+          "One Room": "private",
+          "Shared Room": "shared"
+        };
+        
+        // Transform frontend structure to match backend schema
+        return {
+          title: apartmentData.title,
+          description: apartmentData.description,
+          apartmentCategory: categoryMapping[apartmentData.apartmentCategory] || "whole",
+          apartmentType: apartmentData.apartmentType,
+          media: apartmentData.media || [],
+          address: {
+            street: apartmentData.address?.street || "",
+            city: apartmentData.address?.city || "",
+            state: apartmentData.address?.state || "",
+            lga: apartmentData.address?.lga || "",
+            country: apartmentData.address?.country || "Nigeria",
+          },
+          complex: {
+            name: apartmentData.complex?.name || "",
+          },
+          bedrooms: parseInt(apartmentData.bedrooms) || 0,
+          bathrooms: parseInt(apartmentData.bathrooms) || 0,
+          privateBathrooms: parseInt(apartmentData.privateBathrooms) || 0,
+          publicBathrooms: parseInt(apartmentData.publicBathrooms) || 0,
+          sharedBathrooms: parseInt(apartmentData.sharedBathrooms) || 0,
+          pricePerNight: parseFloat(apartmentData.pricePerNight) || 0,
+          pricePerWeek: parseFloat(apartmentData.pricePerWeek) || 0,
+          maxGuests: parseInt(apartmentData.maxGuests) || 1,
+          basicAmenities: apartmentData.basicAmenities || [],
+          sharedAmenities: apartmentData.sharedAmenities || [],
+          luxuryAmenities: apartmentData.luxuryAmenities || [],
+          otherAmenities: apartmentData.otherAmenities || [],
+          specialPerks: apartmentData.specialPerks || [],
+          availability: {
+            from: apartmentData.availability?.from || new Date(),
+            to: apartmentData.availability?.to || null,
+          },
+          isAvailable: apartmentData.isAvailable !== false,
+          houseRules: apartmentData.houseRules || [],
+          partiesAllowed: apartmentData.partiesAllowed || false,
+          isPublished: true,
+        };
+      },
+
       // Transform event data for backend submission
       getBackendEventData: () => {
         const state = get();
@@ -578,24 +633,70 @@ const useHostingStore = create(
         
         try {
           const state = get();
-          const data = state.getCurrentData();
           
-          // TODO: Replace with actual API call
-          console.log('Submitting listing:', {
-            type: state.hostingType,
-            data,
-          });
+          if (state.hostingType === 'apartment') {
+            // Import apartment service dynamically to avoid circular deps
+            const { createApartment } = await import('../api/services/apartmentServices');
+            
+            // Transform data for backend
+            const backendData = state.getBackendApartmentData();
+            
+            console.log('Submitting apartment:', backendData);
+            
+            // Submit to backend
+            const response = await createApartment(backendData);
+            
+            console.log('Apartment created successfully:', response);
+            
+            // Reset after successful submission
+            state.resetCurrentHosting();
+            
+            return { 
+              success: true, 
+              data: response,
+              message: 'Apartment listing created successfully!' 
+            };
+            
+          } else if (state.hostingType === 'event') {
+            // Import event service dynamically
+            const { createEvent } = await import('../api/services/eventServices');
+            
+            // Transform data for backend
+            const backendData = state.getBackendEventData();
+            
+            console.log('Submitting event:', backendData);
+            
+            // Submit to backend
+            const response = await createEvent(backendData);
+            
+            console.log('Event created successfully:', response);
+            
+            // Reset after successful submission
+            state.resetCurrentHosting();
+            
+            return { 
+              success: true, 
+              data: response,
+              message: 'Event created successfully!' 
+            };
+          }
           
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          throw new Error('Invalid hosting type');
           
-          // Reset after successful submission
-          state.resetCurrentHosting();
-          
-          return { success: true };
         } catch (error) {
           console.error('Submission error:', error);
-          return { success: false, error: error.message };
+          
+          // Extract meaningful error message
+          const errorMessage = error.response?.data?.message 
+            || error.response?.data?.error 
+            || error.message 
+            || 'Failed to submit listing';
+          
+          return { 
+            success: false, 
+            error: errorMessage,
+            details: error.response?.data 
+          };
         } finally {
           set({ isSubmitting: false });
         }
