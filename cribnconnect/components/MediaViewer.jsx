@@ -28,9 +28,11 @@ export default function MediaViewer({
     }
   }, [media.length]);
 
-  // Guard against empty media array
-  if (!media.length) {
-    visible && onClose?.();
+  // Guard against empty media array or invalid index
+  if (!media.length || !media[currentIndex]) {
+    if (visible) {
+      onClose?.();
+    }
     return null;
   }
 

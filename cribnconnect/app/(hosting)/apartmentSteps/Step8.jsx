@@ -1,382 +1,387 @@
+import MediaViewer from "@/components/MediaViewer";
+import { Colors } from "@/constants/Colors";
 import useHostingStore from "@/stores/hostingStore";
-import * as ImagePicker from "expo-image-picker";
-import * as VideoThumbnails from "expo-video-thumbnails";
-import { CloudUpload, Play, RefreshCw, X } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { pickImages, pickVideo } from "@/utils/mediaUtils";
+import { Camera, ImagePlus, Play, X } from "lucide-react-native";
+import { useState } from "react";
 import {
   Alert,
-  Dimensions,
-  FlatList,
   Image,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
 export default function Step8({ styles }) {
-  const { apartmentData, addMediaToApartment, removeMediaFromApartment, updateMediaInApartment } = useHostingStore();
-  const [mediaFiles, setMediaFiles] = useState(apartmentData.media || []);
-  const [isSelecting, setIsSelecting] = useState(false);
+  const { apartmentData, addMediaToApartment, removeMediaFromApartment } = useHostingStore();
+  const [uploading, setUploading] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
-  // Check for missing media files on component mount
-  useEffect(() => {
-    const missingMediaCount = mediaFiles.filter(item => item.needsReselection).length;
-    
-    if (missingMediaCount > 0) {
-      Alert.alert(
-        'Media Files Missing',
-        `${missingMediaCount} media file(s) need to be selected again. Tap the refresh button on missing items to reselect them.`,
-        [{ text: 'OK' }]
-      );
-    }
-  }, []);
+  const mediaFiles = apartmentData.media || [];
+  const images = mediaFiles.filter(m => m.resource_type === "image");
+  const video = mediaFiles.find(m => m.resource_type === "video");
 
-  // Update local state when store changes
-  useEffect(() => {
-    setMediaFiles(apartmentData.media || []);
-  }, [apartmentData.media]);
-
-const generateThumbnail = async (videoUri) => {
-  try {
-    const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-      time: 1500, // get frame at 1.5s
-    });
-    return uri;
-  } catch (e) {
-    console.warn("Thumbnail generation failed:", e);
-    return null;
-  }
-};
-
-const handleMediaSelection = async () => {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) {
-    alert("Permission required!");
-    return;
-  }
-
-  setIsSelecting(true);
-
-  try {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsMultipleSelection: true,
-      quality: 1,
-      selectionLimit: 20,
-    });
-
-    if (!result.canceled) {
-      for (const asset of result.assets) {
-        let mediaItem;
-
-        if (asset.type === "video") {
-          // Generate thumbnail for local display
-          const thumbnail = await generateThumbnail(asset.uri);
-
-          mediaItem = {
-            // For backend submission (will be populated after upload)
-            public_id: null, // Will be set by Cloudinary
-            url: null, // Will be set by Cloudinary
-            resource_type: "video",
-            thumbnail_url: null, // Will be set by Cloudinary
-            width: asset.width || null,
-            height: asset.height || null,
-            format: asset.fileName?.split('.').pop() || "mp4",
-            size: asset.fileSize || 0,
-            
-            // For local display and upload
-            localUri: asset.uri,
-            localThumbnail: thumbnail,
-            filename: asset.fileName || `video_${Date.now()}.mp4`,
-            duration: asset.duration || 0,
-            mimeType: "video/mp4"
-          };
-        } else {
-          mediaItem = {
-            // For backend submission (will be populated after upload)
-            public_id: null, // Will be set by Cloudinary
-            url: null, // Will be set by Cloudinary
+  const handleAddImages = async () => {
+    setUploading(true);
+    try {
+      const selectedImages = await pickImages(images.length, 10); // Max 10 images
+      
+      if (selectedImages && selectedImages.length > 0) {
+        for (const img of selectedImages) {
+          const mediaItem = {
+            public_id: null,
+            url: null,
             resource_type: "image",
-            thumbnail_url: null, // Will be set by Cloudinary for smaller variants
-            width: asset.width || null,
-            height: asset.height || null,
-            format: asset.fileName?.split('.').pop() || "jpg",
-            size: asset.fileSize || 0,
-            
-            // For local display and upload
-            localUri: asset.uri,
-            filename: asset.fileName || `image_${Date.now()}.jpg`,
+            thumbnail_url: null,
+            width: null,
+            height: null,
+            format: "jpg",
+            size: 0,
+            localUri: img.url,
+            filename: `image_${Date.now()}.jpg`,
             mimeType: "image/jpeg"
           };
+          addMediaToApartment(mediaItem);
         }
-
-        // Add to store (this will be sent to backend later)
-        addMediaToApartment(mediaItem);
-        
-        // Update local state for display
-        setMediaFiles(prev => [...prev, mediaItem]);
       }
+    } catch (error) {
+      console.error('Error adding images:', error);
+      Alert.alert('Error', 'Failed to add images. Please try again.');
+    } finally {
+      setUploading(false);
     }
-  } catch (error) {
-    console.error('Media selection failed:', error);
-    alert(`Selection failed: ${error.message}`);
-  } finally {
-    setIsSelecting(false);
-  }
-};
+  };
 
-const removeMedia = (index) => {
-  removeMediaFromApartment(index);
-  setMediaFiles(prev => prev.filter((_, i) => i !== index));
-};
+  const handleAddVideo = async () => {
+    if (video) {
+      Alert.alert(
+        "Video Already Added",
+        "You can only add one video. Remove the existing video first."
+      );
+      return;
+    }
 
-const handleReselectMedia = async (index) => {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) {
-    alert("Permission required!");
-    return;
-  }
-
-  try {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsMultipleSelection: false,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets.length > 0) {
-      const asset = result.assets[0];
-      let mediaItem;
-
-      if (asset.type === "video") {
-        const thumbnail = await generateThumbnail(asset.uri);
-        
-        mediaItem = {
+    setUploading(true);
+    try {
+      const selectedVideo = await pickVideo();
+      
+      if (selectedVideo) {
+        const mediaItem = {
           public_id: null,
           url: null,
           resource_type: "video",
           thumbnail_url: null,
-          width: asset.width || null,
-          height: asset.height || null,
-          format: asset.fileName?.split('.').pop() || "mp4",
-          size: asset.fileSize || 0,
-          localUri: asset.uri,
-          localThumbnail: thumbnail,
-          filename: asset.fileName || `video_${Date.now()}.mp4`,
-          duration: asset.duration || 0,
-          mimeType: "video/mp4",
-          needsReselection: false
+          width: null,
+          height: null,
+          format: "mp4",
+          size: 0,
+          localUri: selectedVideo.url,
+          localThumbnail: selectedVideo.thumbnail,
+          filename: `video_${Date.now()}.mp4`,
+          duration: 0,
+          mimeType: "video/mp4"
         };
-      } else {
-        mediaItem = {
-          public_id: null,
-          url: null,
-          resource_type: "image",
-          thumbnail_url: null,
-          width: asset.width || null,
-          height: asset.height || null,
-          format: asset.fileName?.split('.').pop() || "jpg",
-          size: asset.fileSize || 0,
-          localUri: asset.uri,
-          filename: asset.fileName || `image_${Date.now()}.jpg`,
-          mimeType: "image/jpeg",
-          needsReselection: false
-        };
+        addMediaToApartment(mediaItem);
       }
-
-      // Update the specific media item in the store
-      updateMediaInApartment(index, mediaItem);
-      
-      // Update local state
-      setMediaFiles(prev => prev.map((item, i) => i === index ? mediaItem : item));
+    } catch (error) {
+      console.error('Error adding video:', error);
+      Alert.alert('Error', 'Failed to add video. Please try again.');
+    } finally {
+      setUploading(false);
     }
-  } catch (error) {
-    console.error('Media reselection failed:', error);
-    alert(`Reselection failed: ${error.message}`);
-  }
-};
+  };
 
-const renderMediaItem = ({ item, index }) => (
-  <View
-    style={{
-      width: (Dimensions.get("window").width - 72) / 2,
-      height: 160,
-      margin: 6,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: item.needsReselection ? "#FF6B6B" : (styles.borderColor || "#E5E7EB"),
-      overflow: "hidden",
-      position: "relative",
-      backgroundColor: item.needsReselection ? "#FFF5F5" : "transparent",
-    }}
-  >
-    {item.needsReselection ? (
-      // Show placeholder for missing media
-      <View
-        style={{
-          width: "100%",
-          height: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#F8F8F8",
-        }}
-      >
-        <RefreshCw size={32} color="#FF6B6B" />
-        <Text style={{ 
-          color: "#FF6B6B", 
-          fontSize: 12, 
-          textAlign: "center",
-          marginTop: 8,
-          paddingHorizontal: 8 
-        }}>
-          Media Missing{"\n"}Tap to reselect
-        </Text>
-      </View>
-    ) : item.resource_type === "video" ? (
-      <Image
-        source={{ uri: item.localThumbnail || item.localUri }}
-        style={{ width: "100%", height: "100%" }}
-        resizeMode="cover"
-      />
-    ) : (
-      <Image
-        source={{ uri: item.localUri }}
-        style={{ width: "100%", height: "100%" }}
-        resizeMode="cover"
-      />
-    )}
+  const handleRemoveMedia = (index) => {
+    Alert.alert(
+      "Remove Media",
+      "Are you sure you want to remove this item?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Remove", 
+          style: "destructive",
+          onPress: () => {
+            // Close viewer if it's open
+            if (viewerVisible) {
+              setViewerVisible(false);
+            }
+            removeMediaFromApartment(index);
+          }
+        }
+      ]
+    );
+  };
 
-    {item.resource_type === "video" && !item.needsReselection && (
-      <View
-        style={{
-          position: "absolute",
-          bottom: 8,
-          left: 8,
-          backgroundColor: "rgba(0,0,0,0.75)",
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          borderRadius: 4,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ color: "white", fontSize: 12, marginRight: 4 }}>
-          Video
-        </Text>
-        <Play size={14} color="white" />
-      </View>
-    )}
+  const handleImagePress = (index) => {
+    setViewerIndex(index);
+    setViewerVisible(true);
+  };
 
-    {item.needsReselection ? (
-      // Reselect button for missing media
-      <TouchableOpacity
-        onPress={() => handleReselectMedia(index)}
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          backgroundColor: "#FF6B6B",
-          borderRadius: 12,
-          padding: 6,
-        }}
-      >
-        <RefreshCw size={14} color="white" />
-      </TouchableOpacity>
-    ) : (
-      // Remove button for valid media
-      <TouchableOpacity
-        onPress={() => removeMedia(index)}
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          backgroundColor: "rgba(0,0,0,0.75)",
-          borderRadius: 12,
-          padding: 4,
-        }}
-      >
-        <X size={16} color="white" />
-      </TouchableOpacity>
-    )}
-  </View>
-);
+  // Prepare media for viewer (images only)
+  const viewerMedia = images.map(img => ({
+    url: img.localUri,
+    type: 'image'
+  }));
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={styles.stepContent}>
-        <Text style={styles.stepTitle}>Select Pictures / Videos</Text>
+      <ScrollView 
+        style={styles.stepContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.stepTitle}>Add Photos & Video</Text>
         <Text style={styles.sectionSubtitle}>
-          Choose images or videos to include with your listing
+          Showcase your space with high-quality photos and a video tour
         </Text>
 
-        <View style={styles.uploadContainer}>
-          <Text
-            style={[
-              styles.labelText,
-              { marginBottom: 12, textAlign: "center" },
-            ]}
-          >
-            Select images or videos of your available space
+        {/* Video Section */}
+        <View style={localStyles.section}>
+          <Text style={styles.label}>Video Tour (Optional)</Text>
+          <Text style={styles.typeOptionDescription}>
+            Add a video to give potential guests a virtual tour. This will be the cover display.
           </Text>
-          <TouchableOpacity 
-            style={styles.uploadButton} 
-            onPress={handleMediaSelection}
-            disabled={isSelecting}
-          >
-            <CloudUpload size={32} color="white" />
-            <Text
-              style={{
-                color: "white",
-                fontSize: 16,
-                fontFamily: "Sora-Regular",
-                marginLeft: 8,
-              }}
+
+          {video ? (
+            <View style={localStyles.videoWrapper}>
+              <Image
+                source={{ uri: video.localThumbnail || video.localUri }}
+                style={localStyles.videoPreview}
+                resizeMode="cover"
+              />
+              <View style={localStyles.videoIndicator}>
+                <Play size={14} color="white" />
+                <Text style={localStyles.videoIndicatorText}>Video</Text>
+              </View>
+              <TouchableOpacity
+                style={localStyles.removeButton}
+                onPress={() => handleRemoveMedia(mediaFiles.findIndex(m => m === video))}
+              >
+                <X size={16} color={Colors.white} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={localStyles.addVideoButton}
+              onPress={handleAddVideo}
+              disabled={uploading}
             >
-              {isSelecting ? "Selecting..." : "Select Media"}
-            </Text>
-          </TouchableOpacity>
+              <Camera size={32} color={Colors.primary} />
+              <Text style={localStyles.addButtonText}>
+                {uploading ? "Adding Video..." : "Add Video"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
-        <View>
-          <Text style={styles.warning}>*Select one video and as many images as possible. Your video will be the cover display of your apartment listing.</Text>
-        </View>
-        <View
-          style={{
-            marginVertical: 24,
-            position: "relative",
-            justifyContent: "center",
-            alignItems: "center",
-            height: 24,
-          }}
-        >
-          <View
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: "50%",
-              height: 1,
-              backgroundColor: "#B0B0B0",
-            }}
-          />
-          <View style={{ backgroundColor: "#fff", paddingHorizontal: 8 }}>
-            <Text style={[styles.labelText]}>Selected Items</Text>
+
+        {/* Photos Section */}
+        <View style={localStyles.section}>
+          <Text style={styles.label}>Photos (Required)</Text>
+          <Text style={styles.typeOptionDescription}>
+            Add up to 10 high-quality photos of your space. The first photo will be the main listing image.
+          </Text>
+
+          <View style={localStyles.imagesContainer}>
+            {images.map((img, index) => (
+              <TouchableOpacity
+                key={`image-${index}`}
+                style={localStyles.imageWrapper}
+                onPress={() => handleImagePress(index)}
+              >
+                <Image
+                  source={{ uri: img.localUri }}
+                  style={localStyles.imagePreview}
+                  resizeMode="cover"
+                />
+                {index === 0 && (
+                  <View style={localStyles.mainBadge}>
+                    <Text style={localStyles.mainBadgeText}>Main</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={localStyles.removeButton}
+                  onPress={() => handleRemoveMedia(mediaFiles.findIndex(m => m === img))}
+                >
+                  <X size={16} color={Colors.white} />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+
+            {images.length < 10 && (
+              <TouchableOpacity
+                style={localStyles.addImageButton}
+                onPress={handleAddImages}
+                disabled={uploading}
+              >
+                <ImagePlus size={32} color={Colors.primary} />
+                <Text style={localStyles.addButtonText}>
+                  {uploading ? "Adding..." : "Add Photos"}
+                </Text>
+                {images.length > 0 && (
+                  <Text style={localStyles.countText}>
+                    {images.length}/10
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
-        {mediaFiles.length > 0 && (
-          <FlatList
-            data={mediaFiles}
-            renderItem={renderMediaItem}
-            keyExtractor={(_, index) => index.toString()}
-            numColumns={2}
-            columnWrapperStyle={{
-              justifyContent: "flex-start",
-              paddingHorizontal: 6,
-            }}
-            style={{ marginTop: 16 }}
-          />
-        )}
-      </View>
+        {/* Tips Section */}
+        <View style={localStyles.tipsContainer}>
+          <Text style={styles.label}>📸 Photography Tips</Text>
+          <View style={localStyles.tipsList}>
+            <Text style={localStyles.tipText}>• Use natural lighting when possible</Text>
+            <Text style={localStyles.tipText}>• Show all rooms and key features</Text>
+            <Text style={localStyles.tipText}>• Clean and stage your space before shooting</Text>
+            <Text style={localStyles.tipText}>• Include wide-angle shots and detail shots</Text>
+            <Text style={localStyles.tipText}>• Tap any photo to view full size</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Image Viewer Modal */}
+      <MediaViewer
+        visible={viewerVisible}
+        onClose={() => setViewerVisible(false)}
+        media={viewerMedia}
+        initialIndex={viewerIndex}
+      />
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  section: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  videoWrapper: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+    marginTop: 12,
+  },
+  videoPreview: {
+    width: "100%",
+    height: "100%",
+  },
+  videoIndicator: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  videoIndicatorText: {
+    color: "white",
+    fontSize: 12,
+    marginLeft: 4,
+    fontFamily: "Sora-Regular",
+  },
+  addVideoButton: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    backgroundColor: Colors.gray100,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  imagesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 12,
+  },
+  imageWrapper: {
+    width: "30%",
+    aspectRatio: 3 / 4,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+  },
+  mainBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  mainBadgeText: {
+    color: Colors.white,
+    fontSize: 10,
+    fontFamily: "Sora-Medium",
+  },
+  removeButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addImageButton: {
+    width: "30%",
+    aspectRatio: 3 / 4,
+    backgroundColor: Colors.gray100,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButtonText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.primary,
+    textAlign: "center",
+  },
+  countText: {
+    marginTop: 4,
+    fontSize: 12,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+  },
+  tipsContainer: {
+    marginTop: 24,
+    marginBottom: 32,
+    padding: 16,
+    backgroundColor: Colors.blue50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primary + "20",
+  },
+  tipsList: {
+    marginTop: 8,
+  },
+  tipText: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray700,
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+});

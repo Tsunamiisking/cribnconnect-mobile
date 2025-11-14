@@ -30,11 +30,6 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
   const { user: authUser, isAuthenticated, loading } = useAuth();
   const currentUser = authUser || user;
 
-  // Don't render anything while loading auth state
-  if (loading) {
-    return null;
-  }
-
   const handleNavigation = (route) => {
     onClose(); // Close popup first
     setTimeout(() => {
