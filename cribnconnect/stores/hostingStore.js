@@ -72,14 +72,13 @@ const initialEventData = {
   },
   date: null, // Changed from dateTime.date to match backend
   time: "", // Changed from dateTime.startTime to match backend
-  endTime: "", 
-  ticketPrice: "", 
-  capacity: "", 
-  isFree: false, 
-  ticketTypes: [], 
+  endTime: "", // Keep for frontend, will calculate duration for backend
+  capacity: "", // Moved from ticket.capacity to match backend
+  isFree: false, // Changed from ticket.isFree to match backend
+  ticketTypes: [], // New field for multiple ticket types
   media: [],
-  eventSpecialPerks: [], 
-  eventSafetyTips: [], 
+  eventSpecialPerks: [], // Changed from specialPerks to match backend
+  eventSafetyTips: [], // Changed from safetyTips to match backend
 };
 
 const useHostingStore = create(
@@ -595,22 +594,24 @@ const useHostingStore = create(
         const state = get();
         const eventData = state.eventData;
         
-        // Calculate minimum ticket price from ticket types
-        let ticketPrice = 0;
-        if (!eventData.isFree && eventData.ticketTypes && eventData.ticketTypes.length > 0) {
-          const prices = eventData.ticketTypes
-            .map(t => parseFloat(t.price) || 0)
-            .filter(p => p > 0);
-          ticketPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        // Calculate duration in minutes from time and endTime
+        let duration = null;
+        if (eventData.time && eventData.endTime) {
+          const [startHour, startMin] = eventData.time.split(':').map(Number);
+          const [endHour, endMin] = eventData.endTime.split(':').map(Number);
+          const startMinutes = startHour * 60 + startMin;
+          const endMinutes = endHour * 60 + endMin;
+          duration = endMinutes - startMinutes;
+          // Handle overnight events
+          if (duration < 0) duration += 24 * 60;
         }
         
         // Transform frontend structure to match backend schema
         return {
           title: eventData.title,
+          description: eventData.description,
           category: eventData.category,
           eventType: eventData.eventType,
-          description: eventData.description,
-          media: eventData.media,
           location: {
             street: eventData.location.street,
             city: eventData.location.city,
@@ -619,13 +620,17 @@ const useHostingStore = create(
           },
           date: eventData.date, // Should be a Date object
           time: eventData.time,
-          ticketPrice: ticketPrice,
-          capacity: parseInt(eventData.capacity) || 0,
+          endTime: eventData.endTime || null,
+          duration: duration,
           isFree: eventData.isFree,
-          ticketTypes: eventData.ticketTypes, // Include ticket types for frontend reference
-          eventSpecialPerks: eventData.eventSpecialPerks, // Updated field name
-          eventSafetyTips: eventData.eventSafetyTips, // Updated field name
-          isPublished: true, // Set based on your app logic
+          capacity: parseInt(eventData.capacity) || 0,
+          ticketTypes: eventData.ticketTypes || [],
+          media: eventData.media || [],
+          eventSpecialPerks: eventData.eventSpecialPerks || [],
+          eventSafetyTips: eventData.eventSafetyTips || [],
+          isPublished: true,
+          isActive: true,
+          status: 'draft',
         };
       },
       
