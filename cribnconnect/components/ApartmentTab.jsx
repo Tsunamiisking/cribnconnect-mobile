@@ -205,6 +205,8 @@ export default function ApartmentTab({
   onClearSearch,
   refreshing,
   onRefresh,
+  loading,
+  totalApartments,
 }) {
   const renderApartment = ({ item }) => <ApartmentCard apartment={item} />;
 
@@ -256,9 +258,12 @@ export default function ApartmentTab({
     </View>
   );
 
+  // Show NoApartments only when there are no apartments at all AND no filters applied
+  const showEmptyState = totalApartments === 0 && searchQuery === "" && (!selectedCategory || selectedCategory === "All");
+
   return (
     <View style={styles.container}>
-      {filteredApartments.length === 0 && searchQuery === "" ? (
+      {showEmptyState ? (
         <View style={styles.emptyStateContainer}>
           <NoApartments />
         </View>
@@ -274,17 +279,18 @@ export default function ApartmentTab({
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={
-            searchQuery !== "" ? (
-              <View style={styles.noSearchResultsContainer}>
-                <Eye size={48} color={Colors.gray400} />
-                <Text style={styles.noSearchResultsTitle}>
-                  No Results Found
-                </Text>
-                <Text style={styles.noSearchResultsText}>
-                  Try adjusting your search terms
-                </Text>
-              </View>
-            ) : null
+            <View style={styles.noSearchResultsContainer}>
+              <Eye size={48} color={Colors.gray400} />
+              <Text style={styles.noSearchResultsTitle}>
+                No {selectedCategory !== "All" ? selectedCategory : ""} Apartments Found
+              </Text>
+              <Text style={styles.noSearchResultsText}>
+                {searchQuery !== "" 
+                  ? "Try adjusting your search terms"
+                  : `You don't have any ${selectedCategory?.toLowerCase()} apartments`
+                }
+              </Text>
+            </View>
           }
         />
       )}

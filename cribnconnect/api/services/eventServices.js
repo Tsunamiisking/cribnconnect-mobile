@@ -80,3 +80,32 @@ export const getEventById = async (id) => {
   const res = await api.get(`/events/${id}`);
   return res.data;
 };
+
+export const getMyEvents = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add query parameters
+    if (params.status) {
+      queryParams.append('status', params.status);
+    }
+    if (params.isPublished !== undefined) {
+      queryParams.append('isPublished', params.isPublished);
+    }
+    if (params.sortBy) {
+      queryParams.append('sortBy', params.sortBy);
+    }
+    if (params.order) {
+      queryParams.append('order', params.order);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = `/events/user/my-events${queryString ? `?${queryString}` : ''}`;
+    
+    const res = await api.get(url);
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching my events:', error.response?.data || error.message);
+    throw error;
+  }
+};

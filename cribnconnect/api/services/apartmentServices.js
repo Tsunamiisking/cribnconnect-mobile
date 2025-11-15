@@ -80,3 +80,32 @@ export const getApartmentById = async (id) => {
   const res = await api.get(`/apartments/${id}`);
   return res.data;
 };
+
+export const getMyApartments = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add query parameters
+    if (params.isPublished !== undefined) {
+      queryParams.append('isPublished', params.isPublished);
+    }
+    if (params.isAvailable !== undefined) {
+      queryParams.append('isAvailable', params.isAvailable);
+    }
+    if (params.sortBy) {
+      queryParams.append('sortBy', params.sortBy);
+    }
+    if (params.order) {
+      queryParams.append('order', params.order);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = `/apartments/user/my-apartments${queryString ? `?${queryString}` : ''}`;
+    
+    const res = await api.get(url);
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching my apartments:', error.response?.data || error.message);
+    throw error;
+  }
+};
