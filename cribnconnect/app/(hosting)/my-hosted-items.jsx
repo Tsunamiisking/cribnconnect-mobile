@@ -1,10 +1,10 @@
+import { getMyApartments } from "@/api/services/apartmentServices";
+import { getMyEvents } from "@/api/services/eventServices";
 import ApartmentTab from "@/components/ApartmentTab";
 import BackHeader from "@/components/BackHeader";
 import EventTab from "@/components/EventTab";
 import HostedTabSelector from "@/components/HostedTabSelector";
 import { Colors } from "@/constants/Colors";
-import { getMyApartments } from "@/api/services/apartmentServices";
-import { getMyEvents } from "@/api/services/eventServices";
 import { useEffect, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -276,34 +276,66 @@ export default function MyHostedItemsScreen() {
   // Fetch events
   const fetchEvents = async () => {
     try {
+      console.log('Starting to fetch events...');
       const response = await getMyEvents({
         sortBy: 'date',
         order: 'desc'
       });
       
-      // Transform backend data to match frontend format
-      const transformedEvents = response.data?.map(event => ({
-        id: event._id,
-        title: event.title,
-        category: event.category,
-        eventType: event.eventType,
-        location: `${event.location.venue}, ${event.location.city}`,
-        date: new Date(event.date).toISOString().split('T')[0],
-        time: event.time,
-        price: event.isFree ? 'Free' : `₦${Math.min(...event.ticketTypes.map(t => t.price)).toLocaleString()}`,
-        status: event.status === 'approved' ? 
-          (new Date(event.date) > new Date() ? 'upcoming' : 'completed') : 
-          event.status,
-        attendees: event.attendees?.length || 0,
-        capacity: event.capacity,
-        revenue: `₦${(event.ticketTypes.reduce((sum, t) => sum + (t.sold * t.price), 0)).toLocaleString()}`,
-        images: event.media?.map(m => m.url).filter(Boolean) || [],
-        dateCreated: event.createdAt,
-      })) || [];
+      // console.log('Raw response from getMyEvents:', response);
+      // console.log('Response.events:', response.events);
+      // console.log('Response.events type:', typeof response.events);
+      // console.log('Response.events is array:', Array.isArray(response.events));
       
+      // Transform backend data to match frontend format
+      const transformedEvents = response.events?.map(event => {
+        // console.log('Transforming event:', event._id, event.title);
+        
+        // Get display images (prioritize images over videos, use thumbnails for videos)
+        const displayImages = event.media?.map(m => {
+          if (m.resource_type === 'image') {
+            return m.url;
+          } else if (m.resource_type === 'video' && m.thumbnail_url) {
+            return m.thumbnail_url;
+          }
+          return null;
+        }).filter(Boolean) || [];
+        
+        // Determine status based on isPublished, isActive, and date
+        let displayStatus;
+        if (!event.isPublished || !event.isActive) {
+          displayStatus = 'draft';
+        } else if (event.status === 'cancelled') {
+          displayStatus = 'cancelled';
+        } else {
+          // Check if event date has passed
+          displayStatus = new Date(event.date) > new Date() ? 'upcoming' : 'completed';
+        }
+        
+        return {
+          id: event._id,
+          title: event.title,
+          category: event.category,
+          eventType: event.eventType,
+          location: `${event.location.venue}, ${event.location.city}`,
+          date: new Date(event.date).toISOString().split('T')[0],
+          time: event.time,
+          price: event.isFree ? 'Free' : `₦${Math.min(...event.ticketTypes.map(t => t.price)).toLocaleString()}`,
+          status: displayStatus,
+          attendees: event.attendees?.length || 0,
+          capacity: event.capacity,
+          revenue: `₦${(event.ticketTypes.reduce((sum, t) => sum + (t.sold * t.price), 0)).toLocaleString()}`,
+          images: displayImages,
+          dateCreated: event.createdAt,
+        };
+      }) || [];
+      
+      // console.log('Transformed events count:', transformedEvents.length);
+      // console.log('Transformed events:', transformedEvents);
       setEvents(transformedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
+      console.error('Error details:', error.response?.data);
       Alert.alert('Error', 'Failed to load events. Please try again.');
     }
   };

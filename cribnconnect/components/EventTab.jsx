@@ -102,7 +102,13 @@ const EventCard = ({ event }) => {
       onPress={handleCardPress}
       activeOpacity={0.9}
     >
-      <Image source={{ uri: event.images[0] }} style={styles.eventImage} />
+      {event.images && event.images.length > 0 ? (
+        <Image source={{ uri: event.images[0] }} style={styles.eventImage} />
+      ) : (
+        <View style={[styles.eventImage, styles.placeholderImage]}>
+          <Calendar size={48} color={Colors.gray400} />
+        </View>
+      )}
 
       <View style={styles.eventContent}>
         <View style={styles.eventHeader}>
@@ -432,6 +438,11 @@ const styles = StyleSheet.create({
     height: 180,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
+  },
+  placeholderImage: {
+    backgroundColor: Colors.gray100,
+    justifyContent: "center",
+    alignItems: "center",
   },
   eventContent: {
     padding: 16,

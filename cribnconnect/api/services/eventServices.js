@@ -102,7 +102,9 @@ export const getMyEvents = async (params = {}) => {
     const queryString = queryParams.toString();
     const url = `/events/user/my-events${queryString ? `?${queryString}` : ''}`;
     
+    // console.log('Fetching my events from:', url);
     const res = await api.get(url);
+    // console.log('Fetched my events response:', JSON.stringify(res.data, null, 2));
     return res.data;
   } catch (error) {
     console.error('Error fetching my events:', error.response?.data || error.message);

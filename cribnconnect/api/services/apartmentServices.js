@@ -102,7 +102,9 @@ export const getMyApartments = async (params = {}) => {
     const queryString = queryParams.toString();
     const url = `/apartments/user/my-apartments${queryString ? `?${queryString}` : ''}`;
     
+    // console.log('Fetching my apartments from:', url);
     const res = await api.get(url);
+    // console.log('Fetched my apartments response:', JSON.stringify(res.data, null, 2));
     return res.data;
   } catch (error) {
     console.error('Error fetching my apartments:', error.response?.data || error.message);
