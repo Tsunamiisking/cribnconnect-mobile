@@ -5,7 +5,7 @@ export default function EventAddress({ styles }) {
   const { eventData, updateEventNestedData } = useHostingStore();
 
   const handleLocationChange = (field, value) => {
-    updateEventNestedData('location', field, value);
+    updateEventNestedData("location", field, value);
   };
 
   return (
@@ -19,7 +19,7 @@ export default function EventAddress({ styles }) {
           placeholder="Enter street address"
           placeholderTextColor="#B0B0B0"
           value={eventData.location.street}
-          onChangeText={(value) => handleLocationChange('street', value)}
+          onChangeText={(value) => handleLocationChange("street", value)}
         />
         <View className="flex-row">
           <TextInput
@@ -27,14 +27,23 @@ export default function EventAddress({ styles }) {
             placeholder="State"
             placeholderTextColor="#B0B0B0"
             value={eventData.location.state}
-            onChangeText={(value) => handleLocationChange('state', value)}
+            onChangeText={(value) => handleLocationChange("state", value)}
           />
           <TextInput
             style={styles.input}
             placeholder="City"
             placeholderTextColor="#B0B0B0"
             value={eventData.location.city}
-            onChangeText={(value) => handleLocationChange('city', value)}
+            onChangeText={(value) => handleLocationChange("city", value)}
+          />
+        </View>
+        <View>
+          <TextInput
+            style={styles.input}
+            placeholder="Country"
+            placeholderTextColor="#B0B0B0"
+            value={eventData.location.country}
+            onChangeText={(value) => handleLocationChange("country", value)}
           />
         </View>
 
@@ -45,9 +54,12 @@ export default function EventAddress({ styles }) {
             placeholder="Enter venue name"
             placeholderTextColor="#B0B0B0"
             value={eventData.location.venue}
-            onChangeText={(value) => handleLocationChange('venue', value)}
+            onChangeText={(value) => handleLocationChange("venue", value)}
           />
-          <Text style={styles.typeOptionDescription}>Specific Venue Detail or Name (e.g., Lekki Event Center, Oriental Hotel)</Text>
+          <Text style={styles.typeOptionDescription}>
+            Specific Venue Detail or Name (e.g., Lekki Event Center, Oriental
+            Hotel)
+          </Text>
         </View>
       </View>
     </View>

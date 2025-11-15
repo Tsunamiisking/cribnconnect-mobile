@@ -68,6 +68,7 @@ const initialEventData = {
     street: "", // Changed from 'address' to match backend
     city: "",
     state: "",
+    country: "", // Default country
     venue: "",
   },
   date: null, // Changed from dateTime.date to match backend
@@ -616,6 +617,7 @@ const useHostingStore = create(
             street: eventData.location.street,
             city: eventData.location.city,
             state: eventData.location.state,
+            country: eventData.location.country,
             venue: eventData.location.venue,
           },
           date: eventData.date, // Should be a Date object
