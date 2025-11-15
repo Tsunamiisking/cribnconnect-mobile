@@ -71,7 +71,9 @@ export default function EventSafetyTips({ styles }) {
         {/* Current Safety Tips */}
         {safetyTips.length > 0 && (
           <View style={{ marginBottom: 24 }}>
-            <Text style={styles.label}>Your Safety Guidelines</Text>
+            <View style={{ marginBottom: 8 }} >
+              <Text style={styles.label}>Your Safety Guidelines</Text>
+            </View>
             {safetyTips.map((tip, index) => (
               <View key={index} style={[styles.typeOption, { marginBottom: 8 }]}>
                 <View style={styles.typeOptionRow}>
@@ -97,7 +99,9 @@ export default function EventSafetyTips({ styles }) {
 
         {/* Add Custom Safety Tip */}
         <View style={{ marginBottom: 24 }}>
-          <Text style={styles.label}>Add Custom Safety Tip</Text>
+          <View style={{ marginBottom: 8 }}> 
+            <Text style={styles.label}>Add Custom Safety Tip</Text>
+          </View>
           {!showAddTip ? (
             <TouchableOpacity
               onPress={() => setShowAddTip(true)}
