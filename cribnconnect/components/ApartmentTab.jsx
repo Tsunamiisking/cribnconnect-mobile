@@ -1,5 +1,6 @@
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchInput from "@/components/SearchInput";
+import { LoadingSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
@@ -219,7 +220,7 @@ export default function ApartmentTab({
         onClear={onClearSearch}
       />
 
-      {filteredApartments.length > 0 && (
+      {totalApartments > 0 && (
         <View style={styles.summaryContainer}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
@@ -260,6 +261,15 @@ export default function ApartmentTab({
 
   // Show NoApartments only when there are no apartments at all AND no filters applied
   const showEmptyState = totalApartments === 0 && searchQuery === "" && (!selectedCategory || selectedCategory === "All");
+
+  // Show loading skeleton on initial load
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LoadingSkeleton type="apartment" count={3} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

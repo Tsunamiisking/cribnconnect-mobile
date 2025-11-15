@@ -1,5 +1,6 @@
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchInput from "@/components/SearchInput";
+import { LoadingSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
@@ -224,6 +225,8 @@ export default function EventTab({
   onClearSearch,
   refreshing,
   onRefresh,
+  loading,
+  totalEvents,
 }) {
   const renderEvent = ({ item }) => <EventCard event={item} />;
 
@@ -243,7 +246,7 @@ export default function EventTab({
         onClear={onClearSearch}
       />
 
-      {filteredEvents.length > 0 && (
+      {totalEvents > 0 && (
         <View style={styles.summaryContainer}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
@@ -288,9 +291,21 @@ export default function EventTab({
     </View>
   );
 
+  // Show NoEvents only when there are no events at all AND no filters applied
+  const showEmptyState = totalEvents === 0 && searchQuery === "" && (!selectedCategory || selectedCategory === "All");
+
+  // Show loading skeleton on initial load
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LoadingSkeleton type="event" count={3} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {filteredEvents.length === 0 && searchQuery === "" ? (
+      {showEmptyState ? (
         <View style={styles.emptyStateContainer}>
           <NoEvents />
         </View>
@@ -306,17 +321,18 @@ export default function EventTab({
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={
-            searchQuery !== "" ? (
-              <View style={styles.noSearchResultsContainer}>
-                <Eye size={48} color={Colors.gray400} />
-                <Text style={styles.noSearchResultsTitle}>
-                  No Results Found
-                </Text>
-                <Text style={styles.noSearchResultsText}>
-                  Try adjusting your search terms
-                </Text>
-              </View>
-            ) : null
+            <View style={styles.noSearchResultsContainer}>
+              <Eye size={48} color={Colors.gray400} />
+              <Text style={styles.noSearchResultsTitle}>
+                No {selectedCategory !== "All" ? selectedCategory : ""} Events Found
+              </Text>
+              <Text style={styles.noSearchResultsText}>
+                {searchQuery !== "" 
+                  ? "Try adjusting your search terms"
+                  : `You don't have any ${selectedCategory?.toLowerCase()} events`
+                }
+              </Text>
+            </View>
           }
         />
       )}
