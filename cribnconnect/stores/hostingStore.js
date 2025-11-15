@@ -47,7 +47,7 @@ const initialApartmentData = {
   houseRules: [],
   partiesAllowed: false,
   availability: {
-    from: null,
+    from: new Date(), // Default to today
     to: null,
   },
   maxGuests: "",
@@ -72,14 +72,14 @@ const initialEventData = {
   },
   date: null, // Changed from dateTime.date to match backend
   time: "", // Changed from dateTime.startTime to match backend
-  endTime: "", // Keep for frontend, can derive duration for backend
-  ticketPrice: "", // Changed from ticket.price to match backend (computed from ticketTypes)
-  capacity: "", // Moved from ticket.capacity to match backend
-  isFree: false, // Changed from ticket.isFree to match backend
-  ticketTypes: [], // New field for multiple ticket types
+  endTime: "", 
+  ticketPrice: "", 
+  capacity: "", 
+  isFree: false, 
+  ticketTypes: [], 
   media: [],
-  eventSpecialPerks: [], // Changed from specialPerks to match backend
-  eventSafetyTips: [], // Changed from safetyTips to match backend
+  eventSpecialPerks: [], 
+  eventSafetyTips: [], 
 };
 
 const useHostingStore = create(
@@ -506,9 +506,9 @@ const useHostingStore = create(
             case 4: return Boolean(data.address.street && data.address.city && data.address.state);
             case 5: return Boolean(data.title && data.description);
             case 6: return (data.basicAmenities.length > 0 || data.sharedAmenities.length > 0 || data.luxuryAmenities.length > 0);
-            case 7: return Boolean(data.pricePerNight);
+            case 7: return Boolean(data.pricePerNight && data.availability?.from); // Price and start date required
             case 8: return data.media.length > 0;
-            case 9: return true; // Special perks and house rules are optional
+            case 9: return Boolean(data.maxGuests); // Max guests is required
             default: return false;
           }
         } else if (state.hostingType === 'event') {
@@ -585,6 +585,8 @@ const useHostingStore = create(
           houseRules: apartmentData.houseRules || [],
           partiesAllowed: apartmentData.partiesAllowed || false,
           isPublished: true,
+          // Media files are handled separately in the service (not included here)
+          media: apartmentData.media || [],
         };
       },
 
