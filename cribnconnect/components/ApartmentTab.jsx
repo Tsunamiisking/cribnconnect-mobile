@@ -4,23 +4,23 @@ import { LoadingSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
-    Building2,
-    Calendar,
-    Eye,
-    MapPin,
-    Plus,
-    Star,
-    TrendingUp
+  Building2,
+  Calendar,
+  Eye,
+  MapPin,
+  Plus,
+  Star,
+  TrendingUp
 } from "lucide-react-native";
 import React from "react";
 import {
-    FlatList,
-    Image,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const ApartmentCard = ({ apartment }) => {

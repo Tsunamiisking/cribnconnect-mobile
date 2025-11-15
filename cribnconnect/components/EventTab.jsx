@@ -4,22 +4,22 @@ import { LoadingSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
-  Calendar,
-  Eye,
-  MapPin,
-  Plus,
-  TrendingUp,
-  Users,
+    Calendar,
+    Eye,
+    MapPin,
+    Plus,
+    TrendingUp,
+    Users,
 } from "lucide-react-native";
 import React from "react";
 import {
-  FlatList,
-  Image,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    FlatList,
+    Image,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const EventCard = ({ event }) => {
