@@ -1,6 +1,6 @@
-import api from "../api";
-import { createEventGroupChat } from "@/services/eventChatService";
 import { auth } from "@/config/firebase";
+import { createEventGroupChat } from "@/services/eventChatService";
+import api from "../api";
 
 export const getEvents = async () => {
   const res = await api.get("/events");
