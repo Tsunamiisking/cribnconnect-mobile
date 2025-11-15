@@ -5,6 +5,8 @@ import useHostingStore from "@/stores/hostingStore";
 import { router } from "expo-router";
 import { useEffect } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -62,12 +64,84 @@ export default function AddEventScreen() {
   };
 
   const handleSubmit = async () => {
+    // Validate required fields
+    if (!eventData.title?.trim()) {
+      Alert.alert("Missing Information", "Please provide an event title");
+      return;
+    }
+
+    if (!eventData.description?.trim()) {
+      Alert.alert("Missing Information", "Please provide an event description");
+      return;
+    }
+
+    if (!eventData.location?.address?.trim()) {
+      Alert.alert("Missing Information", "Please provide an event location");
+      return;
+    }
+
+    if (!eventData.date) {
+      Alert.alert("Missing Information", "Please select an event date");
+      return;
+    }
+
+    if (!eventData.time?.trim()) {
+      Alert.alert("Missing Information", "Please provide an event time");
+      return;
+    }
+
+    if (!eventData.capacity || eventData.capacity <= 0) {
+      Alert.alert("Missing Information", "Please provide event capacity");
+      return;
+    }
+
+    if (!eventData.isFree && (!eventData.ticketTypes || eventData.ticketTypes.length === 0)) {
+      Alert.alert("Missing Information", "Please add at least one ticket type or mark event as free");
+      return;
+    }
+
+    // Optional: Check for media files
+    if (!eventData.media || eventData.media.length === 0) {
+      Alert.alert(
+        "No Event Photos",
+        "Are you sure you want to submit without any photos?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel"
+          },
+          {
+            text: "Continue",
+            onPress: submitEvent
+          }
+        ]
+      );
+      return;
+    }
+
+    // If all validations pass, submit
+    await submitEvent();
+  };
+
+  const submitEvent = async () => {
     const result = await submitListing();
     if (result.success) {
-      router.push("/(tabs)/events");
+      Alert.alert(
+        "Success!",
+        "Your event has been created successfully",
+        [
+          {
+            text: "OK",
+            onPress: () => router.push("/(tabs)/events")
+          }
+        ]
+      );
     } else {
-      // Handle error
-      console.error("Submission failed:", result.error);
+      Alert.alert(
+        "Error",
+        result.error || "Failed to create event. Please try again.",
+        [{ text: "OK" }]
+      );
     }
   };
 
@@ -129,6 +203,13 @@ export default function AddEventScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Loading Overlay */}
+      {isSubmitting && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -304,5 +385,16 @@ const styles = StyleSheet.create({
     marginTop: 6,
     flexWrap: "wrap",
     width: "100%",
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
   },
 });
