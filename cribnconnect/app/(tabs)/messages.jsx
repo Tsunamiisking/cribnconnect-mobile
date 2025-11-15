@@ -74,12 +74,29 @@ export default function MessagesScreen() {
   const [eventChats, setEventChats] = useState([]);
   const [loadingLinkups, setLoadingLinkups] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+      if (!user) {
+        console.log('User not authenticated, clearing chats');
+        setLinkupChats([]);
+        setEventChats([]);
+        setLoadingLinkups(false);
+        setLoadingEvents(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Subscribe to user's linkup chats
   useEffect(() => {
     const currentUser = auth?.currentUser;
     
-    if (!currentUser) {
+    if (!currentUser || !isAuthenticated) {
       console.log('No authenticated user');
       setLoadingLinkups(false);
       return;
@@ -97,13 +114,13 @@ export default function MessagesScreen() {
       console.log('Unsubscribing from linkup chats');
       unsubscribe();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Subscribe to user's event chats
   useEffect(() => {
     const currentUser = auth?.currentUser;
     
-    if (!currentUser) {
+    if (!currentUser || !isAuthenticated) {
       console.log('No authenticated user');
       setLoadingEvents(false);
       return;
@@ -121,7 +138,7 @@ export default function MessagesScreen() {
       console.log('Unsubscribing from event chats');
       unsubscribe();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -315,12 +332,22 @@ export default function MessagesScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <NormalHeader title="Messages" />
       
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
+      {!isAuthenticated ? (
+        // Show login prompt when not authenticated
+        <View style={styles.authPromptContainer}>
+          <MessageCircle size={64} color={Colors.gray400} />
+          <Text style={styles.authPromptTitle}>Sign in to view messages</Text>
+          <Text style={styles.authPromptText}>
+            You need to be logged in to access your conversations
+          </Text>
+        </View>
+      ) : (
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
         {/* Tab Navigation */}
         <View style={styles.tabsContainer}>
           <View style={styles.tabsContent}>
@@ -401,6 +428,7 @@ export default function MessagesScreen() {
         {/* Bottom spacing for tab bar */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -583,5 +611,25 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: Platform.OS === 'ios' ? 85 : 60,
+  },
+  authPromptContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  authPromptTitle: {
+    fontFamily: 'Urbanist-Bold',
+    fontSize: 20,
+    color: Colors.gray900,
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  authPromptText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 16,
+    color: Colors.gray500,
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });
