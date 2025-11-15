@@ -3,6 +3,7 @@ import UserLinkupsCarousel from '@/components/UserLinkupsCarousel';
 import { auth } from '@/config/firebase';
 import { Colors } from '@/constants/Colors';
 import { subscribeUserLinkupChats } from '@/services/linkupChatService';
+import { subscribeUserEventChats } from '@/services/eventChatService';
 import { router } from 'expo-router';
 import { MessageCircle, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -53,34 +54,8 @@ const APARTMENT_CONVERSATIONS = [
   },
 ];
 
-const EVENT_CONVERSATIONS = [
-  {
-    id: 'group3',
-    type: 'group',
-    name: 'Tech Conference 2024',
-    avatar: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=300&fit=crop',
-    participants: 8,
-    lastMessage: {
-      text: 'Alex: Found a great 1BR for $1800, sharing details...',
-      timestamp: '3 hours ago',
-      unread: false,
-    },
-    context: 'Event Follow-up',
-  },
-  {
-    id: 'group7',
-    type: 'group',
-    name: 'Photography Meetup',
-    avatar: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&h=300&fit=crop',
-    participants: 15,
-    lastMessage: {
-      text: 'Emma: Next shoot is this Saturday at sunrise!',
-      timestamp: '2 hours ago',
-      unread: true,
-    },
-    context: 'Event Group',
-  },
-];
+// Event conversations will be fetched from Firestore
+const EVENT_CONVERSATIONS = [];
 
 // Conversations from linkups that the user has joined (but not created)
 // This will be replaced with real Firestore data
@@ -96,7 +71,9 @@ export default function MessagesScreen() {
   const [selectedTab, setSelectedTab] = useState('apartments');
   const [refreshing, setRefreshing] = useState(false);
   const [linkupChats, setLinkupChats] = useState([]);
+  const [eventChats, setEventChats] = useState([]);
   const [loadingLinkups, setLoadingLinkups] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
   // Subscribe to user's linkup chats
   useEffect(() => {
@@ -118,6 +95,30 @@ export default function MessagesScreen() {
 
     return () => {
       console.log('Unsubscribing from linkup chats');
+      unsubscribe();
+    };
+  }, []);
+
+  // Subscribe to user's event chats
+  useEffect(() => {
+    const currentUser = auth?.currentUser;
+    
+    if (!currentUser) {
+      console.log('No authenticated user');
+      setLoadingEvents(false);
+      return;
+    }
+
+    console.log('Subscribing to event chats for user:', currentUser.uid);
+    
+    const unsubscribe = subscribeUserEventChats(currentUser.uid, (chats) => {
+      console.log('Received event chats:', chats.length);
+      setEventChats(chats);
+      setLoadingEvents(false);
+    });
+
+    return () => {
+      console.log('Unsubscribing from event chats');
       unsubscribe();
     };
   }, []);
@@ -172,6 +173,31 @@ export default function MessagesScreen() {
     }));
   };
 
+  // Format event chats to match the conversation card format
+  const formatEventChats = () => {
+    const currentUserId = auth?.currentUser?.uid;
+    
+    return eventChats.map(chat => ({
+      id: chat.id, // This is the event ID
+      type: 'group',
+      name: chat.name,
+      avatar: chat.photo || 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=300&fit=crop',
+      participants: chat.participantIds?.length || 0,
+      lastMessage: chat.lastMessage ? {
+        text: chat.lastMessage.senderName === 'System' 
+          ? chat.lastMessage.text 
+          : `${chat.lastMessage.senderName}: ${chat.lastMessage.text}`,
+        timestamp: formatTimestamp(chat.lastMessage.timestamp),
+        unread: chat.unreadBy?.includes(currentUserId) || false,
+      } : {
+        text: 'No messages yet',
+        timestamp: '',
+        unread: false,
+      },
+      context: 'Event Group',
+    }));
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'online': return Colors.emerald;
@@ -184,7 +210,7 @@ export default function MessagesScreen() {
   const getCurrentConversations = () => {
     switch (selectedTab) {
       case 'apartments': return APARTMENT_CONVERSATIONS;
-      case 'events': return EVENT_CONVERSATIONS;
+      case 'events': return formatEventChats();
       case 'linkups': return formatLinkupChats();
       default: return [];
     }
@@ -212,9 +238,12 @@ export default function MessagesScreen() {
     <TouchableOpacity 
       style={styles.conversationCard}
       onPress={() => {
-        // Navigate to chat screen with the conversation/linkup ID
+        // Navigate to chat screen with the conversation/linkup/event ID
         if (selectedTab === 'linkups') {
           // For linkup chats, pass the linkup ID
+          router.push(`/(screens)/chat/${item.id}`);
+        } else if (selectedTab === 'events') {
+          // For event chats, pass the event ID
           router.push(`/(screens)/chat/${item.id}`);
         } else {
           // For other chats, use the existing ID
@@ -340,7 +369,13 @@ export default function MessagesScreen() {
               {selectedTab === 'apartments' ? 'Apartment Conversations' : 'Event Conversations'}
             </Text>
             
-            {getCurrentConversations().length > 0 ? (
+            {/* Show loading state for events tab */}
+            {selectedTab === 'events' && loadingEvents ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Loading conversations...</Text>
+              </View>
+            ) : getCurrentConversations().length > 0 ? (
               <FlatList
                 data={getCurrentConversations()}
                 renderItem={renderConversationCard}

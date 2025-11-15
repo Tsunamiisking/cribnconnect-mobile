@@ -1,4 +1,6 @@
 import api from "../api";
+import { createEventGroupChat } from "@/services/eventChatService";
+import { auth } from "@/config/firebase";
 
 export const getEvents = async () => {
   const res = await api.get("/events");
@@ -68,6 +70,37 @@ export const createEvent = async (data) => {
         'Content-Type': 'multipart/form-data',
       }
     });
+    
+    // 11. Create event group chat in Firestore
+    try {
+      const currentUser = auth.currentUser;
+      if (currentUser && res.data?.event) {
+        const eventId = res.data.event._id;
+        const eventPhoto = res.data.event.media?.[0]?.url || null;
+        
+        console.log('Creating event group chat for event:', eventId);
+        
+        await createEventGroupChat(
+          eventId,
+          {
+            name: data.title,
+            photo: eventPhoto,
+            description: data.description,
+            isFree: data.isFree,
+          },
+          currentUser.uid,
+          {
+            name: currentUser.displayName || 'Unknown User',
+            photoURL: currentUser.photoURL || null,
+          }
+        );
+        
+        console.log('Event group chat created successfully');
+      }
+    } catch (chatError) {
+      console.error('Failed to create event group chat:', chatError);
+      // Don't fail the entire event creation if chat creation fails
+    }
     
     return res.data;
   } catch (error) {

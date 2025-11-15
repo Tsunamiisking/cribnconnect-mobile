@@ -139,7 +139,7 @@ export default function AddEventScreen() {
     if (result.success) {
       Alert.alert(
         "Success!",
-        "Your event has been created successfully",
+        "Your event has been created successfully! A group chat has been set up for attendees.",
         [
           {
             text: "OK",
