@@ -9,6 +9,12 @@ import {
   subscribeLinkupChat,
   subscribeLinkupMessages
 } from "@/services/linkupChatService";
+import {
+  markEventChatAsRead,
+  sendMessageToEventChat,
+  subscribeEventChat,
+  subscribeEventMessages
+} from "@/services/eventChatService";
 import { useLocalSearchParams } from "expo-router";
 import { Info, Paperclip, Send, Users } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
@@ -26,7 +32,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, type } = useLocalSearchParams(); // Get both id and type from params
   const { publicProfileId } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -34,6 +40,7 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [username, setUsername] = useState(null);
+  const [chatType, setChatType] = useState(type || null); // Use type from params
   const flatListRef = useRef(null);
 
   useEffect(() => {
@@ -62,57 +69,113 @@ export default function ChatScreen() {
     
     fetchUsername();
     
-    console.log('Loading chat for linkup ID:', id);
+    console.log('Loading chat for ID:', id, 'Type:', type);
     
-    // Subscribe to linkup chat data
-    const unsubscribeChat = subscribeLinkupChat(id, (chatData) => {
-      if (chatData) {
-        console.log('Received linkup chat data:', chatData.name);
-        setChatData({
-          id: chatData.linkupId,
-          type: 'group',
-          name: chatData.name,
-          participants: chatData.participantIds?.length || 0,
-          online: 0, // Could be calculated from lastSeen timestamps
-          admin: chatData.creatorId,
-          photo: chatData.photo,
-        });
-        setLoading(false);
-        
-        // Mark as read when opened
-        markLinkupChatAsRead(id, currentUser.uid);
-      } else {
-        setError('Chat not found');
-        setLoading(false);
-      }
-    });
+    // Validate chat type
+    if (!type || !['linkup', 'event', 'apartment'].includes(type)) {
+      setError('Invalid chat type');
+      setLoading(false);
+      return;
+    }
     
-    // Subscribe to linkup messages
-    const unsubscribeMessages = subscribeLinkupMessages(id, (messagesData) => {
-      console.log('Received messages:', messagesData.length);
+    let unsubscribeChat = () => {};
+    let unsubscribeMessages = () => {};
+    
+    // Subscribe based on chat type
+    if (type === 'linkup') {
+      console.log('Subscribing to linkup chat...');
       
-      // Transform Firestore messages to match component format
-      const transformedMessages = messagesData.map(msg => ({
-        id: msg.id,
-        text: msg.text,
-        sender: msg.senderId === currentUser.uid ? 'me' : msg.senderId === 'system' ? 'system' : 'other',
-        senderName: msg.senderName,
-        timestamp: new Date(msg.timestamp),
-        delivered: true,
-        read: msg.isRead || false,
-        type: msg.type || 'text',
-        imageUrl: msg.imageUrl,
-      }));
+      unsubscribeChat = subscribeLinkupChat(id, (linkupChatData) => {
+        if (linkupChatData) {
+          console.log('Found linkup chat:', linkupChatData.name);
+          setChatData({
+            id: linkupChatData.linkupId,
+            type: 'group',
+            name: linkupChatData.name,
+            participants: linkupChatData.participantIds?.length || 0,
+            online: 0,
+            admin: linkupChatData.creatorId,
+            photo: linkupChatData.photo,
+          });
+          setLoading(false);
+          
+          // Mark as read
+          markLinkupChatAsRead(id, currentUser.uid);
+        } else {
+          setError('Linkup chat not found');
+          setLoading(false);
+        }
+      });
       
-      setMessages(transformedMessages);
-    });
+      unsubscribeMessages = subscribeLinkupMessages(id, (messagesData) => {
+        console.log('Received linkup messages:', messagesData.length);
+        const transformedMessages = messagesData.map(msg => ({
+          id: msg.id,
+          text: msg.text,
+          sender: msg.senderId === currentUser.uid ? 'me' : msg.senderId === 'system' ? 'system' : 'other',
+          senderName: msg.senderName,
+          timestamp: new Date(msg.timestamp),
+          delivered: true,
+          read: msg.isRead || false,
+          type: msg.type || 'text',
+          imageUrl: msg.imageUrl,
+        }));
+        setMessages(transformedMessages);
+      });
+      
+    } else if (type === 'event') {
+      console.log('Subscribing to event chat...');
+      
+      unsubscribeChat = subscribeEventChat(id, (eventChatData) => {
+        if (eventChatData) {
+          console.log('Found event chat:', eventChatData.name);
+          setChatData({
+            id: eventChatData.eventId,
+            type: 'group',
+            name: eventChatData.name,
+            participants: eventChatData.participantIds?.length || 0,
+            online: 0,
+            admin: eventChatData.creatorId,
+            photo: eventChatData.photo,
+          });
+          setLoading(false);
+          
+          // Mark as read
+          markEventChatAsRead(id, currentUser.uid);
+        } else {
+          setError('Event chat not found');
+          setLoading(false);
+        }
+      });
+      
+      unsubscribeMessages = subscribeEventMessages(id, (messagesData) => {
+        console.log('Received event messages:', messagesData.length);
+        const transformedMessages = messagesData.map(msg => ({
+          id: msg.id,
+          text: msg.text,
+          sender: msg.senderId === currentUser.uid ? 'me' : msg.senderId === 'system' ? 'system' : 'other',
+          senderName: msg.senderName,
+          timestamp: new Date(msg.timestamp),
+          delivered: true,
+          read: msg.isRead || false,
+          type: msg.type || 'text',
+          imageUrl: msg.imageUrl,
+        }));
+        setMessages(transformedMessages);
+      });
+      
+    } else if (type === 'apartment') {
+      // TODO: Implement apartment chat when ready
+      setError('Apartment chats not yet implemented');
+      setLoading(false);
+    }
     
     return () => {
       console.log('Cleaning up chat subscriptions');
       unsubscribeChat();
       unsubscribeMessages();
     };
-  }, [id]);
+  }, [id, type]);
 
   const sendMessage = async () => {
     if (inputText.trim() === "") return;
@@ -125,14 +188,23 @@ export default function ChatScreen() {
     }
     
     try {
-      // Send message to Firebase with username from public profile
-      await sendMessageToLinkupChat(id, {
+      const messageData = {
         text: inputText.trim(),
         senderId: currentUser.uid,
         senderName: username || currentUser.displayName || 'Anonymous',
         senderPhoto: currentUser.photoURL || null,
         type: 'text',
-      });
+      };
+      
+      // Send message based on chat type
+      if (chatType === 'linkup') {
+        await sendMessageToLinkupChat(id, messageData);
+      } else if (chatType === 'event') {
+        await sendMessageToEventChat(id, messageData);
+      } else {
+        console.error('Unknown chat type:', chatType);
+        return;
+      }
       
       setInputText("");
       

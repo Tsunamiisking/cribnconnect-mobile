@@ -238,16 +238,16 @@ export default function MessagesScreen() {
     <TouchableOpacity 
       style={styles.conversationCard}
       onPress={() => {
-        // Navigate to chat screen with the conversation/linkup/event ID
+        // Navigate to chat screen with the conversation ID and type
         if (selectedTab === 'linkups') {
-          // For linkup chats, pass the linkup ID
-          router.push(`/(screens)/chat/${item.id}`);
+          // For linkup chats, pass the linkup ID and type
+          router.push(`/(screens)/chat/${item.id}?type=linkup`);
         } else if (selectedTab === 'events') {
-          // For event chats, pass the event ID
-          router.push(`/(screens)/chat/${item.id}`);
+          // For event chats, pass the event ID and type
+          router.push(`/(screens)/chat/${item.id}?type=event`);
         } else {
-          // For other chats, use the existing ID
-          router.push(`/(screens)/chat/${item.id}`);
+          // For apartment chats, pass the apartment ID and type
+          router.push(`/(screens)/chat/${item.id}?type=apartment`);
         }
       }}
     >
