@@ -595,11 +595,39 @@ const useHostingStore = create(
         const state = get();
         const eventData = state.eventData;
         
+        // Helper function to convert 12-hour time to 24-hour format
+        const convertTo24Hour = (time12h) => {
+          if (!time12h) return null;
+          
+          // If already in 24-hour format (HH:MM), return as is
+          if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time12h)) {
+            return time12h;
+          }
+          
+          // Handle 12-hour format (e.g., "5:00 PM")
+          const [time, modifier] = time12h.split(' ');
+          let [hours, minutes] = time.split(':');
+          
+          if (hours === '12') {
+            hours = '00';
+          }
+          
+          if (modifier === 'PM' || modifier === 'pm') {
+            hours = parseInt(hours, 10) + 12;
+          }
+          
+          return `${hours.toString().padStart(2, '0')}:${minutes}`;
+        };
+        
+        // Convert times to 24-hour format
+        const time24 = convertTo24Hour(eventData.time);
+        const endTime24 = eventData.endTime ? convertTo24Hour(eventData.endTime) : null;
+        
         // Calculate duration in minutes from time and endTime
         let duration = null;
-        if (eventData.time && eventData.endTime) {
-          const [startHour, startMin] = eventData.time.split(':').map(Number);
-          const [endHour, endMin] = eventData.endTime.split(':').map(Number);
+        if (time24 && endTime24) {
+          const [startHour, startMin] = time24.split(':').map(Number);
+          const [endHour, endMin] = endTime24.split(':').map(Number);
           const startMinutes = startHour * 60 + startMin;
           const endMinutes = endHour * 60 + endMin;
           duration = endMinutes - startMinutes;
@@ -611,8 +639,8 @@ const useHostingStore = create(
         return {
           title: eventData.title,
           description: eventData.description,
-          category: eventData.category,
-          eventType: eventData.eventType,
+          category: eventData.category.toLowerCase(), // Convert to lowercase for backend
+          eventType: eventData.eventType.toLowerCase(), // Convert to lowercase for backend
           location: {
             street: eventData.location.street,
             city: eventData.location.city,
@@ -621,8 +649,8 @@ const useHostingStore = create(
             venue: eventData.location.venue,
           },
           date: eventData.date, // Should be a Date object
-          time: eventData.time,
-          endTime: eventData.endTime || null,
+          time: time24,
+          endTime: endTime24,
           duration: duration,
           isFree: eventData.isFree,
           capacity: parseInt(eventData.capacity) || 0,

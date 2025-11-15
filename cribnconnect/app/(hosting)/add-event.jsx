@@ -16,12 +16,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import EventAddress from "./eventSteps/EventAddress";
 import EventDate from "./eventSteps/EventDate";
+import EventImages from "./eventSteps/EventImages";
 import EventSafetyTips from "./eventSteps/EventSafetyTips";
 import EventSpecialPerks from "./eventSteps/EventSpecialPerks";
 import EventTicket from "./eventSteps/EventTicket";
 import EventTitle from "./eventSteps/EventTitle";
 import EventType from "./eventSteps/EventType";
-import EventImages from "./eventSteps/EventImages";
 
 export default function AddEventScreen() {
   const {
@@ -49,9 +49,14 @@ export default function AddEventScreen() {
   }, []);
 
   const handleNext = () => {
+    console.log('=== HANDLE NEXT CALLED ===');
+    console.log('Current Step:', currentStep);
+    console.log('Is Step Valid:', isStepValid(currentStep));
+    
     if (currentStep < 8) {
       nextStep();
     } else {
+      console.log('Calling handleSubmit...');
       handleSubmit();
     }
   };
@@ -79,7 +84,7 @@ export default function AddEventScreen() {
       return;
     }
 
-    if (!eventData.location?.address?.trim()) {
+    if (!eventData.location?.street?.trim()) {
       Alert.alert("Missing Information", "Please provide an event location");
       return;
     }
@@ -202,6 +207,7 @@ export default function AddEventScreen() {
           <HostingButtonNav
             onNext={handleNext}
             onBack={handleBack}
+            onSubmit={handleSubmit}
             onSaveDraft={handleSaveDraft}
             currentStep={currentStep}
             totalSteps={8}
