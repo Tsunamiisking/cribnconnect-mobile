@@ -49,7 +49,7 @@ export default function AddEventScreen() {
   }, []);
 
   const handleNext = () => {
-    if (currentStep < 7) {
+    if (currentStep < 8) {
       nextStep();
     } else {
       handleSubmit();
@@ -182,7 +182,7 @@ export default function AddEventScreen() {
           <View
             style={[
               styles.progressFill,
-              { width: `${(currentStep / 7) * 100}%` },
+              { width: `${(currentStep / 8) * 100}%` },
             ]}
           />
         </View>
@@ -199,10 +199,10 @@ export default function AddEventScreen() {
             onBack={handleBack}
             onSaveDraft={handleSaveDraft}
             currentStep={currentStep}
-            totalSteps={7}
+            totalSteps={8}
             isValid={isStepValid(currentStep)}
             isSubmitting={isSubmitting}
-            isLastStep={currentStep === 7}
+            isLastStep={currentStep === 8}
           />
         </ScrollView>
       </KeyboardAvoidingView>
