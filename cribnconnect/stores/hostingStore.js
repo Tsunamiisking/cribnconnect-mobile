@@ -513,14 +513,14 @@ const useHostingStore = create(
           }
         } else if (state.hostingType === 'event') {
           switch (step) {
-            case 1: return Boolean(data.category && data.eventType);
-            case 2: return Boolean(data.title && data.description);
-            case 3: return Boolean(data.date && data.time);
-            case 4: return Boolean(data.location.street && data.location.city && data.location.state);
-            case 5: return Boolean(data.isFree || data.ticketPrice);
-            case 6: return Boolean(data.capacity); // EventSpecialPerks step - capacity is required
-            case 7: return true; // EventSafetyTips are optional
-            case 8: return true; // EventMedia are optional
+            case 1: return Boolean(data.category && data.eventType); // EventType
+            case 2: return Boolean(data.title && data.description); // EventTitle
+            case 3: return Boolean(data.location.street && data.location.city && data.location.state); // EventAddress
+            case 4: return true; // EventImages - optional
+            case 5: return Boolean(data.isFree || (data.ticketTypes && data.ticketTypes.length > 0)); // EventTicket
+            case 6: return Boolean(data.date && data.time); // EventDate
+            case 7: return Boolean(data.capacity); // EventSpecialPerks - capacity is required
+            case 8: return true; // EventSafetyTips are optional
             default: return false;
           }
         }

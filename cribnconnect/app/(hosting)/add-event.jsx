@@ -65,6 +65,9 @@ export default function AddEventScreen() {
   };
 
   const handleSubmit = async () => {
+    console.log('=== SUBMIT CLICKED ===');
+    console.log('Event Data:', eventData);
+    
     // Validate required fields
     if (!eventData.title?.trim()) {
       Alert.alert("Missing Information", "Please provide an event title");
@@ -101,6 +104,8 @@ export default function AddEventScreen() {
       return;
     }
 
+    console.log('=== ALL VALIDATIONS PASSED ===');
+    
     // Optional: Check for media files
     if (!eventData.media || eventData.media.length === 0) {
       Alert.alert(
