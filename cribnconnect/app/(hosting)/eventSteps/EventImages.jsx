@@ -1,375 +1,387 @@
+import MediaViewer from "@/components/MediaViewer";
 import { Colors } from "@/constants/Colors";
 import useHostingStore from "@/stores/hostingStore";
-import * as ImagePicker from "expo-image-picker";
-import * as VideoThumbnails from "expo-video-thumbnails";
-import { Camera, Image as ImageIcon, Play, RefreshCw, X } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { pickImages, pickVideo } from "@/utils/mediaUtils";
+import { Camera, ImagePlus, Play, X } from "lucide-react-native";
+import { useState } from "react";
 import {
   Alert,
-  Dimensions,
-  FlatList,
   Image,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
 export default function EventImages({ styles }) {
-  const { eventData, addMediaToEvent, removeMediaFromEvent, updateMediaInEvent } = useHostingStore();
-  const [mediaFiles, setMediaFiles] = useState(eventData.media || []);
-  const [isSelecting, setIsSelecting] = useState(false);
+  const { eventData, addMediaToEvent, removeMediaFromEvent } = useHostingStore();
+  const [uploading, setUploading] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
-  // Check for missing media files on component mount
-  useEffect(() => {
-    const checkMediaFiles = async () => {
-      if (mediaFiles.length > 0) {
-        const updatedMedia = mediaFiles.map((media) => {
-          if (!media.localUri || media.localUri === "") {
-            return { ...media, needsReselection: true };
-          }
-          return media;
-        });
-        
-        const hasChanges = updatedMedia.some((m, i) => m.needsReselection !== mediaFiles[i].needsReselection);
-        if (hasChanges) {
-          setMediaFiles(updatedMedia);
-        }
-      }
-    };
-    
-    checkMediaFiles();
-  }, []);
+  const mediaFiles = eventData.media || [];
+  const images = mediaFiles.filter(m => m.resource_type === "image");
+  const video = mediaFiles.find(m => m.resource_type === "video");
 
-  // Update local state when store changes
-  useEffect(() => {
-    setMediaFiles(eventData.media || []);
-  }, [eventData.media]);
-
-  const generateThumbnail = async (videoUri) => {
+  const handleAddImages = async () => {
+    setUploading(true);
     try {
-      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-        time: 0,
-      });
-      return uri;
-    } catch (error) {
-      console.error("Error generating thumbnail:", error);
-      return null;
-    }
-  };
-
-  const handleMediaSelection = async () => {
-    if (isSelecting) return;
-    
-    setIsSelecting(true);
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const selectedImages = await pickImages(images.length, 10); // Max 10 images
       
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please grant media library permissions to upload photos and videos."
-        );
-        setIsSelecting(false);
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-        videoMaxDuration: 60, // 60 seconds max for videos
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const newMediaFiles = [];
-
-        for (const asset of result.assets) {
-          const mediaType = asset.type === "video" ? "video" : "image";
-          let thumbnailUri = null;
-
-          if (mediaType === "video") {
-            thumbnailUri = await generateThumbnail(asset.uri);
-          }
-
-          const mediaFile = {
-            localUri: asset.uri,
-            resource_type: mediaType,
-            localThumbnail: thumbnailUri,
-            width: asset.width,
-            height: asset.height,
-            duration: asset.duration,
-            needsReselection: false,
+      if (selectedImages && selectedImages.length > 0) {
+        for (const img of selectedImages) {
+          const mediaItem = {
+            public_id: null,
+            url: null,
+            resource_type: "image",
+            thumbnail_url: null,
+            width: null,
+            height: null,
+            format: "jpg",
+            size: 0,
+            localUri: img.url,
+            filename: `event_image_${Date.now()}.jpg`,
+            mimeType: "image/jpeg"
           };
-
-          newMediaFiles.push(mediaFile);
-          addMediaToEvent(mediaFile);
+          addMediaToEvent(mediaItem);
         }
-
-        setMediaFiles((prev) => [...prev, ...newMediaFiles]);
       }
     } catch (error) {
-      console.error("Error selecting media:", error);
-      Alert.alert("Error", "Failed to select media. Please try again.");
+      console.error('Error adding images:', error);
+      Alert.alert('Error', 'Failed to add images. Please try again.');
     } finally {
-      setIsSelecting(false);
+      setUploading(false);
     }
   };
 
-  const removeMedia = (index) => {
-    removeMediaFromEvent(index);
-  };
+  const handleAddVideo = async () => {
+    if (video) {
+      Alert.alert(
+        "Video Already Added",
+        "You can only add one video. Remove the existing video first."
+      );
+      return;
+    }
 
-  const handleReselectMedia = async (index) => {
+    setUploading(true);
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const selectedVideo = await pickVideo();
       
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please grant media library permissions to reselect media."
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsMultipleSelection: false,
-        quality: 0.8,
-        videoMaxDuration: 60,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        const mediaType = asset.type === "video" ? "video" : "image";
-        let thumbnailUri = null;
-
-        if (mediaType === "video") {
-          thumbnailUri = await generateThumbnail(asset.uri);
-        }
-
-        const updatedMedia = {
-          localUri: asset.uri,
-          resource_type: mediaType,
-          localThumbnail: thumbnailUri,
-          width: asset.width,
-          height: asset.height,
-          duration: asset.duration,
-          needsReselection: false,
+      if (selectedVideo) {
+        const mediaItem = {
+          public_id: null,
+          url: null,
+          resource_type: "video",
+          thumbnail_url: null,
+          width: null,
+          height: null,
+          format: "mp4",
+          size: 0,
+          localUri: selectedVideo.url,
+          localThumbnail: selectedVideo.thumbnail,
+          filename: `event_video_${Date.now()}.mp4`,
+          duration: 0,
+          mimeType: "video/mp4"
         };
-
-        updateMediaInEvent(index, updatedMedia);
+        addMediaToEvent(mediaItem);
       }
     } catch (error) {
-      console.error("Error reselecting media:", error);
-      Alert.alert("Error", "Failed to reselect media. Please try again.");
+      console.error('Error adding video:', error);
+      Alert.alert('Error', 'Failed to add video. Please try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const renderMediaItem = ({ item, index }) => (
-    <View
-      style={{
-        width: (Dimensions.get("window").width - 72) / 2,
-        height: 160,
-        margin: 6,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: item.needsReselection ? "#FF6B6B" : (styles.borderColor || "#E5E7EB"),
-        overflow: "hidden",
-        position: "relative",
-        backgroundColor: item.needsReselection ? "#FFF5F5" : "transparent",
-      }}
-    >
-      {item.needsReselection ? (
-        <View
-          style={{
-            width: "100%",
-            height: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#F8F8F8",
-          }}
-        >
-          <RefreshCw size={32} color="#FF6B6B" />
-          <Text style={{ 
-            color: "#FF6B6B", 
-            fontSize: 12, 
-            textAlign: "center",
-            marginTop: 8,
-            paddingHorizontal: 8 
-          }}>
-            Media Missing{"\n"}Tap to reselect
-          </Text>
-        </View>
-      ) : item.resource_type === "video" ? (
-        <Image
-          source={{ uri: item.localThumbnail || item.localUri }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      ) : (
-        <Image
-          source={{ uri: item.localUri }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      )}
+  const handleRemoveMedia = (index) => {
+    Alert.alert(
+      "Remove Media",
+      "Are you sure you want to remove this item?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Remove", 
+          style: "destructive",
+          onPress: () => {
+            // Close viewer if it's open
+            if (viewerVisible) {
+              setViewerVisible(false);
+            }
+            removeMediaFromEvent(index);
+          }
+        }
+      ]
+    );
+  };
 
-      {item.resource_type === "video" && !item.needsReselection && (
-        <View
-          style={{
-            position: "absolute",
-            bottom: 8,
-            left: 8,
-            backgroundColor: "rgba(0,0,0,0.75)",
-            paddingHorizontal: 8,
-            paddingVertical: 4,
-            borderRadius: 4,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "white", fontSize: 12, marginRight: 4 }}>
-            Video
-          </Text>
-          <Play size={14} color="white" />
-        </View>
-      )}
+  const handleImagePress = (index) => {
+    setViewerIndex(index);
+    setViewerVisible(true);
+  };
 
-      {item.needsReselection ? (
-        <TouchableOpacity
-          onPress={() => handleReselectMedia(index)}
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            backgroundColor: "#FF6B6B",
-            borderRadius: 12,
-            padding: 6,
-          }}
-        >
-          <RefreshCw size={14} color="white" />
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          onPress={() => removeMedia(index)}
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            backgroundColor: "rgba(0,0,0,0.75)",
-            borderRadius: 12,
-            padding: 4,
-          }}
-        >
-          <X size={16} color="white" />
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+  // Prepare media for viewer (images only)
+  const viewerMedia = images.map(img => ({
+    url: img.localUri,
+    type: 'image'
+  }));
 
   return (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Event Photos & Videos</Text>
-      <Text style={styles.sectionSubtitle}>
-        Add photos and videos to showcase your event (Max 60 seconds for videos)
-      </Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView 
+        style={styles.stepContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.stepTitle}>Event Photos & Video</Text>
+        <Text style={styles.sectionSubtitle}>
+          Showcase your event with high-quality photos and a promotional video
+        </Text>
 
-      <View style={{ marginTop: 24 }}>
-        {/* Media Grid */}
-        {mediaFiles.length > 0 && (
-          <View style={{ marginBottom: 16 }}>
-            <FlatList
-              data={mediaFiles}
-              renderItem={renderMediaItem}
-              keyExtractor={(item, index) => `media-${index}`}
-              numColumns={2}
-              columnWrapperStyle={{
-                justifyContent: "flex-start",
-              }}
-              scrollEnabled={false}
-            />
-          </View>
-        )}
+        {/* Video Section */}
+        <View style={localStyles.section}>
+          <Text style={styles.label}>Promotional Video (Optional)</Text>
+          <Text style={styles.typeOptionDescription}>
+            Add a video to promote your event. Perfect for highlights, teasers, or venue tours.
+          </Text>
 
-        {/* Add Media Button */}
-        <TouchableOpacity
-          onPress={handleMediaSelection}
-          disabled={isSelecting}
-          style={[
-            styles.typeOption,
-            {
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingVertical: 20,
-              borderStyle: "dashed",
-              borderWidth: 2,
-              borderColor: Colors.primary,
-              backgroundColor: Colors.blue50,
-            },
-          ]}
-        >
-          {isSelecting ? (
-            <Text style={[styles.labelText, { color: Colors.primary }]}>
-              Loading...
-            </Text>
-          ) : (
-            <>
-              <Camera size={24} color={Colors.primary} />
-              <Text
-                style={[
-                  styles.labelText,
-                  { color: Colors.primary, marginLeft: 12 },
-                ]}
+          {video ? (
+            <View style={localStyles.videoWrapper}>
+              <Image
+                source={{ uri: video.localThumbnail || video.localUri }}
+                style={localStyles.videoPreview}
+                resizeMode="cover"
+              />
+              <View style={localStyles.videoIndicator}>
+                <Play size={14} color="white" />
+                <Text style={localStyles.videoIndicatorText}>Video</Text>
+              </View>
+              <TouchableOpacity
+                style={localStyles.removeButton}
+                onPress={() => handleRemoveMedia(mediaFiles.findIndex(m => m === video))}
               >
-                {mediaFiles.length > 0 ? "Add More Media" : "Add Photos & Videos"}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-
-        {/* Media Count Info */}
-        {mediaFiles.length > 0 && (
-          <View
-            style={[
-              styles.typeOption,
-              { marginTop: 16, backgroundColor: Colors.blue50 },
-            ]}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <ImageIcon size={20} color={Colors.primary} />
-              <Text
-                style={[
-                  styles.labelText,
-                  { color: Colors.primary, marginLeft: 8 },
-                ]}
-              >
-                {mediaFiles.length} {mediaFiles.length === 1 ? "file" : "files"} added
-              </Text>
+                <X size={16} color={Colors.white} />
+              </TouchableOpacity>
             </View>
-            <Text style={[styles.typeOptionDescription, { marginTop: 8 }]}>
-              {mediaFiles.filter(m => m.resource_type === "image").length} photos • {" "}
-              {mediaFiles.filter(m => m.resource_type === "video").length} videos
-            </Text>
-            {mediaFiles.some(m => m.needsReselection) && (
-              <Text style={{ color: "#FF6B6B", fontSize: 12, marginTop: 8 }}>
-                ⚠️ Some files need to be reselected
+          ) : (
+            <TouchableOpacity
+              style={localStyles.addVideoButton}
+              onPress={handleAddVideo}
+              disabled={uploading}
+            >
+              <Camera size={32} color={Colors.primary} />
+              <Text style={localStyles.addButtonText}>
+                {uploading ? "Adding Video..." : "Add Video"}
               </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Photos Section */}
+        <View style={localStyles.section}>
+          <Text style={styles.label}>Event Photos (Optional)</Text>
+          <Text style={styles.typeOptionDescription}>
+            Add up to 10 photos of the event venue, atmosphere, or past events. First photo will be the cover.
+          </Text>
+
+          <View style={localStyles.imagesContainer}>
+            {images.map((img, index) => (
+              <TouchableOpacity
+                key={`image-${index}`}
+                style={localStyles.imageWrapper}
+                onPress={() => handleImagePress(index)}
+              >
+                <Image
+                  source={{ uri: img.localUri }}
+                  style={localStyles.imagePreview}
+                  resizeMode="cover"
+                />
+                {index === 0 && (
+                  <View style={localStyles.mainBadge}>
+                    <Text style={localStyles.mainBadgeText}>Cover</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={localStyles.removeButton}
+                  onPress={() => handleRemoveMedia(mediaFiles.findIndex(m => m === img))}
+                >
+                  <X size={16} color={Colors.white} />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+
+            {images.length < 10 && (
+              <TouchableOpacity
+                style={localStyles.addImageButton}
+                onPress={handleAddImages}
+                disabled={uploading}
+              >
+                <ImagePlus size={32} color={Colors.primary} />
+                <Text style={localStyles.addButtonText}>
+                  {uploading ? "Adding..." : "Add Photos"}
+                </Text>
+                {images.length > 0 && (
+                  <Text style={localStyles.countText}>
+                    {images.length}/10
+                  </Text>
+                )}
+              </TouchableOpacity>
             )}
           </View>
-        )}
-
-        {/* Tips */}
-        <View style={{ marginTop: 16 }}>
-          <Text style={[styles.typeOptionDescription, { fontSize: 13 }]}>
-            💡 Tips:{"\n"}
-            • Add high-quality photos showing the event venue, atmosphere, or past events{"\n"}
-            • Videos should be under 60 seconds{"\n"}
-            • Include promotional content, highlights, or teaser clips{"\n"}
-            • First image will be used as the cover photo
-          </Text>
         </View>
-      </View>
+
+        {/* Tips Section */}
+        <View style={localStyles.tipsContainer}>
+          <Text style={styles.label}>📸 Media Tips</Text>
+          <View style={localStyles.tipsList}>
+            <Text style={localStyles.tipText}>• Show the venue, atmosphere, and key features</Text>
+            <Text style={localStyles.tipText}>• Include photos from past events if available</Text>
+            <Text style={localStyles.tipText}>• Videos should be under 60 seconds</Text>
+            <Text style={localStyles.tipText}>• Use high-quality, well-lit content</Text>
+            <Text style={localStyles.tipText}>• Tap any photo to view full size</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Image Viewer Modal */}
+      <MediaViewer
+        visible={viewerVisible}
+        onClose={() => setViewerVisible(false)}
+        media={viewerMedia}
+        initialIndex={viewerIndex}
+      />
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  section: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  videoWrapper: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+    marginTop: 12,
+  },
+  videoPreview: {
+    width: "100%",
+    height: "100%",
+  },
+  videoIndicator: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  videoIndicatorText: {
+    color: "white",
+    fontSize: 12,
+    marginLeft: 4,
+    fontFamily: "Sora-Regular",
+  },
+  addVideoButton: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    backgroundColor: Colors.gray100,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  imagesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 12,
+  },
+  imageWrapper: {
+    width: "30%",
+    aspectRatio: 3 / 4,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+  },
+  mainBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  mainBadgeText: {
+    color: Colors.white,
+    fontSize: 10,
+    fontFamily: "Sora-Medium",
+  },
+  removeButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addImageButton: {
+    width: "30%",
+    aspectRatio: 3 / 4,
+    backgroundColor: Colors.gray100,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButtonText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.primary,
+    textAlign: "center",
+  },
+  countText: {
+    marginTop: 4,
+    fontSize: 12,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+  },
+  tipsContainer: {
+    marginTop: 24,
+    marginBottom: 32,
+    padding: 16,
+    backgroundColor: Colors.blue50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primary + "20",
+  },
+  tipsList: {
+    marginTop: 8,
+  },
+  tipText: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray700,
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+});

@@ -21,6 +21,7 @@ import EventSpecialPerks from "./eventSteps/EventSpecialPerks";
 import EventTicket from "./eventSteps/EventTicket";
 import EventTitle from "./eventSteps/EventTitle";
 import EventType from "./eventSteps/EventType";
+import EventImages from "./eventSteps/EventImages";
 
 export default function AddEventScreen() {
   const {
@@ -159,12 +160,14 @@ export default function AddEventScreen() {
       case 3:
         return <EventAddress styles={styles} />;
       case 4:
-        return <EventTicket styles={styles} />;
+        return <EventImages styles={styles} />;
       case 5:
-        return <EventDate styles={styles} />;
+        return <EventTicket styles={styles} />;
       case 6:
-        return <EventSpecialPerks styles={styles} />;
+        return <EventDate styles={styles} />;
       case 7:
+        return <EventSpecialPerks styles={styles} />;
+      case 8:
         return <EventSafetyTips styles={styles} />;
       default:
         return null;
