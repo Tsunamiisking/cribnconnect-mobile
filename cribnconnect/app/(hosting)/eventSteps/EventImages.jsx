@@ -27,7 +27,7 @@ export default function EventImages({ styles }) {
   const handleAddImages = async () => {
     setUploading(true);
     try {
-      const selectedImages = await pickImages(images.length, 10); // Max 10 images
+      const selectedImages = await pickImages(images.length, 2); // Max 10 images
       
       if (selectedImages && selectedImages.length > 0) {
         for (const img of selectedImages) {
@@ -180,7 +180,7 @@ export default function EventImages({ styles }) {
         <View style={localStyles.section}>
           <Text style={styles.label}>Event Photos (Optional)</Text>
           <Text style={styles.typeOptionDescription}>
-            Add up to 10 photos of the event venue, atmosphere, or past events. First photo will be the cover.
+            Add up to 2 photos of the event venue, atmosphere, or past events. First photo will be the cover.
           </Text>
 
           <View style={localStyles.imagesContainer}>
@@ -209,7 +209,7 @@ export default function EventImages({ styles }) {
               </TouchableOpacity>
             ))}
 
-            {images.length < 10 && (
+            {images.length < 2 && (
               <TouchableOpacity
                 style={localStyles.addImageButton}
                 onPress={handleAddImages}
@@ -221,7 +221,7 @@ export default function EventImages({ styles }) {
                 </Text>
                 {images.length > 0 && (
                   <Text style={localStyles.countText}>
-                    {images.length}/10
+                    {images.length}/2
                   </Text>
                 )}
               </TouchableOpacity>
