@@ -4,10 +4,13 @@ import ApartmentTab from "@/components/ApartmentTab";
 import BackHeader from "@/components/BackHeader";
 import EventTab from "@/components/EventTab";
 import HostedTabSelector from "@/components/HostedTabSelector";
+import ProcessingItemCard from "@/components/ProcessingItemCard";
 import { Colors } from "@/constants/Colors";
+import useProcessingStore from "@/stores/processingStore";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 // Mock data for hosted apartments
 // const HOSTED_APARTMENTS = [
@@ -236,10 +239,16 @@ export default function MyHostedItemsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApartmentCategory, setSelectedApartmentCategory] = useState("All");
   const [selectedEventCategory, setSelectedEventCategory] = useState("All");
+  const [showProcessing, setShowProcessing] = useState(true);
   
   // State for actual data
   const [apartments, setApartments] = useState([]);
   const [events, setEvents] = useState([]);
+  
+  // Get processing items from store
+  const { getProcessingItems, getProcessingCount, removeProcessingItem } = useProcessingStore();
+  const processingItems = getProcessingItems();
+  const processingCount = getProcessingCount();
 
   // Fetch apartments
   const fetchApartments = async () => {
@@ -350,6 +359,23 @@ export default function MyHostedItemsScreen() {
     
     loadData();
   }, []);
+  
+  // Auto-refresh when processing items complete
+  useEffect(() => {
+    const hasCompleted = processingItems.some(item => item.status === 'completed');
+    if (hasCompleted) {
+      // Refresh the appropriate data
+      const timer = setTimeout(() => {
+        if (activeTab === 'apartments') {
+          fetchApartments();
+        } else {
+          fetchEvents();
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [processingItems, activeTab]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -405,10 +431,65 @@ export default function MyHostedItemsScreen() {
       setSelectedEventCategory("All"); // Reset event category when switching to events
     }
   };
+  
+  const handleRetryUpload = async (item) => {
+    Alert.alert(
+      'Retry Upload',
+      `Do you want to retry uploading "${item.title || 'this item'}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Retry',
+          onPress: () => {
+            // TODO: Implement retry logic
+            // For now, just remove the failed item
+            removeProcessingItem(item.id);
+            Alert.alert('Info', 'Please re-submit your listing from the Add Apartment/Event screen.');
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <BackHeader title="Host Dashboard" showUser={false} />
+      
+      {/* Processing Items Banner */}
+      {processingCount > 0 && (
+        <View style={styles.processingBanner}>
+          <View style={styles.processingHeader}>
+            <View style={styles.processingTitleRow}>
+              <Ionicons name="sync-circle" size={20} color={Colors.primary} />
+              <Text style={styles.processingTitle}>
+                Processing Items ({processingCount})
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => setShowProcessing(!showProcessing)}>
+              <Ionicons 
+                name={showProcessing ? "chevron-up" : "chevron-down"} 
+                size={20} 
+                color={Colors.gray600} 
+              />
+            </TouchableOpacity>
+          </View>
+          
+          {showProcessing && (
+            <ScrollView 
+              style={styles.processingList}
+              showsVerticalScrollIndicator={false}
+            >
+              {processingItems.map(item => (
+                <ProcessingItemCard 
+                  key={item.id} 
+                  item={item}
+                  onRetry={handleRetryUpload}
+                />
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      )}
       
       <HostedTabSelector activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -451,6 +532,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  processingBanner: {
+    backgroundColor: Colors.gray50,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  processingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  processingTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  processingTitle: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 14,
+    color: Colors.gray900,
+  },
+  processingList: {
+    maxHeight: 250,
   },
   tabContentContainer: {
     flex: 1,

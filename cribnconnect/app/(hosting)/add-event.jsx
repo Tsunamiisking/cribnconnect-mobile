@@ -33,6 +33,7 @@ export default function AddEventScreen() {
     nextStep,
     previousStep,
     submitListing,
+    submitListingOptimistic,
     saveAsDraft,
     isSubmitting,
     isStepValid,
@@ -135,15 +136,17 @@ export default function AddEventScreen() {
   };
 
   const submitEvent = async () => {
-    const result = await submitListing();
+    // Use optimistic submission - adds to queue and uploads in background
+    const result = await submitListingOptimistic();
+    
     if (result.success) {
       Alert.alert(
-        "Success!",
-        "Your event has been created successfully! A group chat has been set up for attendees.",
+        "Uploading! 📤",
+        result.message || "Your event is being uploaded in the background. A group chat will be created for attendees once complete. Check the Host Dashboard to see the progress.",
         [
           {
-            text: "OK",
-            onPress: () => router.push("/(tabs)/events")
+            text: "View Dashboard",
+            onPress: () => router.push("/(hosting)/my-hosted-items")
           }
         ]
       );

@@ -17,6 +17,7 @@ export const Colors = {
   // Additional colors used throughout the app
   emerald: "#10b981", // Used for liked hearts and price text
   success: "#10b981", // Used for active status indicators
+  error: "#ef4444", // Used for error states and failed indicators
   amber: "#f59e0b", // Used for day time indicator
   indigo: "#6366f1", // Used for night time indicator
   

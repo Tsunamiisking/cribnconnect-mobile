@@ -38,6 +38,7 @@ export default function AddApartmentScreen() {
     updateApartmentData,
     updateApartmentNestedData,
     submitListing,
+    submitListingOptimistic,
     saveAsDraft,
     isSubmitting,
     isStepValid,
@@ -87,16 +88,17 @@ export default function AddApartmentScreen() {
     setIsSubmittingData(true);
     
     try {
-      const result = await submitListing();
+      // Use optimistic submission - adds to queue and uploads in background
+      const result = await submitListingOptimistic();
       
       if (result.success) {
         Alert.alert(
-          'Success! 🎉',
-          result.message || 'Your apartment has been listed successfully!',
+          'Uploading! 📤',
+          result.message || 'Your apartment is being uploaded in the background. Check the Host Dashboard to see the progress.',
           [
             {
-              text: 'View My Listings',
-              onPress: () => router.push("/(tabs)"),
+              text: 'View Dashboard',
+              onPress: () => router.push("/(hosting)/my-hosted-items"),
             },
           ]
         );

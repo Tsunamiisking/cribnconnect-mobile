@@ -738,6 +738,126 @@ const useHostingStore = create(
           set({ isSubmitting: false });
         }
       },
+      
+      /**
+       * Optimistic submission - Add to processing queue and submit in background
+       * Returns immediately with a temp ID
+       */
+      submitListingOptimistic: async () => {
+        const state = get();
+        const { default: useProcessingStore } = await import('./processingStore');
+        
+        try {
+          // Create temp item for immediate display
+          const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          
+          let itemData;
+          let type;
+          let backendData;
+          
+          if (state.hostingType === 'apartment') {
+            type = 'apartment';
+            backendData = state.getBackendApartmentData();
+            itemData = {
+              title: state.apartmentData.title,
+              location: `${state.apartmentData.address.city}, ${state.apartmentData.address.state}`,
+              price: `₦${state.apartmentData.pricePerNight || 0}/night`,
+              images: state.apartmentData.media?.slice(0, 1).map(m => m.uri || m.url) || [],
+              status: 'processing',
+            };
+          } else if (state.hostingType === 'event') {
+            type = 'event';
+            backendData = state.getBackendEventData();
+            itemData = {
+              title: state.eventData.title,
+              location: `${state.eventData.location.city}, ${state.eventData.location.state}`,
+              date: state.eventData.date,
+              images: state.eventData.media?.slice(0, 1).map(m => m.uri || m.url) || [],
+              status: 'processing',
+            };
+          } else {
+            throw new Error('Invalid hosting type');
+          }
+          
+          // Add to processing queue
+          useProcessingStore.getState().addProcessingItem({
+            id: tempId,
+            type,
+            data: itemData,
+            status: 'uploading',
+            progress: 0,
+          });
+          
+          // Reset current hosting session
+          state.resetCurrentHosting();
+          
+          // Return immediately with temp ID
+          const result = {
+            success: true,
+            tempId,
+            processing: true,
+            message: `Your ${type} is being uploaded in the background. You can continue using the app!`,
+          };
+          
+          // Start background upload (don't await)
+          state.backgroundUpload(tempId, type, backendData);
+          
+          return result;
+          
+        } catch (error) {
+          console.error('Optimistic submission error:', error);
+          return {
+            success: false,
+            error: error.message || 'Failed to queue submission',
+          };
+        }
+      },
+      
+      /**
+       * Background upload function
+       */
+      backgroundUpload: async (tempId, type, backendData) => {
+        const { default: useProcessingStore } = await import('./processingStore');
+        
+        try {
+          // Update progress
+          useProcessingStore.getState().updateProcessingItem(tempId, {
+            status: 'processing',
+            progress: 20,
+          });
+          
+          let response;
+          
+          if (type === 'apartment') {
+            const { createApartment } = await import('../api/services/apartmentServices');
+            response = await createApartment(backendData);
+          } else if (type === 'event') {
+            const { createEvent } = await import('../api/services/eventServices');
+            response = await createEvent(backendData);
+          }
+          
+          console.log(`${type} uploaded successfully:`, response);
+          
+          // Extract real ID from response
+          const realId = response?.data?.apartment?._id || response?.data?.event?._id || response?.data?._id;
+          
+          // Mark as completed
+          useProcessingStore.getState().completeProcessingItem(tempId, realId, {
+            status: 'active',
+          });
+          
+        } catch (error) {
+          console.error('Background upload failed:', error);
+          
+          const errorMessage = error.response?.data?.message 
+            || error.response?.data?.error 
+            || error.message 
+            || 'Upload failed';
+          
+          // Mark as failed
+          useProcessingStore.getState().failProcessingItem(tempId, errorMessage);
+        }
+      },
     }),
     {
       name: 'hosting-storage',
