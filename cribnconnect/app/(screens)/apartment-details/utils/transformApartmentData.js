@@ -84,6 +84,10 @@ export const transformApartmentData = (apiData) => {
       revenue: apiData.revenue || 0,
     },
     
+    // Rating and reviews
+    rating: apiData.rating || 0,
+    reviewCount: apiData.reviewCount || 0,
+    
     // Media - transform media array
     media: (apiData.media || []).map((mediaItem, index) => ({
       resource_type: mediaItem.resourceType || mediaItem.resource_type || 'image',

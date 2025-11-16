@@ -1,4 +1,4 @@
-import {Colors} from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { Bath, Bed, MapPin, Star, Users } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -50,14 +50,18 @@ const ApartmentInfo = ({ apartment, apartmentTypeIcons }) => {
       </View>
 
       {/* Rating Section */}
-      {(apartment.rating > 0 || apartment.reviewCount > 0) && (
-        <View style={styles.ratingSection}>
-          <Star size={16} color={Colors.amber} fill={Colors.amber} />
-          <Text style={styles.ratingText}>
-            {apartment.rating?.toFixed(1) || '0.0'} ({apartment.reviewCount || 0} {apartment.reviewCount === 1 ? 'review' : 'reviews'})
-          </Text>
-        </View>
-      )}
+      <View style={styles.ratingSection}>
+        {(apartment.rating > 0 || apartment.reviewCount > 0) ? (
+          <>
+            <Star size={16} color={Colors.amber} fill={Colors.amber} />
+            <Text style={styles.ratingText}>
+              {apartment.rating?.toFixed(1) || '0.0'} ({apartment.reviewCount || 0} {apartment.reviewCount === 1 ? 'review' : 'reviews'})
+            </Text>
+          </>
+        ) : (
+          <Text style={styles.noRatingText}>No ratings for this apartment</Text>
+        )}
+      </View>
 
       {/* Room Section */}
       <View style={styles.roomSection}>
@@ -169,6 +173,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Sora-Medium',
     color: Colors.black,
+  },
+  noRatingText: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray500,
+    fontStyle: 'italic',
   },
   roomSection: {
     marginBottom: 20,
