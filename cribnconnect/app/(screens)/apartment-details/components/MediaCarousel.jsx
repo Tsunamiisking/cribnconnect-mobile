@@ -1,19 +1,19 @@
 import { Colors } from '@/constants/Colors';
+import { ResizeMode, Video } from 'expo-av';
 import { ChevronLeft, ChevronRight, Grid3X3, Play, X, ZoomIn } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
 import {
-  Dimensions,
-  FlatList,
-  Image,
-  Modal,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    FlatList,
+    Image,
+    Modal,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
