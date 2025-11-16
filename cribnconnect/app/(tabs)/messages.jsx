@@ -55,11 +55,11 @@ const APARTMENT_CONVERSATIONS = [
 ];
 
 // Event conversations will be fetched from Firestore
-const EVENT_CONVERSATIONS = [];
+// const EVENT_CONVERSATIONS = [];
 
 // Conversations from linkups that the user has joined (but not created)
 // This will be replaced with real Firestore data
-const LINKUP_CONVERSATIONS = [];
+// const LINKUP_CONVERSATIONS = [];
 
 const MESSAGE_TABS = [
   { id: 'apartments', title: 'Apartments', icon: 'building' },
