@@ -1,31 +1,31 @@
+import { getApartmentById } from '@/api/services/apartmentServices';
 import { Colors } from '@/constants/Colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import {
-    ArrowLeft,
-    Building2,
-    Caravan,
-    Container,
-    Heart,
-    Hotel,
-    House,
-    Share2,
-    Ship,
-    Tent,
-    Trees,
+  ArrowLeft,
+  Building2,
+  Caravan,
+  Container,
+  Heart,
+  Hotel,
+  House,
+  Share2,
+  Ship,
+  Tent,
+  Trees,
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getApartmentById } from '@/api/services/apartmentServices';
 import { transformApartmentData } from './utils/transformApartmentData';
 
 // Import components
@@ -121,37 +121,43 @@ const ApartmentDetailsScreen = () => {
         // Fetch real apartment data from API
         const rawApartmentData = await getApartmentById(id);
         
-        console.log('=== RAW APARTMENT DATA FROM API ===');
-        console.log('Raw Data:', JSON.stringify(rawApartmentData, null, 2));
-        console.log('===================================');
+        // console.log('=== RAW APARTMENT DATA FROM API ===');
+        // console.log('Raw Data:', JSON.stringify(rawApartmentData, null, 2));
+        // console.log('===================================');
         
         // Transform the data to match component expectations
         const apartmentData = transformApartmentData(rawApartmentData);
         
-        console.log('=== TRANSFORMED APARTMENT DATA ===');
-        console.log('Apartment ID:', id);
-        console.log('Apartment Type:', apartmentData.apartmentType);
-        console.log('Space Type:', apartmentData.space);
-        console.log('Host ID:', apartmentData.hostId);
-        console.log('Location:', apartmentData.location);
-        console.log('Pricing:', apartmentData.pricing);
-        console.log('Rooms:', apartmentData.rooms);
-        console.log('Amenities - Basic:', apartmentData.amenities.basic);
-        console.log('Amenities - Luxury:', apartmentData.amenities.luxury);
-        console.log('Amenities - Shared:', apartmentData.amenities.shared);
-        console.log('Amenities - Other:', apartmentData.amenities.other);
-        console.log('Media Count:', apartmentData.media?.length || 0);
-        console.log('Is Published:', apartmentData.isPublished);
-        console.log('Stats:', apartmentData.stats);
-        console.log('===================================');
+        // console.log('=== TRANSFORMED APARTMENT DATA ===');
+        // console.log('Apartment ID:', id);
+        // console.log('Apartment Type:', apartmentData.apartmentType);
+        // console.log('Space Type:', apartmentData.space);
+        // console.log('Host ID:', apartmentData.hostId);
+        // console.log('Location:', apartmentData.location);
+        // console.log('Pricing:', apartmentData.pricing);
+        // console.log('Rooms:', apartmentData.rooms);
+        // console.log('Amenities - Basic:', apartmentData.amenities.basic);
+        // console.log('Amenities - Luxury:', apartmentData.amenities.luxury);
+        // console.log('Amenities - Shared:', apartmentData.amenities.shared);
+        // console.log('Amenities - Other:', apartmentData.amenities.other);
+        // console.log('Media Count:', apartmentData.media?.length || 0);
+        // console.log('Is Published:', apartmentData.isPublished);
+        // console.log('Stats:', apartmentData.stats);
+        // console.log('===================================');
         
         setApartment(apartmentData);
         
         // Check if current user is the host
         const auth = getAuth();
         const currentUserId = auth?.currentUser?.uid;
-        console.log('Current User ID:', currentUserId);
-        console.log('Is Host:', currentUserId === apartmentData.hostId);
+        // console.log('=== HOST DETECTION ===');
+        // console.log('Current User ID:', currentUserId);
+        // console.log('Apartment Host ID:', apartmentData.hostId);
+        // console.log('Host ID Type:', typeof apartmentData.hostId);
+        // console.log('User ID Type:', typeof currentUserId);
+        // console.log('Are they equal?:', currentUserId === apartmentData.hostId);
+        // console.log('Is Host:', currentUserId === apartmentData.hostId);
+        // console.log('======================');
         
         setIsHost(currentUserId === apartmentData.hostId);
         setLoading(false);
@@ -222,6 +228,7 @@ const ApartmentDetailsScreen = () => {
               isHost={isHost}
               onApartmentUpdate={handleApartmentUpdate}
               onApartmentDelete={handleApartmentDelete}
+              section="menuButton"
             />
           ) : (
             <>
@@ -242,14 +249,15 @@ const ApartmentDetailsScreen = () => {
           )}
         </View>
       </View>
-      
-      {/* Host Stats Banner - Only visible to hosts */}
+
+      {/* Stats Banner - Below header for hosts */}
       {isHost && (
         <HostManagement 
           apartment={apartment}
           isHost={isHost}
           onApartmentUpdate={handleApartmentUpdate}
           onApartmentDelete={handleApartmentDelete}
+          section="statsBanner"
         />
       )}
 
@@ -264,16 +272,6 @@ const ApartmentDetailsScreen = () => {
           apartment={apartment} 
           apartmentTypeIcons={apartmentTypeIcons}
         />
-        
-        {/* Host Quick Actions - Only visible to hosts */}
-        {isHost && (
-          <HostManagement 
-            apartment={apartment}
-            isHost={isHost}
-            onApartmentUpdate={handleApartmentUpdate}
-            onApartmentDelete={handleApartmentDelete}
-          />
-        )}
 
         {/* Amenities */}
         <AmenitiesSection 
@@ -281,8 +279,19 @@ const ApartmentDetailsScreen = () => {
           amenityIcons={amenityIcons}
         />
 
-        {/* Host Info */}
-        <HostInfo houseRules={apartment.houseRules} />
+        {/* Host Info - Only visible to guests */}
+        {!isHost && <HostInfo houseRules={apartment.houseRules} />}
+
+        {/* Quick Actions - Below Host Info for hosts */}
+        {isHost && (
+          <HostManagement 
+            apartment={apartment}
+            isHost={isHost}
+            onApartmentUpdate={handleApartmentUpdate}
+            onApartmentDelete={handleApartmentDelete}
+            section="quickActions"
+          />
+        )}
       </ScrollView>
 
       {/* Bottom Bar - Only visible to guests */}

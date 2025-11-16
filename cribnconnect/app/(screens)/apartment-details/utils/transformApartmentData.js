@@ -27,16 +27,19 @@ export const transformApartmentData = (apiData) => {
     apartmentType: apiData.apartmentType || 'Apartment',
     space: apiData.apartmentCategory || 'Whole Space',
     
-    // Host info
-    hostId: apiData.hostId?._id || apiData.hostId || apiData.userId,
+    // Host info - extract uid from hostId object if it's an object
+    hostId: apiData.hostId?.uid || apiData.hostId?._id || apiData.hostId || apiData.userId,
     isPublished: apiData.isPublished ?? true,
     isAvailable: apiData.isAvailable ?? true,
     
     // Rooms - map backend fields to component expectations
+    // If privateBathrooms/sharedBathrooms are 0, use total bathrooms count
     rooms: {
       beds: (apiData.bedrooms || 0).toString(),
       rooms: (apiData.bedrooms || 0).toString(),
-      privateBathIn: (apiData.privateBathrooms || 0).toString(),
+      privateBathIn: apiData.privateBathrooms 
+        ? apiData.privateBathrooms.toString() 
+        : (apiData.bathrooms || 0).toString(),
       privateBathOut: '0',
       sharedBath: (apiData.publicBathrooms || apiData.sharedBathrooms || 0).toString(),
     },
