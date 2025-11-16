@@ -70,14 +70,14 @@ const AmenitiesSection = ({ amenities, amenityIcons }) => {
 
 const styles = StyleSheet.create({
   amenitiesSection: {
-    marginBottom: 24,
-    paddingBottom: 24,
+    marginBottom: 20,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: Colors.gray200,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Sora-SemiBold',
     color: Colors.black,
     marginBottom: 16,

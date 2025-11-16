@@ -6,6 +6,19 @@ import { StyleSheet, Text, View } from 'react-native';
 const ApartmentInfo = ({ apartment, apartmentTypeIcons }) => {
   const ApartmentTypeIcon = apartmentTypeIcons[apartment.apartmentType];
   
+  const convertApartmentSpace = (space) => {
+    switch(space) {
+      case 'whole':
+        return 'Whole Apartment';
+      case 'private':
+        return 'Private Room';      
+      case 'shared':
+        return 'Shared Room';
+      default:
+        return space;
+    }
+  };
+
   const totalBaths = 
     parseInt(apartment.rooms.privateBathIn || 0) + 
     parseInt(apartment.rooms.privateBathOut || 0) + 
@@ -24,7 +37,7 @@ const ApartmentInfo = ({ apartment, apartmentTypeIcons }) => {
             <Text style={styles.typeText}>{apartment.apartmentType}</Text>
           </View>
         </View>
-        <Text style={styles.spaceType}>{apartment.space}</Text>
+        <Text style={styles.spaceType}>{convertApartmentSpace(apartment.space)}</Text>
       </View>
 
       {/* Location Section */}
@@ -37,10 +50,14 @@ const ApartmentInfo = ({ apartment, apartmentTypeIcons }) => {
       </View>
 
       {/* Rating Section */}
-      <View style={styles.ratingSection}>
-        <Star size={16} color={Colors.amber} fill={Colors.amber} />
-        <Text style={styles.ratingText}>4.8 (124 reviews)</Text>
-      </View>
+      {(apartment.rating > 0 || apartment.reviewCount > 0) && (
+        <View style={styles.ratingSection}>
+          <Star size={16} color={Colors.amber} fill={Colors.amber} />
+          <Text style={styles.ratingText}>
+            {apartment.rating?.toFixed(1) || '0.0'} ({apartment.reviewCount || 0} {apartment.reviewCount === 1 ? 'review' : 'reviews'})
+          </Text>
+        </View>
+      )}
 
       {/* Room Section */}
       <View style={styles.roomSection}>
@@ -193,7 +210,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Sora-SemiBold',
     color: Colors.black,
     marginBottom: 12,
