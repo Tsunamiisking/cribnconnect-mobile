@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/Colors';
-import { ResizeMode, Video } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { ChevronLeft, ChevronRight, Grid3X3, Play, X, ZoomIn } from 'lucide-react-native';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
     Dimensions,
     FlatList,
@@ -17,6 +17,43 @@ import {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// Separate component for video to properly use useVideoPlayer hook
+const VideoPlayer = ({ item, isPlaying, onTogglePlay }) => {
+  const player = useVideoPlayer(item.localUri || item.url, (player) => {
+    player.loop = true;
+    player.muted = false;
+  });
+
+  const handlePress = () => {
+    if (isPlaying) {
+      player.pause();
+    } else {
+      player.play();
+    }
+    onTogglePlay();
+  };
+
+  return (
+    <TouchableOpacity 
+      style={styles.fullScreenVideoContainer}
+      onPress={handlePress}
+      activeOpacity={1}
+    >
+      <VideoView
+        player={player}
+        style={styles.fullScreenVideo}
+        contentFit="contain"
+        nativeControls={false}
+      />
+      {!isPlaying && (
+        <View style={styles.fullScreenPlayButton}>
+          <Play size={40} color={Colors.white} fill={Colors.white} />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
 const MediaCarousel = ({ media }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullScreenMedia, setShowFullScreenMedia] = useState(false);
@@ -26,7 +63,6 @@ const MediaCarousel = ({ media }) => {
   
   const fullScreenFlatListRef = useRef(null);
   const mainFlatListRef = useRef(null);
-  const videoRefs = useRef({});
 
   const openFullScreenMedia = (index) => {
     setFullScreenIndex(index);
@@ -44,10 +80,6 @@ const MediaCarousel = ({ media }) => {
   };
 
   const closeFullScreenMedia = () => {
-    // Pause any playing video
-    if (playingVideoIndex !== null && videoRefs.current[playingVideoIndex]) {
-      videoRefs.current[playingVideoIndex]?.pauseAsync();
-    }
     setPlayingVideoIndex(null);
     setShowFullScreenMedia(false);
   };
@@ -158,18 +190,11 @@ const MediaCarousel = ({ media }) => {
     const isVideo = item.resource_type === 'video';
     const isPlaying = playingVideoIndex === index;
 
-    const handleVideoPress = async () => {
+    const handleTogglePlay = () => {
       if (isPlaying) {
-        // Pause video
-        await videoRefs.current[index]?.pauseAsync();
         setPlayingVideoIndex(null);
       } else {
-        // Pause any other playing video
-        if (playingVideoIndex !== null && videoRefs.current[playingVideoIndex]) {
-          await videoRefs.current[playingVideoIndex]?.pauseAsync();
-        }
-        // Play this video
-        await videoRefs.current[index]?.playAsync();
+        // Pause any other video first
         setPlayingVideoIndex(index);
       }
     };
@@ -177,30 +202,11 @@ const MediaCarousel = ({ media }) => {
     return (
       <View style={styles.fullScreenContainer} key={`fullscreen-${index}`}>
         {isVideo ? (
-          <TouchableOpacity 
-            style={styles.fullScreenVideoContainer}
-            onPress={handleVideoPress}
-            activeOpacity={1}
-          >
-            <Video
-              ref={(ref) => { videoRefs.current[index] = ref; }}
-              source={{ uri: item.localUri || item.url }}
-              style={styles.fullScreenVideo}
-              resizeMode={ResizeMode.CONTAIN}
-              useNativeControls={false}
-              isLooping
-              onPlaybackStatusUpdate={(status) => {
-                if (status.didJustFinish) {
-                  setPlayingVideoIndex(null);
-                }
-              }}
-            />
-            {!isPlaying && (
-              <View style={styles.fullScreenPlayButton}>
-                <Play size={40} color={Colors.white} fill={Colors.white} />
-              </View>
-            )}
-          </TouchableOpacity>
+          <VideoPlayer
+            item={item}
+            isPlaying={isPlaying}
+            onTogglePlay={handleTogglePlay}
+          />
         ) : (
           <Image 
             source={{ uri: item.localUri || item.url }} 
@@ -292,9 +298,8 @@ const MediaCarousel = ({ media }) => {
             })}
             onMomentumScrollEnd={(event) => {
               const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-              // Pause any playing video when scrolling to another item
-              if (playingVideoIndex !== null && playingVideoIndex !== index && videoRefs.current[playingVideoIndex]) {
-                videoRefs.current[playingVideoIndex]?.pauseAsync();
+              // Reset playing state when scrolling to another item
+              if (playingVideoIndex !== null && playingVideoIndex !== index) {
                 setPlayingVideoIndex(null);
               }
               setFullScreenIndex(index);
