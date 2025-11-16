@@ -58,9 +58,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="bookmarks"
+        name="favourites"
         options={{
-          title: "Bookmarks",
+          title: "Favourites",
           tabBarIcon: ({ color }) => <Heart size={24} color={color} />,
         }}
       />
