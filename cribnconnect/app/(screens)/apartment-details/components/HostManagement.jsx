@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: Colors.gray200,
-    alignItems: "center",
+    // alignItems: "center",
   },
   statItem: {
     flex: 1,

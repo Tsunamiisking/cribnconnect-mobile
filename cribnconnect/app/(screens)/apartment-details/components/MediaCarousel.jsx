@@ -13,17 +13,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Video, ResizeMode } from 'expo-av';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const MediaCarousel = ({ media }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullScreenMedia, setShowFullScreenMedia] = useState(false);
   const [fullScreenIndex, setFullScreenIndex] = useState(0);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const [playingVideoIndex, setPlayingVideoIndex] = useState(null);
   
   const fullScreenFlatListRef = useRef(null);
   const mainFlatListRef = useRef(null);
+  const videoRefs = useRef({});
 
   const openFullScreenMedia = (index) => {
     setFullScreenIndex(index);
@@ -41,6 +44,11 @@ const MediaCarousel = ({ media }) => {
   };
 
   const closeFullScreenMedia = () => {
+    // Pause any playing video
+    if (playingVideoIndex !== null && videoRefs.current[playingVideoIndex]) {
+      videoRefs.current[playingVideoIndex]?.pauseAsync();
+    }
+    setPlayingVideoIndex(null);
     setShowFullScreenMedia(false);
   };
 
@@ -147,18 +155,51 @@ const MediaCarousel = ({ media }) => {
   );
 
   const renderFullScreenMedia = ({ item, index }) => {
+    const isVideo = item.resource_type === 'video';
+    const isPlaying = playingVideoIndex === index;
+
+    const handleVideoPress = async () => {
+      if (isPlaying) {
+        // Pause video
+        await videoRefs.current[index]?.pauseAsync();
+        setPlayingVideoIndex(null);
+      } else {
+        // Pause any other playing video
+        if (playingVideoIndex !== null && videoRefs.current[playingVideoIndex]) {
+          await videoRefs.current[playingVideoIndex]?.pauseAsync();
+        }
+        // Play this video
+        await videoRefs.current[index]?.playAsync();
+        setPlayingVideoIndex(index);
+      }
+    };
+
     return (
       <View style={styles.fullScreenContainer} key={`fullscreen-${index}`}>
-        {item.resource_type === 'video' ? (
-          <TouchableOpacity style={styles.fullScreenVideoContainer}>
-            <Image 
-              source={{ uri: item.localThumbnail || item.localUri }} 
-              style={styles.fullScreenImage}
-              resizeMode="contain"
+        {isVideo ? (
+          <TouchableOpacity 
+            style={styles.fullScreenVideoContainer}
+            onPress={handleVideoPress}
+            activeOpacity={1}
+          >
+            <Video
+              ref={(ref) => { videoRefs.current[index] = ref; }}
+              source={{ uri: item.localUri || item.url }}
+              style={styles.fullScreenVideo}
+              resizeMode={ResizeMode.CONTAIN}
+              useNativeControls={false}
+              isLooping
+              onPlaybackStatusUpdate={(status) => {
+                if (status.didJustFinish) {
+                  setPlayingVideoIndex(null);
+                }
+              }}
             />
-            <View style={styles.fullScreenPlayButton}>
-              <Play size={40} color={Colors.white} />
-            </View>
+            {!isPlaying && (
+              <View style={styles.fullScreenPlayButton}>
+                <Play size={40} color={Colors.white} fill={Colors.white} />
+              </View>
+            )}
           </TouchableOpacity>
         ) : (
           <Image 
@@ -251,6 +292,11 @@ const MediaCarousel = ({ media }) => {
             })}
             onMomentumScrollEnd={(event) => {
               const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+              // Pause any playing video when scrolling to another item
+              if (playingVideoIndex !== null && playingVideoIndex !== index && videoRefs.current[playingVideoIndex]) {
+                videoRefs.current[playingVideoIndex]?.pauseAsync();
+                setPlayingVideoIndex(null);
+              }
               setFullScreenIndex(index);
             }}
             onScrollToIndexFailed={(info) => {
@@ -331,7 +377,7 @@ const styles = StyleSheet.create({
   },
   mediaContainer: {
     width: screenWidth,
-    height: 250,
+    height: 300,
   },
   portraitMediaContainer: {
     height: 300,
@@ -459,19 +505,25 @@ const styles = StyleSheet.create({
   },
   fullScreenContainer: {
     width: screenWidth,
-    height: '100%',
+    height: screenHeight,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.black,
   },
   fullScreenImage: {
     width: screenWidth,
-    height: '100%',
+    height: screenHeight,
   },
   fullScreenVideoContainer: {
     width: screenWidth,
-    height: '100%',
+    height: screenHeight,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.black,
+  },
+  fullScreenVideo: {
+    width: screenWidth,
+    height: screenHeight,
   },
   fullScreenPlayButton: {
     position: 'absolute',
