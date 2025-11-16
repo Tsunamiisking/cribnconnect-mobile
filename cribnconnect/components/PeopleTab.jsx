@@ -6,14 +6,14 @@ import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { UserPlus } from "lucide-react-native";
 import {
-  ActivityIndicator,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 
 export default function PeopleTab({ 
