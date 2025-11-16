@@ -7,10 +7,10 @@ import HostedTabSelector from "@/components/HostedTabSelector";
 import ProcessingItemCard from "@/components/ProcessingItemCard";
 import { Colors } from "@/constants/Colors";
 import useProcessingStore from "@/stores/processingStore";
-import { useEffect, useState } from "react";
-import { Alert, StyleSheet, View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Mock data for hosted apartments
 // const HOSTED_APARTMENTS = [
@@ -259,21 +259,33 @@ export default function MyHostedItemsScreen() {
       });
       
       // Transform backend data to match frontend format
-      const transformedApartments = response.data?.map(apt => ({
-        id: apt._id,
-        title: apt.title,
-        location: `${apt.address.city}, ${apt.address.state}`,
-        price: `₦${apt.pricePerNight.toLocaleString()}/night`,
-        status: apt.isPublished ? (apt.isAvailable ? 'active' : 'inactive') : 'draft',
-        category: apt.apartmentCategory,
-        bookings: apt.bookingCount || 0,
-        rating: apt.averageRating || 0,
-        reviews: apt.reviewCount || 0,
-        images: apt.media?.map(m => m.url).filter(Boolean) || [],
-        dateCreated: apt.createdAt,
-        lastBooked: apt.lastBookedAt || null,
-        earnings: `₦${(apt.totalEarnings || 0).toLocaleString()}`,
-      })) || [];
+      const transformedApartments = response.data?.map(apt => {
+        // Get display images (prioritize images over videos, use thumbnails for videos)
+        const displayImages = apt.media?.map(m => {
+          if (m.resource_type === 'image') {
+            return m.url;
+          } else if (m.resource_type === 'video' && m.thumbnail_url) {
+            return m.thumbnail_url;
+          }
+          return null;
+        }).filter(Boolean) || [];
+        
+        return {
+          id: apt._id,
+          title: apt.title,
+          location: `${apt.address.city}, ${apt.address.state}`,
+          price: `₦${apt.pricePerNight.toLocaleString()}/night`,
+          status: apt.isPublished ? (apt.isAvailable ? 'active' : 'inactive') : 'draft',
+          category: apt.apartmentCategory,
+          bookings: apt.bookingCount || 0,
+          rating: apt.averageRating || 0,
+          reviews: apt.reviewCount || 0,
+          images: displayImages,
+          dateCreated: apt.createdAt,
+          lastBooked: apt.lastBookedAt || null,
+          earnings: `₦${(apt.totalEarnings || 0).toLocaleString()}`,
+        };
+      }) || [];
       
       setApartments(transformedApartments);
     } catch (error) {
@@ -479,9 +491,9 @@ export default function MyHostedItemsScreen() {
               style={styles.processingList}
               showsVerticalScrollIndicator={false}
             >
-              {processingItems.map(item => (
+              {processingItems.map((item, index) => (
                 <ProcessingItemCard 
-                  key={item.id} 
+                  key={item.id || `processing-${index}`}
                   item={item}
                   onRetry={handleRetryUpload}
                 />

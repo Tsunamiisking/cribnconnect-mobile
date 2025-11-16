@@ -760,20 +760,16 @@ const useHostingStore = create(
             backendData = state.getBackendApartmentData();
             itemData = {
               title: state.apartmentData.title,
-              location: `${state.apartmentData.address.city}, ${state.apartmentData.address.state}`,
-              price: `₦${state.apartmentData.pricePerNight || 0}/night`,
-              images: state.apartmentData.media?.slice(0, 1).map(m => m.uri || m.url) || [],
-              status: 'processing',
+              subtitle: `${state.apartmentData.address.city}, ${state.apartmentData.address.state}`,
+              thumbnail: state.apartmentData.media?.[0]?.uri || state.apartmentData.media?.[0]?.url || null,
             };
           } else if (state.hostingType === 'event') {
             type = 'event';
             backendData = state.getBackendEventData();
             itemData = {
               title: state.eventData.title,
-              location: `${state.eventData.location.city}, ${state.eventData.location.state}`,
-              date: state.eventData.date,
-              images: state.eventData.media?.slice(0, 1).map(m => m.uri || m.url) || [],
-              status: 'processing',
+              subtitle: `${state.eventData.location.city}, ${state.eventData.location.state}`,
+              thumbnail: state.eventData.media?.[0]?.uri || state.eventData.media?.[0]?.url || null,
             };
           } else {
             throw new Error('Invalid hosting type');
@@ -783,7 +779,9 @@ const useHostingStore = create(
           useProcessingStore.getState().addProcessingItem({
             id: tempId,
             type,
-            data: itemData,
+            title: itemData.title,
+            subtitle: itemData.subtitle,
+            thumbnail: itemData.thumbnail,
             status: 'uploading',
             progress: 0,
           });
