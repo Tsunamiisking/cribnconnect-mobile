@@ -56,7 +56,12 @@ export default function PeopleTab({
       />
 
       <View style={styles.peopleCardsContainer}>
-        {filteredPeople.length > 0 ? (
+        {loading && filteredPeople.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Loading people...</Text>
+          </View>
+        ) : filteredPeople.length > 0 ? (
           <>
             {filteredPeople.map((person) => (
               <PersonCard 
@@ -122,5 +127,16 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontFamily: 'Sora-SemiBold',
     fontSize: 15,
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontFamily: 'Sora-Regular',
+    fontSize: 16,
+    color: Colors.gray600,
   },
 });
