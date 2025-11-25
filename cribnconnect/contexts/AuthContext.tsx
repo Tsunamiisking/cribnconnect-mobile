@@ -7,6 +7,7 @@ import { auth } from '../config/firebase';
 interface AuthContextType {
   user: User | null;
   publicProfileId: string | null;
+  publicProfile: any | null; // Full profile data (username, firstName, lastName, etc.)
   loading: boolean;
   isAuthenticated: boolean;
   refreshPublicProfile: () => Promise<void>;
@@ -15,6 +16,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   publicProfileId: null,
+  publicProfile: null,
   loading: true,
   isAuthenticated: false,
   refreshPublicProfile: async () => {},
@@ -35,6 +37,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [publicProfileId, setPublicProfileId] = useState<string | null>(null);
+  const [publicProfile, setPublicProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Function to fetch and store public profile ID
@@ -42,18 +45,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Check AsyncStorage first for cached value
       const cachedProfileId = await AsyncStorage.getItem('publicProfileId');
+      const cachedProfile = await AsyncStorage.getItem('publicProfile');
+      
       if (cachedProfileId) {
         setPublicProfileId(cachedProfileId);
+      }
+      
+      if (cachedProfile) {
+        setPublicProfile(JSON.parse(cachedProfile));
       }
 
       // Fetch fresh data from backend
       const response = await api.get('/public-profiles/me');
-      const profileId = response.data?._id;
+      const profileData = response.data;
+      const profileId = profileData?._id;
       
       if (profileId) {
         setPublicProfileId(profileId);
-        // Cache it in AsyncStorage
+        setPublicProfile(profileData);
+        // Cache both in AsyncStorage
         await AsyncStorage.setItem('publicProfileId', profileId);
+        await AsyncStorage.setItem('publicProfile', JSON.stringify(profileData));
       }
     } catch (error) {
       console.log('Could not fetch public profile:', error);
@@ -79,7 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         // User is logged out, clear public profile ID
         setPublicProfileId(null);
+        setPublicProfile(null);
         await AsyncStorage.removeItem('publicProfileId');
+        await AsyncStorage.removeItem('publicProfile');
       }
       
       setLoading(false);
@@ -91,6 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value = {
     user,
     publicProfileId,
+    publicProfile,
     loading,
     isAuthenticated: !!user,
     refreshPublicProfile,
