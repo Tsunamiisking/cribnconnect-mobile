@@ -104,6 +104,10 @@ export default function ChatScreen() {
           imageUrl: msg.imageUrl,
         }));
         setMessages(transformedMessages);
+          // Auto-scroll to bottom when messages load
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+          }, 50);
       });
       
     } else if (type === 'event') {
@@ -145,6 +149,10 @@ export default function ChatScreen() {
           imageUrl: msg.imageUrl,
         }));
         setMessages(transformedMessages);
+          // Auto-scroll to bottom when messages load
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+          }, 50);
       });
       
     } else if (type === 'apartment') {
@@ -176,9 +184,13 @@ export default function ChatScreen() {
                      currentUser.displayName || 
                      'Anonymous';
     
+    // Store message text and clear input immediately for better UX
+    const messageText = inputText.trim();
+    setInputText("");
+    
     try {
       const messageData = {
-        text: inputText.trim(),
+        text: messageText,
         senderId: currentUser.uid,
         senderName: username,
         senderPhoto: publicProfile?.profilePicture || currentUser.photoURL || null,
@@ -192,10 +204,10 @@ export default function ChatScreen() {
         await sendMessageToEventChat(id, messageData);
       } else {
         console.error('Unknown chat type:', chatType);
+        // Restore message if chat type is invalid
+        setInputText(messageText);
         return;
       }
-      
-      setInputText("");
       
       // Auto-scroll to bottom
       setTimeout(() => {
@@ -203,6 +215,8 @@ export default function ChatScreen() {
       }, 100);
     } catch (error) {
       console.error('Error sending message:', error);
+      // Restore message to input if send failed
+      setInputText(messageText);
       // You could show an error toast here
     }
   };
