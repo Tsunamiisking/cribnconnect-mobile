@@ -1,67 +1,85 @@
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
-import React from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Bell, CheckCircle, User, Users } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-// Sample notification data - replace with your actual data source
-const SAMPLE_NOTIFICATIONS = [
-  {
-    id: '1',
-    title: 'New Apartment Booking',
-    message: 'You have a new booking request for your Downtown Loft',
-    time: '2 min ago',
-    read: false,
-  },
-  {
-    id: '2',
-    title: 'Event Reminder',
-    message: 'Your hosted event "Networking Mixer" starts in 24 hours',
-    time: '1 hour ago',
-    read: false,
-  },
-  {
-    id: '3',
-    title: 'Property Update Required',
-    message: 'Please update your property amenities information',
-    time: 'Yesterday',
-    read: true,
-  },
-  {
-    id: '4',
-    title: 'Payout Processed',
-    message: 'Your payout of $750 has been processed successfully',
-    time: '2 days ago',
-    read: true,
-  },
-  {
-    id: '5',
-    title: 'Listing Performance',
-    message: 'Your apartment listing has received 24 new views this week',
-    time: '3 days ago',
-    read: true,
-  },
-];
+import { getNotifications } from '@/api/services/notificationServices';
 
 const NotificationScreen = () => {
-  const handleNotificationPress = (id) => {
-    // Navigate to notification detail screen
-    router.push(`/(screens)/notification/${id}`);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchNotifications();
+  }, []);
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'join_request':
+        return <User size={20} color={Colors.primary} />;
+      case 'join_approved':
+        return <CheckCircle size={20} color={Colors.success} />;
+      case 'user_joined':
+        return <Users size={20} color={Colors.primary} />;
+      default:
+        return <Bell size={20} color={Colors.gray600} />;
+    }
+  };
+
+  const handleNotificationPress = (notification) => {
+    router.push({
+      pathname: `/(screens)/notification/${notification._id}`,
+      params: { notification: JSON.stringify(notification) }
+    });
   };
 
   const renderNotification = ({ item }) => (
     <TouchableOpacity
-      style={styles.notificationItem}
-      onPress={() => handleNotificationPress(item.id)}
+      style={[
+        styles.notificationItem,
+        !item.isRead && styles.unreadNotification
+      ]}
+      onPress={() => handleNotificationPress(item)}
       activeOpacity={0.7}
     >
+      <View style={styles.iconContainer}>
+        {getNotificationIcon(item.type)}
+      </View>
       <View style={styles.notificationContent}>
         <Text style={styles.notificationTitle}>{item.title}</Text>
-        <Text style={styles.notificationMessage}>{item.message}</Text>
-        <Text style={styles.notificationTime}>{item.time}</Text>
+        <Text style={styles.notificationMessage} numberOfLines={2}>
+          {item.message}
+        </Text>
+        <Text style={styles.notificationTime}>
+          {new Date(item.createdAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </Text>
       </View>
-      {!item.read && <View style={styles.unreadDot} />}
+      {!item.isRead && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 
@@ -69,15 +87,23 @@ const NotificationScreen = () => {
     <SafeAreaView style={styles.container}>
       <BackHeader title="Notifications" showUser={false} />
       
-      {SAMPLE_NOTIFICATIONS.length > 0 ? (
+      {loading ? (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : notifications.length > 0 ? (
         <FlatList
-          data={SAMPLE_NOTIFICATIONS}
-          keyExtractor={(item) => item.id}
+          data={notifications}
+          keyExtractor={(item) => item._id}
           renderItem={renderNotification}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       ) : (
         <View style={styles.emptyContainer}>
+          <Bell size={48} color={Colors.gray400} />
           <Text style={styles.emptyText}>No notifications yet</Text>
         </View>
       )}
@@ -103,6 +129,19 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     alignItems: 'center',
     position: 'relative',
+  },
+  unreadNotification: {
+    backgroundColor: '#F0F9FF',
+    borderColor: Colors.primary + '20',
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.gray100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   unreadDot: {
     width: 10,
@@ -140,6 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Sora-Regular',
     color: Colors.gray500,
+    marginTop: 12,
   },
 });
 

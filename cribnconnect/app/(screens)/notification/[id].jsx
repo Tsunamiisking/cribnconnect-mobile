@@ -1,104 +1,206 @@
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Clipboard, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-// Sample notifications data - replace with your actual data source/API
-const SAMPLE_NOTIFICATIONS = [
-  {
-    id: '1',
-    title: 'New Apartment Booking',
-    message: 'You have a new booking request for your Downtown Loft',
-    time: '2 min ago',
-    read: false,
-    details: 'A user has submitted a booking request for your Downtown Loft property from October 15-22, 2025. The reservation is for 2 guests. You have 24 hours to review and approve this request before it expires. You can view full details in your host dashboard.',
-    type: 'booking'
-  },
-  {
-    id: '2',
-    title: 'Event Reminder',
-    message: 'Your hosted event "Networking Mixer" starts in 24 hours',
-    time: '1 hour ago',
-    read: false,
-    details: 'This is a reminder that your hosted event "Networking Mixer" is scheduled to begin tomorrow at 7:00 PM at The Grand Hall, 123 Main Street. Currently, 45 guests have RSVP\'d as attending. Please ensure all preparations are complete. Attendees will receive an automatic reminder 3 hours before the event starts.',
-    type: 'event'
-  },
-  {
-    id: '3',
-    title: 'Property Update Required',
-    message: 'Please update your property amenities information',
-    time: 'Yesterday',
-    read: true,
-    details: 'We\'ve updated our amenities categories to provide more detailed information to potential guests. Please review and update your property listings to include information about smart home features, accessibility options, and sustainability practices. Properties with complete amenities information receive 30% more booking requests on average.',
-    type: 'update'
-  },
-  {
-    id: '4',
-    title: 'Payout Processed',
-    message: 'Your payout of $750 has been processed successfully',
-    time: '2 days ago',
-    read: true,
-    details: 'A payout of $750.00 has been successfully processed to your linked bank account for recent bookings. This amount represents earnings from 2 completed stays at your property minus the platform fee (10%). Please allow 2-3 business days for the funds to appear in your account. Your detailed earnings report is available in your financial dashboard.',
-    type: 'payout'
-  },
-  {
-    id: '5',
-    title: 'Listing Performance',
-    message: 'Your apartment listing has received 24 new views this week',
-    time: '3 days ago',
-    read: true,
-    details: 'Your "Modern Downtown Studio" listing has received 24 views in the past 7 days, which is 15% higher than the previous week. Your listing has appeared in search results 120 times, with a click-through rate of 20%. You\'ve received 3 new booking requests during this period. Consider updating your listing photos or offering a special discount to increase your conversion rate further.',
-    type: 'analytics'
-  }
-];
+import { markAsRead, approveJoinRequest, rejectJoinRequest } from '@/api/services/notificationServices';
+import { CheckCircle, XCircle, Copy, ExternalLink } from 'lucide-react-native';
 
 export default function NotificationDetails() {
-  const { id } = useLocalSearchParams();
+  const { id, notification: notificationParam } = useLocalSearchParams();
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    // In a real app, you would fetch the notification details from your API
-    // For now, we'll simulate that with our sample data
-    const fetchNotification = () => {
-      const found = SAMPLE_NOTIFICATIONS.find(n => n.id === id);
-      
-      // Simulate API delay
-      setTimeout(() => {
-        setNotification(found || { 
-          title: 'Notification not found',
-          message: 'The notification you are looking for does not exist.',
-          details: '',
-          time: '',
-          actions: []
-        });
+    const loadNotification = async () => {
+      try {
+        // Parse notification from params if provided
+        if (notificationParam) {
+          const parsed = JSON.parse(notificationParam);
+          setNotification(parsed);
+          
+          // Mark as read if not already
+          if (!parsed.isRead) {
+            await markAsRead(parsed._id);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading notification:', error);
+      } finally {
         setLoading(false);
-      }, 300);
+      }
     };
 
-    fetchNotification();
-  }, [id]);
+    loadNotification();
+  }, [id, notificationParam]);
 
-  // Mark notification as read when viewed
-  useEffect(() => {
-    if (notification && !notification.read) {
-      // In a real app, you would update the read status in your backend
-      console.log(`Marking notification ${id} as read`);
+  const handleApproveRequest = async () => {
+    if (!notification?.linkupId || !notification?.requestId) {
+      Alert.alert('Error', 'Invalid notification data');
+      return;
     }
-  }, [notification, id]);
+
+    try {
+      setActionLoading(true);
+      const response = await approveJoinRequest(
+        notification.linkupId,
+        notification.requestId
+      );
+      
+      Alert.alert(
+        'Request Approved',
+        `Join code ${response.joinCode} has been sent to ${notification.requesterData?.userName}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back()
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to approve request'
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectRequest = async () => {
+    if (!notification?.linkupId || !notification?.requestId) {
+      Alert.alert('Error', 'Invalid notification data');
+      return;
+    }
+
+    Alert.alert(
+      'Reject Request',
+      `Are you sure you want to reject ${notification.requesterData?.userName}'s request?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reject',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+              await rejectJoinRequest(
+                notification.linkupId,
+                notification.requestId
+              );
+              
+              Alert.alert(
+                'Request Rejected',
+                'The join request has been rejected',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => router.back()
+                  }
+                ]
+              );
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                error.response?.data?.message || 'Failed to reject request'
+              );
+            } finally {
+              setActionLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleCopyCode = () => {
+    if (notification?.joinCode) {
+      Clipboard.setString(notification.joinCode);
+      Alert.alert('Copied', 'Join code copied to clipboard');
+    }
+  };
+
+  const handleViewLinkup = () => {
+    if (notification?.linkupId) {
+      router.push(`/(screens)/linkup-details/${notification.linkupId}`);
+    }
+  };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <BackHeader title="Notification" showUser={false} />
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       </SafeAreaView>
     );
   }
+
+  if (!notification) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <BackHeader title="Notification" showUser={false} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Notification not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const renderJoinRequestActions = () => (
+    <View style={styles.actionsContainer}>
+      {notification.requesterData?.message && (
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageLabel}>Message from user:</Text>
+          <Text style={styles.messageText}>{notification.requesterData.message}</Text>
+        </View>
+      )}
+      
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.approveButton]}
+          onPress={handleApproveRequest}
+          disabled={actionLoading}
+        >
+          {actionLoading ? (
+            <ActivityIndicator size="small" color={Colors.white} />
+          ) : (
+            <>
+              <CheckCircle size={20} color={Colors.white} />
+              <Text style={styles.actionButtonText}>Approve Request</Text>
+            </>
+          )}
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.actionButton, styles.rejectButton]}
+          onPress={handleRejectRequest}
+          disabled={actionLoading}
+        >
+          <XCircle size={20} color={Colors.white} />
+          <Text style={styles.actionButtonText}>Reject</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderJoinCode = () => (
+    <View style={styles.codeContainer}>
+      <Text style={styles.codeLabel}>Your Join Code</Text>
+      <View style={styles.codeBox}>
+        <Text style={styles.codeText}>{notification.joinCode}</Text>
+        <TouchableOpacity onPress={handleCopyCode} style={styles.copyButton}>
+          <Copy size={20} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.codeInfo}>
+        This code is valid for 24 hours. Tap to copy and use it to join the linkup.
+      </Text>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -107,17 +209,37 @@ export default function NotificationDetails() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>{notification.title}</Text>
-          <Text style={styles.time}>{notification.time}</Text>
+          <Text style={styles.time}>
+            {new Date(notification.createdAt).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </Text>
         </View>
         
         <View style={styles.content}>
           <Text style={styles.message}>{notification.message}</Text>
-          <Text style={styles.details}>{notification.details}</Text>
+          
+          {notification.type === 'join_request' && renderJoinRequestActions()}
+          {notification.type === 'join_approved' && renderJoinCode()}
+          
+          {notification.linkupId && (
+            <TouchableOpacity 
+              style={styles.viewLinkupButton}
+              onPress={handleViewLinkup}
+            >
+              <ExternalLink size={18} color={Colors.primary} />
+              <Text style={styles.viewLinkupText}>View Linkup Details</Text>
+            </TouchableOpacity>
+          )}
         </View>
         
         <View style={styles.typeContainer}>
           <View style={[styles.typeBadge, styles[`${notification.type}Badge`]]}>
-            <Text style={styles.typeText}>{notification.type}</Text>
+            <Text style={styles.typeText}>{notification.type?.replace('_', ' ')}</Text>
           </View>
         </View>
       </ScrollView>
@@ -135,7 +257,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
+  errorText: {
     fontFamily: 'Sora-Regular',
     fontSize: 16,
     color: Colors.gray500,
@@ -162,16 +284,112 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   message: {
-    fontFamily: 'Sora-SemiBold',
-    fontSize: 18,
-    color: Colors.primary,
-    marginBottom: 16,
-  },
-  details: {
     fontFamily: 'Sora-Regular',
     fontSize: 16,
     color: Colors.gray700,
     lineHeight: 24,
+    marginBottom: 16,
+  },
+  actionsContainer: {
+    marginTop: 20,
+    gap: 16,
+  },
+  messageContainer: {
+    backgroundColor: '#F3F4F6',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  messageLabel: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 14,
+    color: Colors.gray700,
+    marginBottom: 8,
+  },
+  messageText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 15,
+    lineHeight: 22,
+    color: Colors.black,
+  },
+  actionButtons: {
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  approveButton: {
+    backgroundColor: '#10B981',
+  },
+  rejectButton: {
+    backgroundColor: '#EF4444',
+  },
+  actionButtonText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: Colors.white,
+  },
+  codeContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  codeLabel: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: Colors.gray700,
+    marginBottom: 12,
+  },
+  codeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    gap: 12,
+  },
+  codeText: {
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    letterSpacing: 4,
+  },
+  copyButton: {
+    padding: 8,
+  },
+  codeInfo: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray500,
+    textAlign: 'center',
+    marginTop: 12,
+    paddingHorizontal: 20,
+    lineHeight: 20,
+  },
+  viewLinkupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.white,
+    marginTop: 20,
+  },
+  viewLinkupText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   typeContainer: {
     marginTop: 24,
@@ -186,8 +404,26 @@ const styles = StyleSheet.create({
   typeText: {
     fontFamily: 'Sora-Medium',
     fontSize: 12,
-    color: Colors.gray700,
+    color: Colors.white,
     textTransform: 'capitalize',
+  },
+  join_requestBadge: {
+    backgroundColor: '#F59E0B',
+  },
+  join_approvedBadge: {
+    backgroundColor: '#10B981',
+  },
+  user_joinedBadge: {
+    backgroundColor: '#3B82F6',
+  },
+  infoBadge: {
+    backgroundColor: '#3B82F6',
+  },
+  warningBadge: {
+    backgroundColor: '#F59E0B',
+  },
+  successBadge: {
+    backgroundColor: '#10B981',
   },
   bookingBadge: {
     backgroundColor: '#DCFCE7',
