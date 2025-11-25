@@ -317,38 +317,38 @@ const HostManagement = ({
 
   const handleTogglePublish = () => {
     setShowHostMenu(false);
-    const newStatus = !apartment.isPublished;
+    const newStatus = !apartment.isAvailable;
     Alert.alert(
-      newStatus ? "Publish Listing" : "Unpublish Listing",
+      newStatus ? "Mark as Available" : "Mark as Unavailable",
       newStatus
-        ? "Make this apartment visible to guests?"
-        : "Hide this apartment from guests?",
+        ? "Make this apartment available for booking?"
+        : "Mark this apartment as unavailable for booking?",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: newStatus ? "Publish" : "Unpublish",
+          text: newStatus ? "Available" : "Unavailable",
           onPress: async () => {
             try {
               const response = await api.put(
                 `/apartments/${apartment.id}/status`,
                 {
-                  isPublished: newStatus,
+                  isAvailable: newStatus,
                 }
               );
 
-              console.log("Publish status updated:", response.data);
+              console.log("Availability status updated:", response.data);
 
               onApartmentUpdate({
                 ...apartment,
-                isPublished: newStatus,
+                isAvailable: newStatus,
               });
 
               Alert.alert(
                 "Success",
-                `Apartment ${newStatus ? "published" : "unpublished"} successfully`
+                `Apartment marked as ${newStatus ? "available" : "unavailable"} successfully`
               );
             } catch (error) {
-              console.error("Failed to update publish status:", error);
+              console.error("Failed to update availability status:", error);
               Alert.alert(
                 "Error",
                 "Failed to update status. Please try again."
@@ -466,7 +466,7 @@ const HostManagement = ({
               color={apartment.isAvailable ? Colors.success : Colors.gray500}
             />
             <Text style={styles.hostActionText}>
-              {apartment.isAvailable ? "Available" : "Unavailable"}
+              {apartment.isAvailable ? "Mark Unavailable" : "Mark Available"}
             </Text>
           </TouchableOpacity>
         </View>
