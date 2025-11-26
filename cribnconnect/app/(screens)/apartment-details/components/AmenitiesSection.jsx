@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import { X } from "lucide-react-native";
+import { X, Plus  } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 
@@ -46,7 +46,14 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <Text style={styles.categoryTitle}>Basic Amenities</Text>
           <View style={styles.amenitiesGrid}>
             {amenities.basic.map((amenity) => renderAmenity(amenity, isHost))}
+            {isHost && (
+              <TouchableOpacity style={styles.addAmenityButton}>
+                <Text style={styles.addAmenityButtonText}>Add Basic Amenities</Text>
+                <Plus size={16} color={Colors.black} strokeWidth={2.5} />
+              </TouchableOpacity>
+            )}
           </View>
+
         </View>
       )}
 
@@ -56,6 +63,12 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <Text style={styles.categoryTitle}>Luxury Amenities</Text>
           <View style={styles.amenitiesGrid}>
             {amenities.luxury.map((amenity) => renderAmenity(amenity, isHost))}
+            {isHost && (
+              <TouchableOpacity style={styles.addAmenityButton}>
+                <Text style={styles.addAmenityButtonText}>Add Luxury Amenities</Text>
+                <Plus size={16} color={Colors.black} strokeWidth={2.5} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       )}
@@ -66,6 +79,12 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <Text style={styles.categoryTitle}>Shared Amenities</Text>
           <View style={styles.amenitiesGrid}>
             {amenities.shared.map((amenity) => renderAmenity(amenity, isHost))}
+            {isHost && (
+              <TouchableOpacity style={styles.addAmenityButton}>
+                <Text style={styles.addAmenityButtonText}>Add Shared Amenities</Text>
+                <Plus size={16} color={Colors.black} strokeWidth={2.5} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       )}
@@ -143,6 +162,21 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Medium",
     color: Colors.black,
     marginBottom: 4,
+  },
+  addAmenityButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.gray50,
+    paddingHorizontal: 12,
+    paddingVertical: 15,
+    borderRadius: 8,
+    gap: 8,
+    marginBottom: 8,
+  },
+  addAmenityButtonText: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray700,
   },
   otherAmenitiesText: {
     fontSize: 14,
