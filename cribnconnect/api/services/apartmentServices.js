@@ -111,3 +111,15 @@ export const getMyApartments = async (params = {}) => {
     throw error;
   }
 };
+
+export const updateApartment = async (id, data) => {
+  try {
+    // Send partial update as JSON. Backend should accept fields such as
+    // basicAmenities, luxuryAmenities, sharedAmenities, otherAmenities.
+    const res = await api.put(`/apartments/${id}`, data);
+    return res.data;
+  } catch (error) {
+    console.error('Error updating apartment:', error.response?.data || error.message);
+    throw error;
+  }
+};
