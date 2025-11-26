@@ -10,14 +10,29 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [initialSelectedAmenities, setInitialSelectedAmenities] = useState([]);
 
-  const renderAmenity = (amenityName, isHost) => {
+  const renderAmenity = (amenityName, isHost, category) => {
     const IconComponent = amenityIcons[amenityName];
+    const handleRemove = () => {
+      // remove amenity from the category and call parent callback
+      if (!onSaveAmenities || typeof onSaveAmenities !== "function") return;
+      const current = category === "basic"
+        ? amenities.basic || []
+        : category === "luxury"
+        ? amenities.luxury || []
+        : category === "shared"
+        ? amenities.shared || []
+        : [];
+      const normalized = (current || []).map((a) => (typeof a === "string" ? a : a.name));
+      const updated = normalized.filter((n) => n !== amenityName);
+      onSaveAmenities(category, updated);
+    };
+
     return (
       <View key={amenityName} style={styles.amenityItem}>
         {IconComponent && <IconComponent width={24} height={24} />}
         <Text style={styles.amenityText}>{amenityName}</Text>
         {isHost && (
-          <TouchableOpacity style={styles.removeAmenityButton}>
+          <TouchableOpacity style={styles.removeAmenityButton} onPress={handleRemove}>
             <X size={16} color={Colors.black} strokeWidth={2.5} />
           </TouchableOpacity>
         )}
@@ -93,7 +108,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
         <View style={styles.categorySection}>
           <Text style={styles.categoryTitle}>Basic Amenities</Text>
           <View style={styles.amenitiesGrid}>
-            {amenities.basic.map((amenity) => renderAmenity(amenity, isHost))}
+            {amenities.basic.map((amenity) => renderAmenity(amenity, isHost, "basic"))}
             {isHost && (
               <TouchableOpacity
                 style={styles.addAmenityButton}
@@ -114,7 +129,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
         <View style={styles.categorySection}>
           <Text style={styles.categoryTitle}>Luxury Amenities</Text>
           <View style={styles.amenitiesGrid}>
-            {amenities.luxury.map((amenity) => renderAmenity(amenity, isHost))}
+            {amenities.luxury.map((amenity) => renderAmenity(amenity, isHost, "luxury"))}
             {isHost && (
               <TouchableOpacity
                 style={styles.addAmenityButton}
@@ -135,7 +150,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
         <View style={styles.categorySection}>
           <Text style={styles.categoryTitle}>Shared Amenities</Text>
           <View style={styles.amenitiesGrid}>
-            {amenities.shared.map((amenity) => renderAmenity(amenity, isHost))}
+            {amenities.shared.map((amenity) => renderAmenity(amenity, isHost, "shared"))}
             {isHost && (
               <TouchableOpacity
                 style={styles.addAmenityButton}
@@ -218,6 +233,10 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
             <TouchableOpacity
               style={styles.modalButton}
               onPress={() => {
+                // Save selection for this category
+                if (onSaveAmenities && typeof onSaveAmenities === "function") {
+                  onSaveAmenities(selectedCategory, selectedAmenities);
+                }
                 setModalVisible(false);
               }}
             >

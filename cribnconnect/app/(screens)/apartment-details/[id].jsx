@@ -1,4 +1,4 @@
-import { getApartmentById } from '@/api/services/apartmentServices';
+import { getApartmentById, updateApartment } from '@/api/services/apartmentServices';
 import { Colors } from '@/constants/Colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
@@ -278,6 +278,26 @@ const ApartmentDetailsScreen = () => {
           amenities={apartment.amenities}
           amenityIcons={amenityIcons}
           isHost={isHost}
+          onSaveAmenities={async (category, list) => {
+            // Persist immediately to backend and update local state on success
+            try {
+              const payload = {};
+              // map category key to backend field names (use basicAmenities, luxuryAmenities, sharedAmenities)
+              if (category === 'basic') payload.basicAmenities = Array.isArray(list) ? list : [];
+              if (category === 'luxury') payload.luxuryAmenities = Array.isArray(list) ? list : [];
+              if (category === 'shared') payload.sharedAmenities = Array.isArray(list) ? list : [];
+
+              // Call API
+              const updated = await updateApartment(id, payload);
+              // Transform if needed (transformApartmentData expects raw API shape)
+              const transformed = transformApartmentData(updated);
+              setApartment(transformed);
+              console.log('Amenities persisted and apartment updated:', category, list);
+            } catch (err) {
+              console.error('Failed to persist amenities:', err.response?.data || err.message || err);
+              Alert.alert('Error', 'Failed to save amenities. Please try again.');
+            }
+          }}
         />
 
         {/* Host Info - Only visible to guests */}
