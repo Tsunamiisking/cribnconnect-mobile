@@ -128,7 +128,19 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }}>
           <View style={styles.modalHeader}>
-            <X color={Colors.black} size={24} strokeWidth={2.5} />
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <X color={Colors.black} size={24} strokeWidth={2.5} />
+            </TouchableOpacity> 
+            <Text style={styles.modalTitle}>
+              {selectedCategory
+                ? `Add ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Amenities`
+                : "Add Amenities"}
+            </Text>
+            <View style={{width: 16}}></View>
+          </View>
+
+          <View style={{ padding: 20 }}>
+            <Text style={styles.modalSubTitle}> Select Amenities</Text>
           </View>
         </SafeAreaView>
       </Modal>
@@ -187,6 +199,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Sora-Bold",
     color: Colors.black,
+  },
+  modalSubTitle: {
+    fontSize: 16,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray900,
   },
   amenityText: {
     fontSize: 14,
