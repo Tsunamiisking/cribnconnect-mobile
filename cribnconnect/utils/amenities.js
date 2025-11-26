@@ -24,7 +24,7 @@ import Wifi from "@/components/svgs/wifi";
 import Workspace from "@/components/svgs/workspace";
 
 
-  const basicAmenities = [
+export const basicAmenities = [
     { name: "WIFI", icon: Wifi },
     { name: "TV", icon: Tv },
     { name: "Smart Lock", icon: SmartLock },
@@ -38,7 +38,7 @@ import Workspace from "@/components/svgs/workspace";
   ];
 
 
-  const luxuryAmenities = [
+export const luxuryAmenities = [
     { name: "Workspace", icon: Workspace },
     { name: "Beach/Lake Access", icon: Beach },
     { name: "Pool Ball", icon: PoolBall },
@@ -54,7 +54,7 @@ import Workspace from "@/components/svgs/workspace";
   ];
 
 
-  const sharedAmenities = [
+export const sharedAmenities = [
     { name: "Shared Pool", icon: Pool },
     { name: "Shared Gym", icon: Gym },
     { name: "Shared Workspace", icon: Workspace },
