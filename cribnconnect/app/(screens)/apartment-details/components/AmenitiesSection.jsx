@@ -1,7 +1,8 @@
 import { Colors } from "@/constants/Colors";
-import { X, Plus  } from "lucide-react-native";
-import {React, useState} from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Modal } from "react-native";
+import { Plus, X } from "lucide-react-native";
+import { React, useState } from "react";
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -14,9 +15,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
         {IconComponent && <IconComponent width={24} height={24} />}
         <Text style={styles.amenityText}>{amenityName}</Text>
         {isHost && (
-          <TouchableOpacity
-            style={styles.removeAmenityButton}
-          >
+          <TouchableOpacity style={styles.removeAmenityButton}>
             <X size={16} color={Colors.black} strokeWidth={2.5} />
           </TouchableOpacity>
         )}
@@ -24,21 +23,10 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
     );
   };
 
-  const renderAmenityModal = (category) => {
+  // Modal rendering logic
+  const handleOpenAmenityModal = (category) => {
     setSelectedCategory(category);
     setModalVisible(true);
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible} // Control visibility with state
-        onRequestClose={() => { setModalVisible(false); }}
-      >
-        <TouchableOpacity onPress={() => setModalVisible(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-
-        </TouchableOpacity>
-      </Modal>
-    )
   };
 
   // Check if there are any amenities at all
@@ -67,13 +55,17 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <View style={styles.amenitiesGrid}>
             {amenities.basic.map((amenity) => renderAmenity(amenity, isHost))}
             {isHost && (
-              <TouchableOpacity style={styles.addAmenityButton} onPress={() => { renderAmenityModal('basic') }}>
-                <Text style={styles.addAmenityButtonText}>Add Basic Amenities</Text>
+              <TouchableOpacity
+                style={styles.addAmenityButton}
+                onPress={() => handleOpenAmenityModal("basic")}
+              >
+                <Text style={styles.addAmenityButtonText}>
+                  Add Basic Amenities
+                </Text>
                 <Plus size={16} color={Colors.black} strokeWidth={2.5} />
               </TouchableOpacity>
             )}
           </View>
-
         </View>
       )}
 
@@ -84,8 +76,13 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <View style={styles.amenitiesGrid}>
             {amenities.luxury.map((amenity) => renderAmenity(amenity, isHost))}
             {isHost && (
-              <TouchableOpacity style={styles.addAmenityButton}>
-                <Text style={styles.addAmenityButtonText}>Add Luxury Amenities</Text>
+              <TouchableOpacity
+                style={styles.addAmenityButton}
+                onPress={() => handleOpenAmenityModal("luxury")}
+              >
+                <Text style={styles.addAmenityButtonText}>
+                  Add Luxury Amenities
+                </Text>
                 <Plus size={16} color={Colors.black} strokeWidth={2.5} />
               </TouchableOpacity>
             )}
@@ -100,8 +97,13 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <View style={styles.amenitiesGrid}>
             {amenities.shared.map((amenity) => renderAmenity(amenity, isHost))}
             {isHost && (
-              <TouchableOpacity style={styles.addAmenityButton}>
-                <Text style={styles.addAmenityButtonText}>Add Shared Amenities</Text>
+              <TouchableOpacity
+                style={styles.addAmenityButton}
+                onPress={() => handleOpenAmenityModal("shared")}
+              >
+                <Text style={styles.addAmenityButtonText}>
+                  Add Shared Amenities
+                </Text>
                 <Plus size={16} color={Colors.black} strokeWidth={2.5} />
               </TouchableOpacity>
             )}
@@ -116,6 +118,20 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <Text style={styles.otherAmenitiesText}>{amenities.other}</Text>
         </View>
       )}
+
+      {/* Modal for adding amenities */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }}>
+          <View style={styles.modalHeader}>
+            <X color={Colors.black} size={24} strokeWidth={2.5} />
+          </View>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 };
@@ -157,6 +173,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
     marginBottom: 8,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: "Sora-Bold",
+    color: Colors.black,
   },
   amenityText: {
     fontSize: 14,
