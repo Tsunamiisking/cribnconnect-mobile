@@ -297,7 +297,7 @@ export default function MyHostedItemsScreen() {
   // Fetch events
   const fetchEvents = async () => {
     try {
-      console.log('Starting to fetch events...');
+      // console.log('Starting to fetch events...');
       const response = await getMyEvents({
         sortBy: 'date',
         order: 'desc'
