@@ -1,12 +1,14 @@
 import { Colors } from "@/constants/Colors";
+import { basicAmenities, luxuryAmenities, sharedAmenities } from "@/utils/amenities";
 import { Plus, X } from "lucide-react-native";
 import { React, useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
+const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmenities }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [initialSelectedAmenities, setInitialSelectedAmenities] = useState([]);
 
   const renderAmenity = (amenityName, isHost) => {
     const IconComponent = amenityIcons[amenityName];
@@ -26,7 +28,45 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
   // Modal rendering logic
   const handleOpenAmenityModal = (category) => {
     setSelectedCategory(category);
+    // initialize selection from current amenities for this category
+    const current =
+      category === "basic"
+        ? amenities.basic || []
+        : category === "luxury"
+        ? amenities.luxury || []
+        : category === "shared"
+        ? amenities.shared || []
+        : [];
+    // current may be array of names or objects; normalize to names
+    const normalized = (current || []).map((a) => (typeof a === "string" ? a : a.name));
+    setInitialSelectedAmenities(normalized);
+    setSelectedAmenities(normalized);
     setModalVisible(true);
+  };
+
+  // Selection state for modal
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
+
+  // Helper to split array into rows of 2 (from Step6.jsx)
+  function toRows(arr) {
+    const rows = [];
+    for (let i = 0; i < arr.length; i += 2) {
+      rows.push(arr.slice(i, i + 2));
+    }
+    return rows;
+  }
+
+  // Get amenities for current modal category
+  let modalAmenities = [];
+  if (selectedCategory === "basic") modalAmenities = basicAmenities;
+  if (selectedCategory === "luxury") modalAmenities = luxuryAmenities;
+  if (selectedCategory === "shared") modalAmenities = sharedAmenities;
+
+  // Select/deselect amenities in modal
+  const handleAmenitySelect = (name) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
   };
 
   // Check if there are any amenities at all
@@ -130,17 +170,59 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
               <X color={Colors.black} size={24} strokeWidth={2.5} />
-            </TouchableOpacity> 
+            </TouchableOpacity>
             <Text style={styles.modalTitle}>
               {selectedCategory
                 ? `Add ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Amenities`
                 : "Add Amenities"}
             </Text>
-            <View style={{width: 16}}></View>
+            <View style={{ width: 16 }}></View>
           </View>
 
-          <View style={{ padding: 20 }}>
-            <Text style={styles.modalSubTitle}> Select Amenities</Text>
+          <ScrollView style={{ padding: 20 }}>
+            {toRows(modalAmenities).map((row, idx) => (
+              <View key={idx} style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
+                {row.map((amenity) => {
+                  const selected = selectedAmenities.includes(amenity.name);
+                  const Icon = amenity.icon;
+                  return (
+                    <TouchableOpacity
+                      key={amenity.name}
+                      style={[styles.typeOption, selected && styles.selectedTypeOption, { flex: 1, alignItems: "center", justifyContent: "center" }]}
+                      activeOpacity={0.85}
+                      onPress={() => handleAmenitySelect(amenity.name)}
+                    >
+                      <View style={{ marginBottom: 8 }}>
+                        <Icon width={32} height={32} />
+                      </View>
+                      <Text style={styles.labelText}>{amenity.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Footer: Save / Cancel */}
+          <View style={styles.modalFooter}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalCancelButton]}
+              onPress={() => {
+                // revert selection and close
+                setSelectedAmenities(initialSelectedAmenities);
+                setModalVisible(false);
+              }}
+            >
+              <Text style={[styles.modalButtonText, styles.modalCancelButtonText]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.modalButtonText}>Save</Text>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </Modal>
@@ -204,6 +286,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Sora-Medium",
     color: Colors.gray900,
+    marginBottom: 12,
+  },
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray200,
+    backgroundColor: Colors.white,
+  },
+  modalButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    minWidth: 120,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: Colors.white,
+    fontFamily: "Sora-SemiBold",
+    fontSize: 16,
+  },
+  modalCancelButton: {
+    backgroundColor: Colors.gray100,
+  },
+  modalCancelButtonText: {
+    color: Colors.gray700,
   },
   amenityText: {
     fontSize: 14,
@@ -249,6 +360,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Sora-Regular",
     color: Colors.gray600,
+  },
+  // Modal amenity grid styles (from Step6.jsx)
+  typeOption: {
+    backgroundColor: Colors.gray50,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    marginBottom: 4,
+  },
+  selectedTypeOption: {
+    backgroundColor: Colors.blue50,
+    borderColor: Colors.primary,
+  },
+  labelText: {
+    fontSize: 13,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray700,
+    textAlign: "center",
   },
 });
 
