@@ -277,13 +277,14 @@ const ApartmentDetailsScreen = () => {
         <AmenitiesSection 
           amenities={apartment.amenities}
           amenityIcons={amenityIcons}
+          isHost={isHost}
         />
 
         {/* Host Info - Only visible to guests */}
         {!isHost && <HostInfo houseRules={apartment.houseRules} />}
 
         {/* Quick Actions - Below Host Info for hosts */}
-        {isHost && (
+        {/* {isHost && (
           <HostManagement 
             apartment={apartment}
             isHost={isHost}
@@ -291,7 +292,7 @@ const ApartmentDetailsScreen = () => {
             onApartmentDelete={handleApartmentDelete}
             section="quickActions"
           />
-        )}
+        )} */}
       </ScrollView>
 
       {/* Bottom Bar - Only visible to guests */}
