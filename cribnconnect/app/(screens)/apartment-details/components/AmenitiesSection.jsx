@@ -1,9 +1,12 @@
 import { Colors } from "@/constants/Colors";
 import { X, Plus  } from "lucide-react-native";
-import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import {React, useState} from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Modal } from "react-native";
 
 const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   const renderAmenity = (amenityName, isHost) => {
     const IconComponent = amenityIcons[amenityName];
     return (
@@ -19,6 +22,23 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
         )}
       </View>
     );
+  };
+
+  const renderAmenityModal = (category) => {
+    setSelectedCategory(category);
+    setModalVisible(true);
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible} // Control visibility with state
+        onRequestClose={() => { setModalVisible(false); }}
+      >
+        <TouchableOpacity onPress={() => setModalVisible(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+
+        </TouchableOpacity>
+      </Modal>
+    )
   };
 
   // Check if there are any amenities at all
@@ -47,7 +67,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false }) => {
           <View style={styles.amenitiesGrid}>
             {amenities.basic.map((amenity) => renderAmenity(amenity, isHost))}
             {isHost && (
-              <TouchableOpacity style={styles.addAmenityButton}>
+              <TouchableOpacity style={styles.addAmenityButton} onPress={() => { renderAmenityModal('basic') }}>
                 <Text style={styles.addAmenityButtonText}>Add Basic Amenities</Text>
                 <Plus size={16} color={Colors.black} strokeWidth={2.5} />
               </TouchableOpacity>
