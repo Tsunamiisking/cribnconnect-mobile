@@ -379,11 +379,11 @@ const HostManagement = ({
                 Mark as {availabilityToggle ? "Unavailable" : "Available"}
               </Text>
               <Switch
-                value={availabilityToggle}
-                onValueChange={(val) => {setAvailabilityToggle(val); handleToggleAvailability(); }}
-                trackColor={{ false: Colors.gray300, true: Colors.primary }}
-                thumbColor={availabilityToggle ? Colors.white : Colors.white}
-              />
+                  value={availabilityToggle}
+                  onValueChange={(val) => { setAvailabilityToggle(val); handleToggleAvailability(val); }}
+                  trackColor={{ false: Colors.gray300, true: Colors.primary }}
+                  thumbColor={availabilityToggle ? Colors.white : Colors.white}
+                />
             </View>
 
             {availabilityToggle ? (
@@ -502,16 +502,18 @@ const HostManagement = ({
     }
   };
 
-  const handleToggleAvailability = async () => {
-       setShowHostMenu(false);
-    const newStatus = !apartment.isAvailable;
+  const handleToggleAvailability = async (desiredStatus) => {
+    // desiredStatus (boolean) can be passed from UI (e.g., Switch). If not provided, toggle based on current apartment state.
+    const newStatus = typeof desiredStatus === "boolean" ? desiredStatus : !apartment.isAvailable;
+    setShowHostMenu(false);
+
     Alert.alert(
       newStatus ? "Make Available?" : "Make Unavailable?",
       newStatus
         ? "Make this available for Users?"
         : "Make this Unavailable?",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "Cancel", style: "cancel", onPress: () => { /* revert toggle if UI already changed */ } },
         {
           text: newStatus ? "Available" : "Unavailable",
           onPress: async () => {
@@ -525,10 +527,14 @@ const HostManagement = ({
 
               console.log("Availability status updated:", response.data);
 
+              // Update parent state so the UI reflects the change
               onApartmentUpdate({
                 ...apartment,
                 isAvailable: newStatus,
               });
+
+              // Keep modal toggle in sync
+              setAvailabilityToggle(newStatus);
 
               Alert.alert(
                 "Success",
@@ -549,16 +555,16 @@ const HostManagement = ({
 
   const handleTogglePublish = () => {
     setShowHostMenu(false);
-    const newStatus = !apartment.isAvailable;
+    const newStatus = !apartment.isPublished;
     Alert.alert(
       newStatus ? "Publish?" : "Unpublish?",
       newStatus
         ? "Make this publicly available for Users?"
-        : "Make this apartment as private (Non Visible to Users)?",
+        : "Make this apartment private (not visible to Users)?",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: newStatus ? "Available" : "Unavailable",
+          text: newStatus ? "Publish" : "Unpublish",
           onPress: async () => {
             try {
               const response = await api.put(
@@ -568,19 +574,20 @@ const HostManagement = ({
                 }
               );
 
-              console.log("Availability status updated:", response.data);
+              console.log("Publish status updated:", response.data);
 
+              // Update parent with the published flag
               onApartmentUpdate({
                 ...apartment,
-                isAvailable: newStatus,
+                isPublished: newStatus,
               });
 
               Alert.alert(
                 "Success",
-                `Apartment marked as ${newStatus ? "available" : "unavailable"} successfully`
+                `Apartment ${newStatus ? "published" : "unpublished"} successfully`
               );
             } catch (error) {
-              console.error("Failed to update availability status:", error);
+              console.error("Failed to update publish status:", error);
               Alert.alert(
                 "Error",
                 "Failed to update status. Please try again."
@@ -691,7 +698,7 @@ const HostManagement = ({
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.hostActionCard}
-            onPress={handleTogglePublish}
+            onPress={handleToggleAvailability}
           >
             <Eye
               size={24}
