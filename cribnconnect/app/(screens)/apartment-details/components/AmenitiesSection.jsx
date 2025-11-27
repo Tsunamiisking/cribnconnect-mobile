@@ -2,8 +2,8 @@ import { Colors } from "@/constants/Colors";
 import { basicAmenities, luxuryAmenities, sharedAmenities } from "@/utils/amenities";
 import { Edit, X } from "lucide-react-native";
 import { React, useState } from "react";
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Modal, StyleSheet, Text, TouchableOpacity, View, ScrollView, SafeAreaView } from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
 
 const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmenities }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -174,7 +174,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
             <View style={{ width: 16 }}></View>
           </View>
 
-          <View style={{ padding: 20 }}>
+          <ScrollView style={{ padding: 20 }}>
             {toRows(modalAmenities).map((row, idx) => (
               <View key={idx} style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
                 {row.map((amenity) => {
@@ -196,7 +196,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
                 })}
               </View>
             ))}
-          </View>
+          </ScrollView>
 
           {/* Footer: Save / Cancel */}
           <View style={styles.modalFooter}>

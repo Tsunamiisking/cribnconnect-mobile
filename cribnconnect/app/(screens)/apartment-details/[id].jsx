@@ -1,7 +1,10 @@
-import { getApartmentById, updateApartment } from '@/api/services/apartmentServices';
-import { Colors } from '@/constants/Colors';
-import { router, useLocalSearchParams } from 'expo-router';
-import { getAuth } from 'firebase/auth';
+import {
+  getApartmentById,
+  updateApartment,
+} from "@/api/services/apartmentServices";
+import { Colors } from "@/constants/Colors";
+import { router, useLocalSearchParams } from "expo-router";
+import { getAuth } from "firebase/auth";
 import {
   ArrowLeft,
   Building2,
@@ -14,8 +17,8 @@ import {
   Ship,
   Tent,
   Trees,
-} from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+} from "lucide-react-native";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -24,16 +27,16 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { transformApartmentData } from './utils/transformApartmentData';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { transformApartmentData } from "./utils/transformApartmentData";
 
 // Import components
-import AmenitiesSection from './components/AmenitiesSection';
-import ApartmentInfo from './components/ApartmentInfo';
-import HostInfo from './components/HostInfo';
-import HostManagement from './components/HostManagement';
-import MediaCarousel from './components/MediaCarousel';
+import AmenitiesSection from "./components/AmenitiesSection";
+import ApartmentInfo from "./components/ApartmentInfo";
+import HostInfo from "./components/HostInfo";
+import HostManagement from "./components/HostManagement";
+import MediaCarousel from "./components/MediaCarousel";
 
 // Import amenity icons
 import AirVent from "@/components/svgs/airVent";
@@ -63,46 +66,46 @@ import Workspace from "@/components/svgs/workspace";
 
 // Apartment type icons mapping
 const apartmentTypeIcons = {
-  "House": House,
-  "Apartment": Building2,
-  "Boat": Ship,
-  "Hotel": Hotel,
-  "Camper": Caravan,
-  "Container": Container,
-  "Cabin": Trees,
-  "Tent": Tent,
+  House: House,
+  Apartment: Building2,
+  Boat: Ship,
+  Hotel: Hotel,
+  Camper: Caravan,
+  Container: Container,
+  Cabin: Trees,
+  Tent: Tent,
 };
 
 // Amenity icons mapping
 const amenityIcons = {
-  "WIFI": Wifi,
-  "TV": Tv,
+  WIFI: Wifi,
+  TV: Tv,
   "Smart Lock": SmartLock,
   "Air Conditioning": AirVent,
-  "Refrigerator": Refrigerator,
-  "Kitchen": Kitchen,
-  "Washer": Washer,
+  Refrigerator: Refrigerator,
+  Kitchen: Kitchen,
+  Washer: Washer,
   "Indoor Dining": IndoorDining,
-  "Electricity": Electricity,
+  Electricity: Electricity,
   "Clean Water": Water,
-  "Workspace": Workspace,
+  Workspace: Workspace,
   "Beach/Lake Access": Beach,
   "Pool Ball": PoolBall,
   "Outdoor Dining": OutdoorDining,
-  "Fireplace": Fireplace,
+  Fireplace: Fireplace,
   "Private Gym": Gym,
   "Private Pool": Pool,
   "Private Parking": Parking,
   "BBQ Grill": BBQGrill,
   "Voice Assistant": HomeAssistant,
   "Indoor Piano": Piano,
-  "Bathtub": BathTub,
+  Bathtub: BathTub,
   "Shared Pool": Pool,
   "Shared Gym": Gym,
   "Shared Workspace": Workspace,
-  "Security": Security,
+  Security: Security,
   "Shared Parking": Parking,
-  "Generator": Generator,
+  Generator: Generator,
 };
 
 const ApartmentDetailsScreen = () => {
@@ -112,82 +115,112 @@ const ApartmentDetailsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [isHost, setIsHost] = useState(false);
 
+  const fetchApartment = async () => {
+    try {
+      console.log("Fetching apartment with ID:", id);
+
+      // Fetch real apartment data from API
+      const rawApartmentData = await getApartmentById(id);
+
+      // console.log('=== RAW APARTMENT DATA FROM API ===');
+      // console.log('Raw Data:', JSON.stringify(rawApartmentData, null, 2));
+      // console.log('===================================');
+
+      // Transform the data to match component expectations
+      const apartmentData = transformApartmentData(rawApartmentData);
+
+      // console.log('=== TRANSFORMED APARTMENT DATA ===');
+      // console.log('Apartment ID:', id);
+      // console.log('Apartment Type:', apartmentData.apartmentType);
+      // console.log('Space Type:', apartmentData.space);
+      // console.log('Host ID:', apartmentData.hostId);
+      // console.log('Location:', apartmentData.location);
+      // console.log('Pricing:', apartmentData.pricing);
+      // console.log('Rooms:', apartmentData.rooms);
+      // console.log('Amenities - Basic:', apartmentData.amenities.basic);
+      // console.log('Amenities - Luxury:', apartmentData.amenities.luxury);
+      // console.log('Amenities - Shared:', apartmentData.amenities.shared);
+      // console.log('Amenities - Other:', apartmentData.amenities.other);
+      // console.log('Media Count:', apartmentData.media?.length || 0);
+      // console.log('Is Published:', apartmentData.isPublished);
+      // console.log('Stats:', apartmentData.stats);
+      // console.log('===================================');
+
+      setApartment(apartmentData);
+
+      // Check if current user is the host
+      const auth = getAuth();
+      const currentUserId = auth?.currentUser?.uid;
+      // console.log('=== HOST DETECTION ===');
+      // console.log('Current User ID:', currentUserId);
+      // console.log('Apartment Host ID:', apartmentData.hostId);
+      // console.log('Host ID Type:', typeof apartmentData.hostId);
+      // console.log('User ID Type:', typeof currentUserId);
+      // console.log('Are they equal?:', currentUserId === apartmentData.hostId);
+      // console.log('Is Host:', currentUserId === apartmentData.hostId);
+      // console.log('======================');
+
+      setIsHost(currentUserId === apartmentData.hostId);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching apartment:", error);
+      console.error("Error details:", error.response?.data || error.message);
+      Alert.alert(
+        "Error",
+        "Failed to load apartment details. Please try again."
+      );
+      setLoading(false);
+    }
+  };
   // Fetch apartment data
   useEffect(() => {
-    const fetchApartment = async () => {
-      try {
-        console.log('Fetching apartment with ID:', id);
-        
-        // Fetch real apartment data from API
-        const rawApartmentData = await getApartmentById(id);
-        
-        // console.log('=== RAW APARTMENT DATA FROM API ===');
-        // console.log('Raw Data:', JSON.stringify(rawApartmentData, null, 2));
-        // console.log('===================================');
-        
-        // Transform the data to match component expectations
-        const apartmentData = transformApartmentData(rawApartmentData);
-        
-        // console.log('=== TRANSFORMED APARTMENT DATA ===');
-        // console.log('Apartment ID:', id);
-        // console.log('Apartment Type:', apartmentData.apartmentType);
-        // console.log('Space Type:', apartmentData.space);
-        // console.log('Host ID:', apartmentData.hostId);
-        // console.log('Location:', apartmentData.location);
-        // console.log('Pricing:', apartmentData.pricing);
-        // console.log('Rooms:', apartmentData.rooms);
-        // console.log('Amenities - Basic:', apartmentData.amenities.basic);
-        // console.log('Amenities - Luxury:', apartmentData.amenities.luxury);
-        // console.log('Amenities - Shared:', apartmentData.amenities.shared);
-        // console.log('Amenities - Other:', apartmentData.amenities.other);
-        // console.log('Media Count:', apartmentData.media?.length || 0);
-        // console.log('Is Published:', apartmentData.isPublished);
-        // console.log('Stats:', apartmentData.stats);
-        // console.log('===================================');
-        
-        setApartment(apartmentData);
-        
-        // Check if current user is the host
-        const auth = getAuth();
-        const currentUserId = auth?.currentUser?.uid;
-        // console.log('=== HOST DETECTION ===');
-        // console.log('Current User ID:', currentUserId);
-        // console.log('Apartment Host ID:', apartmentData.hostId);
-        // console.log('Host ID Type:', typeof apartmentData.hostId);
-        // console.log('User ID Type:', typeof currentUserId);
-        // console.log('Are they equal?:', currentUserId === apartmentData.hostId);
-        // console.log('Is Host:', currentUserId === apartmentData.hostId);
-        // console.log('======================');
-        
-        setIsHost(currentUserId === apartmentData.hostId);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching apartment:', error);
-        console.error('Error details:', error.response?.data || error.message);
-        Alert.alert('Error', 'Failed to load apartment details. Please try again.');
-        setLoading(false);
-      }
-    };
-
     fetchApartment();
   }, [id]);
 
   const handleShare = () => {
-    Alert.alert('Share', 'Share functionality will be implemented here');
+    Alert.alert("Share", "Share functionality will be implemented here");
   };
 
   const handleBooking = () => {
-    Alert.alert('Booking', 'Booking functionality will be implemented here');
+    Alert.alert("Booking", "Booking functionality will be implemented here");
   };
 
   const handleApartmentUpdate = (updatedApartment) => {
-    console.log('Apartment updated:', updatedApartment);
+    console.log("Apartment updated:", updatedApartment);
     setApartment(updatedApartment);
   };
 
   const handleApartmentDelete = () => {
-    console.log('Apartment deleted, navigating back');
+    console.log("Apartment deleted, navigating back");
     router.back();
+  };
+
+  const handleAmenitiesUpdate = async (category, list) => {
+    try {
+      const payload = {};
+      if (category === "basic")
+        payload.basicAmenities = Array.isArray(list) ? list : [];
+      if (category === "luxury")
+        payload.luxuryAmenities = Array.isArray(list) ? list : [];
+      if (category === "shared")
+        payload.sharedAmenities = Array.isArray(list) ? list : [];
+
+      const updated = await updateApartment(id, payload);
+
+      if (updated) {
+        fetchApartment();
+      }
+
+      console.log(
+        "Amenities updated successfully:",
+      );
+    } catch (err) {
+      console.error(
+        "Failed to Update amenities:",
+        err.response?.data || err.message || err
+      );
+      Alert.alert("Error", "Failed to save amenities. Please try again.");
+    }
   };
 
   if (loading) {
@@ -206,7 +239,10 @@ const ApartmentDetailsScreen = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Apartment not found</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -218,12 +254,15 @@ const ApartmentDetailsScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.headerButton}
+        >
           <ArrowLeft size={24} color={Colors.black} />
         </TouchableOpacity>
         <View style={styles.headerActions}>
           {isHost ? (
-            <HostManagement 
+            <HostManagement
               apartment={apartment}
               isHost={isHost}
               onApartmentUpdate={handleApartmentUpdate}
@@ -232,17 +271,20 @@ const ApartmentDetailsScreen = () => {
             />
           ) : (
             <>
-              <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
-                <Share2 size={24} color={Colors.black} />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => setIsLiked(!isLiked)} 
+              <TouchableOpacity
+                onPress={handleShare}
                 style={styles.headerButton}
               >
-                <Heart 
-                  size={24} 
+                <Share2 size={24} color={Colors.black} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setIsLiked(!isLiked)}
+                style={styles.headerButton}
+              >
+                <Heart
+                  size={24}
                   color={isLiked ? Colors.emerald : Colors.black}
-                  fill={isLiked ? Colors.emerald : 'transparent'}
+                  fill={isLiked ? Colors.emerald : "transparent"}
                 />
               </TouchableOpacity>
             </>
@@ -252,7 +294,7 @@ const ApartmentDetailsScreen = () => {
 
       {/* Stats Banner - Below header for hosts */}
       {isHost && (
-        <HostManagement 
+        <HostManagement
           apartment={apartment}
           isHost={isHost}
           onApartmentUpdate={handleApartmentUpdate}
@@ -268,64 +310,17 @@ const ApartmentDetailsScreen = () => {
         )}
 
         {/* Apartment Info */}
-        <ApartmentInfo 
-          apartment={apartment} 
+        <ApartmentInfo
+          apartment={apartment}
           apartmentTypeIcons={apartmentTypeIcons}
         />
 
         {/* Amenities */}
-        <AmenitiesSection 
+        <AmenitiesSection
           amenities={apartment.amenities}
           amenityIcons={amenityIcons}
           isHost={isHost}
-          onSaveAmenities={async (category, list) => {
-            // Persist immediately to backend and update local state on success.
-            // Some backends return no body on PUT; handle both cases.
-            try {
-              const payload = {};
-              if (category === 'basic') payload.basicAmenities = Array.isArray(list) ? list : [];
-              if (category === 'luxury') payload.luxuryAmenities = Array.isArray(list) ? list : [];
-              if (category === 'shared') payload.sharedAmenities = Array.isArray(list) ? list : [];
-
-              const updated = await updateApartment(id, payload);
-
-              if (updated && Object.keys(updated).length > 0) {
-                // If API returned updated apartment, transform and set
-                try {
-                  const transformed = transformApartmentData(updated);
-                  setApartment(transformed);
-                } catch (e) {
-                  // If transform fails, fall back to merging
-                  console.warn('Transform failed, merging payload into local apartment', e);
-                  setApartment((prev) => ({
-                    ...prev,
-                    amenities: {
-                      ...prev.amenities,
-                      ...(payload.basicAmenities ? { basic: payload.basicAmenities } : {}),
-                      ...(payload.luxuryAmenities ? { luxury: payload.luxuryAmenities } : {}),
-                      ...(payload.sharedAmenities ? { shared: payload.sharedAmenities } : {}),
-                    }
-                  }));
-                }
-              } else {
-                // No body returned — merge locally so UI stays consistent
-                setApartment((prev) => ({
-                  ...prev,
-                  amenities: {
-                    ...prev.amenities,
-                    ...(payload.basicAmenities ? { basic: payload.basicAmenities } : {}),
-                    ...(payload.luxuryAmenities ? { luxury: payload.luxuryAmenities } : {}),
-                    ...(payload.sharedAmenities ? { shared: payload.sharedAmenities } : {}),
-                  }
-                }));
-              }
-
-              console.log('Amenities persisted and apartment updated (local):', category, list);
-            } catch (err) {
-              console.error('Failed to persist amenities:', err.response?.data || err.message || err);
-              Alert.alert('Error', 'Failed to save amenities. Please try again.');
-            }
-          }}
+          onSaveAmenities={handleAmenitiesUpdate}
         />
 
         {/* Host Info - Only visible to guests */}
@@ -367,9 +362,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 12,
     backgroundColor: Colors.white,
@@ -381,20 +376,20 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: Colors.gray100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   content: {
     flex: 1,
   },
   bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: Colors.white,
@@ -411,12 +406,12 @@ const styles = StyleSheet.create({
   },
   bottomPrice: {
     fontSize: 18,
-    fontFamily: 'Sora-Bold',
+    fontFamily: "Sora-Bold",
     color: Colors.primary,
   },
   bottomPriceUnit: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
   },
   bookButton: {
@@ -432,29 +427,29 @@ const styles = StyleSheet.create({
   },
   bookButtonText: {
     fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.white,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 16,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
     marginTop: 16,
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
   },
   errorText: {
     fontSize: 18,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.gray700,
     marginBottom: 20,
   },
@@ -466,7 +461,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.white,
   },
 });
