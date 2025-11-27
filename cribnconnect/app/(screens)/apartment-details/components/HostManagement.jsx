@@ -7,7 +7,7 @@ import {
   HatGlasses,
   MoreVertical,
   Trash2,
-  X
+  X,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -94,7 +94,9 @@ const HostManagement = ({
   const formatDateInput = (value) => {
     if (value === null || value === undefined) return "";
     // keep only digits
-    let digits = String(value).replace(/[^0-9]/g, "").slice(0, 8); // YYYYMMDD max
+    let digits = String(value)
+      .replace(/[^0-9]/g, "")
+      .slice(0, 8); // YYYYMMDD max
 
     const y = digits.slice(0, 4);
     const m = digits.slice(4, 6);
@@ -105,7 +107,9 @@ const HostManagement = ({
     if (m) {
       // basic clamp for month
       const mn = parseInt(m, 10);
-      const mm = isNaN(mn) ? m : String(Math.max(1, Math.min(12, mn))).padStart(m.length, '0');
+      const mm = isNaN(mn)
+        ? m
+        : String(Math.max(1, Math.min(12, mn))).padStart(m.length, "0");
       parts.push(mm);
     } else if (digits.length > 4 && !m) {
       parts.push(digits.slice(4));
@@ -113,11 +117,13 @@ const HostManagement = ({
     if (d) {
       // basic clamp for day
       const dn = parseInt(d, 10);
-      const dd = isNaN(dn) ? d : String(Math.max(1, Math.min(31, dn))).padStart(d.length, '0');
+      const dd = isNaN(dn)
+        ? d
+        : String(Math.max(1, Math.min(31, dn))).padStart(d.length, "0");
       parts.push(dd);
     }
 
-    return parts.join('-');
+    return parts.join("-");
   };
 
   const renderModals = () => (
@@ -361,11 +367,20 @@ const HostManagement = ({
             </Text>
 
             {/* Availability toggle - mark listing available/unavailable */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text style={[styles.largeLabel, { marginBottom: 0 }]}>Mark as {availabilityToggle ? "Unavailable" : "Available"}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+              }}
+            >
+              <Text style={[styles.largeLabel, { marginBottom: 0 }]}>
+                Mark as {availabilityToggle ? "Unavailable" : "Available"}
+              </Text>
               <Switch
                 value={availabilityToggle}
-                onValueChange={(val) => setAvailabilityToggle(val)}
+                onValueChange={(val) => {setAvailabilityToggle(val); handleToggleAvailability(); }}
                 trackColor={{ false: Colors.gray300, true: Colors.primary }}
                 thumbColor={availabilityToggle ? Colors.white : Colors.white}
               />
@@ -373,12 +388,14 @@ const HostManagement = ({
 
             {availabilityToggle ? (
               <>
-                <View style={[styles.inputGroup, {marginTop: 20}]}>
+                <View style={[styles.inputGroup, { marginTop: 20 }]}>
                   <Text style={styles.inputLabel}>Available From</Text>
                   <TextInput
                     style={styles.input}
                     value={editedAvailabilityFrom}
-                    onChangeText={(t) => setEditedAvailabilityFrom(formatDateInput(t))}
+                    onChangeText={(t) =>
+                      setEditedAvailabilityFrom(formatDateInput(t))
+                    }
                     placeholder="YYYY-MM-DD"
                     placeholderTextColor={Colors.gray400}
                     keyboardType="numeric"
@@ -394,7 +411,9 @@ const HostManagement = ({
                   <TextInput
                     style={styles.input}
                     value={editedAvailabilityTo}
-                    onChangeText={(t) => setEditedAvailabilityTo(formatDateInput(t))}
+                    onChangeText={(t) =>
+                      setEditedAvailabilityTo(formatDateInput(t))
+                    }
                     placeholder="YYYY-MM-DD"
                     placeholderTextColor={Colors.gray400}
                     keyboardType="numeric"
@@ -407,7 +426,9 @@ const HostManagement = ({
               </>
             ) : (
               <View style={{ marginVertical: 12 }}>
-                <Text style={[styles.inputHint, { color: Colors.gray600 }]}>Listing is marked unavailable — availability dates are hidden.</Text>
+                <Text style={[styles.inputHint, { color: Colors.gray600 }]}>
+                  Listing is marked unavailable — availability dates are hidden.
+                </Text>
               </View>
             )}
           </ScrollView>
@@ -466,11 +487,10 @@ const HostManagement = ({
         {
           from: new Date(editedAvailabilityFrom),
           to: new Date(editedAvailabilityTo),
-          isAvailable: availabilityToggle,
         }
       );
 
-      console.log("Availability updated successfully:", response.data);
+      // console.log("Availability updated successfully:", response.data);
 
       Alert.alert("Success", "Availability updated successfully");
       setShowEditAvailabilityModal(false);
@@ -480,6 +500,51 @@ const HostManagement = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleToggleAvailability = async () => {
+       setShowHostMenu(false);
+    const newStatus = !apartment.isAvailable;
+    Alert.alert(
+      newStatus ? "Make Available?" : "Make Unavailable?",
+      newStatus
+        ? "Make this available for Users?"
+        : "Make this Unavailable?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: newStatus ? "Available" : "Unavailable",
+          onPress: async () => {
+            try {
+              const response = await api.put(
+                `/apartments/${apartment.id}/status`,
+                {
+                  isAvailable: newStatus,
+                }
+              );
+
+              console.log("Availability status updated:", response.data);
+
+              onApartmentUpdate({
+                ...apartment,
+                isAvailable: newStatus,
+              });
+
+              Alert.alert(
+                "Success",
+                `Apartment marked as ${newStatus ? "available" : "unavailable"} successfully`
+              );
+            } catch (error) {
+              console.error("Failed to update availability status:", error);
+              Alert.alert(
+                "Error",
+                "Failed to update status. Please try again."
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleTogglePublish = () => {
@@ -499,7 +564,7 @@ const HostManagement = ({
               const response = await api.put(
                 `/apartments/${apartment.id}/status`,
                 {
-                  isAvailable: newStatus,
+                  isPublished: newStatus,
                 }
               );
 

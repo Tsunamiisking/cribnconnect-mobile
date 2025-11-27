@@ -211,9 +211,7 @@ const ApartmentDetailsScreen = () => {
         fetchApartment();
       }
 
-      console.log(
-        "Amenities updated successfully:",
-      );
+      console.log("Amenities updated successfully:");
     } catch (err) {
       console.error(
         "Failed to Update amenities:",
@@ -292,6 +290,8 @@ const ApartmentDetailsScreen = () => {
         </View>
       </View>
 
+      {/* availability badge moved below media carousel (see below) */}
+
       {/* Stats Banner - Below header for hosts */}
       {isHost && (
         <HostManagement
@@ -307,6 +307,32 @@ const ApartmentDetailsScreen = () => {
         {/* Media Carousel */}
         {apartment.media && apartment.media.length > 0 && (
           <MediaCarousel media={apartment.media} />
+        )}
+
+        {/* Availability badge for hosts (below media, above title) */}
+        {isHost && (
+          <View style={styles.availabilityBadgeContainer}>
+            <View
+              style={[
+                styles.availabilityBadge,
+                {
+                  backgroundColor: apartment.isAvailable
+                    ? Colors.success
+                    : Colors.error,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.availabilityDot,
+                  { backgroundColor: Colors.white },
+                ]}
+              />
+              <Text style={styles.availabilityText}>
+                {apartment.isAvailable ? "Available" : "Unavailable"}
+              </Text>
+            </View>
+          </View>
         )}
 
         {/* Apartment Info */}
@@ -462,6 +488,30 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontFamily: "Sora-SemiBold",
+    color: Colors.white,
+  },
+  availabilityBadgeContainer: {
+    paddingHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  availabilityBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  availabilityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  availabilityText: {
+    fontSize: 12,
+    fontFamily: "Sora-Medium",
     color: Colors.white,
   },
 });
