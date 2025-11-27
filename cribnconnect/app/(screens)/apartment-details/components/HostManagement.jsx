@@ -347,13 +347,10 @@ const HostManagement = ({
     try {
       const response = await api.put(`/apartments/${apartment.id}/pricing`, {
         pricePerNight: parseInt(editedPricePerNight),
-        pricePerWeek: editedPricePerWeek ? parseInt(editedPricePerWeek) : null,
-        pricePerMonth: editedPricePerMonth
-          ? parseInt(editedPricePerMonth)
-          : null,
+        pricePerWeek: editedPricePerWeek ? parseInt(editedPricePerWeek) : null,  
       });
 
-      console.log("Price updated successfully:", response.data);
+      // console.log("Price updated successfully:", response.data);
 
       // Update parent component
       onApartmentUpdate({
@@ -361,7 +358,7 @@ const HostManagement = ({
         pricing: {
           perNight: editedPricePerNight,
           perWeek: editedPricePerWeek,
-          perMonth: editedPricePerMonth,
+          // perMonth: editedPricePerMonth,
         },
       });
 

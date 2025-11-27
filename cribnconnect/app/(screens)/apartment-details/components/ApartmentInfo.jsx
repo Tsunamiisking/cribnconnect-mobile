@@ -96,11 +96,11 @@ const ApartmentInfo = ({ apartment, apartmentTypeIcons }) => {
             ₦{parseInt(apartment.pricing.perWeek).toLocaleString()} / week
           </Text>
         )}
-        {apartment.pricing.perMonth && (
+        {/* {apartment.pricing.perMonth && (
           <Text style={styles.weeklyPrice}>
             ₦{parseInt(apartment.pricing.perMonth).toLocaleString()} / month
           </Text>
-        )}
+        )} */}
       </View>
 
       {/* Description Section */}
