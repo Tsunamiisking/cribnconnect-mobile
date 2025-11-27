@@ -4,9 +4,10 @@ import {
   Calendar,
   DollarSign,
   Eye,
+  HatGlasses,
   MoreVertical,
   Trash2,
-  X,
+  X
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -15,6 +16,7 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -43,6 +45,9 @@ const HostManagement = ({
   );
   const [editedAvailabilityFrom, setEditedAvailabilityFrom] = useState("");
   const [editedAvailabilityTo, setEditedAvailabilityTo] = useState("");
+  const [availabilityToggle, setAvailabilityToggle] = useState(
+    apartment?.isAvailable === undefined ? true : apartment.isAvailable
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const handleEditPrice = () => {
@@ -119,11 +124,21 @@ const HostManagement = ({
               style={styles.hostMenuItem}
               onPress={handleTogglePublish}
             >
-              <Eye size={20} color={Colors.primary} />
+              <HatGlasses size={20} color={Colors.primary} />
               <Text style={styles.hostMenuItemText}>
                 {apartment?.isPublished ? "Unpublish" : "Publish"} Listing
               </Text>
             </TouchableOpacity>
+
+            {/* <TouchableOpacity
+              style={styles.hostMenuItem}
+              onPress={handleSaveAvailability}
+            >
+              <Eye size={20} color={Colors.primary} />
+              <Text style={styles.hostMenuItemText}>
+                Mark {apartment?.isPublished ? "Unavailable" : "Available"}
+              </Text>
+            </TouchableOpacity> */}
 
             <View style={styles.hostMenuDivider} />
 
@@ -167,26 +182,32 @@ const HostManagement = ({
           <ScrollView style={styles.modalContent}>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Price per Night (₦)</Text>
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                height: 60,
-                borderWidth: 1,
-                borderColor: Colors.borderColor || Colors.gray300,
-                borderRadius: 12,
-                paddingHorizontal: 16,
-                backgroundColor: '#f9fafb',
-              }}>
-                <Text style={{ 
-                  fontFamily: 'Sora-Medium', 
-                  fontSize: 18, 
-                  color: Colors.primary,
-                  marginRight: 8
-                }}>₦</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  height: 60,
+                  borderWidth: 1,
+                  borderColor: Colors.borderColor || Colors.gray300,
+                  borderRadius: 12,
+                  paddingHorizontal: 16,
+                  backgroundColor: "#f9fafb",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Sora-Medium",
+                    fontSize: 18,
+                    color: Colors.primary,
+                    marginRight: 8,
+                  }}
+                >
+                  ₦
+                </Text>
                 <TextInput
                   style={{
                     flex: 1,
-                    fontFamily: 'Sora-Regular',
+                    fontFamily: "Sora-Regular",
                     fontSize: 16,
                     color: Colors.primary,
                     padding: 0,
@@ -195,7 +216,9 @@ const HostManagement = ({
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
                   value={editedPricePerNight || ""}
-                  onChangeText={(t) => setEditedPricePerNight(String(t).replace(/[^0-9]/g, ''))}
+                  onChangeText={(t) =>
+                    setEditedPricePerNight(String(t).replace(/[^0-9]/g, ""))
+                  }
                 />
               </View>
               {editedPricePerNight && (
@@ -208,26 +231,32 @@ const HostManagement = ({
               <Text style={styles.inputLabel}>
                 Price per Week (₦) - Optional
               </Text>
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                height: 60,
-                borderWidth: 1,
-                borderColor: Colors.borderColor || Colors.gray300,
-                borderRadius: 12,
-                paddingHorizontal: 16,
-                backgroundColor: '#f9fafb',
-              }}>
-                <Text style={{ 
-                  fontFamily: 'Sora-Medium', 
-                  fontSize: 18, 
-                  color: Colors.primary,
-                  marginRight: 8
-                }}>₦</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  height: 60,
+                  borderWidth: 1,
+                  borderColor: Colors.borderColor || Colors.gray300,
+                  borderRadius: 12,
+                  paddingHorizontal: 16,
+                  backgroundColor: "#f9fafb",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Sora-Medium",
+                    fontSize: 18,
+                    color: Colors.primary,
+                    marginRight: 8,
+                  }}
+                >
+                  ₦
+                </Text>
                 <TextInput
                   style={{
                     flex: 1,
-                    fontFamily: 'Sora-Regular',
+                    fontFamily: "Sora-Regular",
                     fontSize: 16,
                     color: Colors.primary,
                     padding: 0,
@@ -236,7 +265,9 @@ const HostManagement = ({
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
                   value={editedPricePerWeek || ""}
-                  onChangeText={(t) => setEditedPricePerWeek(String(t).replace(/[^0-9]/g, ''))}
+                  onChangeText={(t) =>
+                    setEditedPricePerWeek(String(t).replace(/[^0-9]/g, ""))
+                  }
                 />
               </View>
               {editedPricePerWeek && (
@@ -297,33 +328,52 @@ const HostManagement = ({
               Set the dates when your apartment is available for booking.
             </Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Available From</Text>
-              <TextInput
-                style={styles.input}
-                value={editedAvailabilityFrom}
-                onChangeText={setEditedAvailabilityFrom}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={Colors.gray400}
+            {/* Availability toggle - mark listing available/unavailable */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <Text style={[styles.largeLabel, { marginBottom: 0 }]}>Mark as Available</Text>
+              <Switch
+                value={availabilityToggle}
+                onValueChange={(val) => setAvailabilityToggle(val)}
+                trackColor={{ false: Colors.gray300, true: Colors.primary }}
+                thumbColor={availabilityToggle ? Colors.white : Colors.white}
               />
-              <Text style={styles.inputHint}>
-                Format: YYYY-MM-DD (e.g., 2025-01-01)
-              </Text>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Available To</Text>
-              <TextInput
-                style={styles.input}
-                value={editedAvailabilityTo}
-                onChangeText={setEditedAvailabilityTo}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={Colors.gray400}
-              />
-              <Text style={styles.inputHint}>
-                Format: YYYY-MM-DD (e.g., 2025-12-31)
-              </Text>
-            </View>
+            {availabilityToggle ? (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Available From</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedAvailabilityFrom}
+                    onChangeText={setEditedAvailabilityFrom}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor={Colors.gray400}
+                  />
+                  <Text style={styles.inputHint}>
+                    Format: YYYY-MM-DD (e.g., 2025-01-01)
+                  </Text>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Available To</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedAvailabilityTo}
+                    onChangeText={setEditedAvailabilityTo}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor={Colors.gray400}
+                  />
+                  <Text style={styles.inputHint}>
+                    Format: YYYY-MM-DD (e.g., 2025-12-31)
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <View style={{ marginVertical: 12 }}>
+                <Text style={[styles.inputHint, { color: Colors.gray600 }]}>Listing is marked unavailable — availability dates are hidden.</Text>
+              </View>
+            )}
           </ScrollView>
 
           <View style={styles.modalFooter}>
@@ -347,7 +397,7 @@ const HostManagement = ({
     try {
       const response = await api.put(`/apartments/${apartment.id}/pricing`, {
         pricePerNight: parseInt(editedPricePerNight),
-        pricePerWeek: editedPricePerWeek ? parseInt(editedPricePerWeek) : null,  
+        pricePerWeek: editedPricePerWeek ? parseInt(editedPricePerWeek) : null,
       });
 
       // console.log("Price updated successfully:", response.data);
@@ -380,6 +430,7 @@ const HostManagement = ({
         {
           from: new Date(editedAvailabilityFrom),
           to: new Date(editedAvailabilityTo),
+          isAvailable: availabilityToggle,
         }
       );
 
@@ -399,10 +450,10 @@ const HostManagement = ({
     setShowHostMenu(false);
     const newStatus = !apartment.isAvailable;
     Alert.alert(
-      newStatus ? "Mark as Available" : "Mark as Unavailable",
+      newStatus ? "Publish?" : "Unpublish?",
       newStatus
-        ? "Make this apartment available for booking?"
-        : "Mark this apartment as unavailable for booking?",
+        ? "Make this publicly available for Users?"
+        : "Make this apartment as private (Non Visible to Users)?",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -722,13 +773,17 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   inputGroup: {
-    marginBottom: 24,
+    marginVertical: 24,
   },
   inputLabel: {
     fontSize: 14,
     fontFamily: "Sora-Medium",
     color: Colors.black,
     marginBottom: 8,
+  },
+  largeLabel: {
+    fontSize: 16,
+    fontFamily: "Sora-Medium",
   },
   input: {
     borderWidth: 1,
