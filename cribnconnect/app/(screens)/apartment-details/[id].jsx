@@ -279,20 +279,48 @@ const ApartmentDetailsScreen = () => {
           amenityIcons={amenityIcons}
           isHost={isHost}
           onSaveAmenities={async (category, list) => {
-            // Persist immediately to backend and update local state on success
+            // Persist immediately to backend and update local state on success.
+            // Some backends return no body on PUT; handle both cases.
             try {
               const payload = {};
-              // map category key to backend field names (use basicAmenities, luxuryAmenities, sharedAmenities)
               if (category === 'basic') payload.basicAmenities = Array.isArray(list) ? list : [];
               if (category === 'luxury') payload.luxuryAmenities = Array.isArray(list) ? list : [];
               if (category === 'shared') payload.sharedAmenities = Array.isArray(list) ? list : [];
 
-              // Call API
               const updated = await updateApartment(id, payload);
-              // Transform if needed (transformApartmentData expects raw API shape)
-              const transformed = transformApartmentData(updated);
-              setApartment(transformed);
-              console.log('Amenities persisted and apartment updated:', category, list);
+
+              if (updated && Object.keys(updated).length > 0) {
+                // If API returned updated apartment, transform and set
+                try {
+                  const transformed = transformApartmentData(updated);
+                  setApartment(transformed);
+                } catch (e) {
+                  // If transform fails, fall back to merging
+                  console.warn('Transform failed, merging payload into local apartment', e);
+                  setApartment((prev) => ({
+                    ...prev,
+                    amenities: {
+                      ...prev.amenities,
+                      ...(payload.basicAmenities ? { basic: payload.basicAmenities } : {}),
+                      ...(payload.luxuryAmenities ? { luxury: payload.luxuryAmenities } : {}),
+                      ...(payload.sharedAmenities ? { shared: payload.sharedAmenities } : {}),
+                    }
+                  }));
+                }
+              } else {
+                // No body returned — merge locally so UI stays consistent
+                setApartment((prev) => ({
+                  ...prev,
+                  amenities: {
+                    ...prev.amenities,
+                    ...(payload.basicAmenities ? { basic: payload.basicAmenities } : {}),
+                    ...(payload.luxuryAmenities ? { luxury: payload.luxuryAmenities } : {}),
+                    ...(payload.sharedAmenities ? { shared: payload.sharedAmenities } : {}),
+                  }
+                }));
+              }
+
+              console.log('Amenities persisted and apartment updated (local):', category, list);
             } catch (err) {
               console.error('Failed to persist amenities:', err.response?.data || err.message || err);
               Alert.alert('Error', 'Failed to save amenities. Please try again.');

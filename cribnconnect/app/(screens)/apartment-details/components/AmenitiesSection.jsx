@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { basicAmenities, luxuryAmenities, sharedAmenities } from "@/utils/amenities";
-import { Plus, X } from "lucide-react-native";
+import { Edit, X } from "lucide-react-native";
 import { React, useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,32 +10,12 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [initialSelectedAmenities, setInitialSelectedAmenities] = useState([]);
 
-  const renderAmenity = (amenityName, isHost, category) => {
+  const renderAmenity = (amenityName, isHost) => {
     const IconComponent = amenityIcons[amenityName];
-    const handleRemove = () => {
-      // remove amenity from the category and call parent callback
-      if (!onSaveAmenities || typeof onSaveAmenities !== "function") return;
-      const current = category === "basic"
-        ? amenities.basic || []
-        : category === "luxury"
-        ? amenities.luxury || []
-        : category === "shared"
-        ? amenities.shared || []
-        : [];
-      const normalized = (current || []).map((a) => (typeof a === "string" ? a : a.name));
-      const updated = normalized.filter((n) => n !== amenityName);
-      onSaveAmenities(category, updated);
-    };
-
     return (
       <View key={amenityName} style={styles.amenityItem}>
         {IconComponent && <IconComponent width={24} height={24} />}
         <Text style={styles.amenityText}>{amenityName}</Text>
-        {isHost && (
-          <TouchableOpacity style={styles.removeAmenityButton} onPress={handleRemove}>
-            <X size={16} color={Colors.black} strokeWidth={2.5} />
-          </TouchableOpacity>
-        )}
       </View>
     );
   };
@@ -115,9 +95,9 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
                 onPress={() => handleOpenAmenityModal("basic")}
               >
                 <Text style={styles.addAmenityButtonText}>
-                  Add Basic Amenities
+                  Add/Remove Basic Amenities
                 </Text>
-                <Plus size={16} color={Colors.black} strokeWidth={2.5} />
+                <Edit size={16} color={Colors.black} strokeWidth={2.5} />
               </TouchableOpacity>
             )}
           </View>
@@ -136,9 +116,9 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
                 onPress={() => handleOpenAmenityModal("luxury")}
               >
                 <Text style={styles.addAmenityButtonText}>
-                  Add Luxury Amenities
+                  Add/Remove Luxury Amenities
                 </Text>
-                <Plus size={16} color={Colors.black} strokeWidth={2.5} />
+                <Edit size={16} color={Colors.black} strokeWidth={2.5} />
               </TouchableOpacity>
             )}
           </View>
@@ -157,9 +137,9 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
                 onPress={() => handleOpenAmenityModal("shared")}
               >
                 <Text style={styles.addAmenityButtonText}>
-                  Add Shared Amenities
+                  Add/Remove Shared Amenities
                 </Text>
-                <Plus size={16} color={Colors.black} strokeWidth={2.5} />
+                <Edit size={16} color={Colors.black} strokeWidth={2.5} />
               </TouchableOpacity>
             )}
           </View>
@@ -194,7 +174,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
             <View style={{ width: 16 }}></View>
           </View>
 
-          <ScrollView style={{ padding: 20 }}>
+          <View style={{ padding: 20 }}>
             {toRows(modalAmenities).map((row, idx) => (
               <View key={idx} style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
                 {row.map((amenity) => {
@@ -216,7 +196,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
                 })}
               </View>
             ))}
-          </ScrollView>
+          </View>
 
           {/* Footer: Save / Cancel */}
           <View style={styles.modalFooter}>
