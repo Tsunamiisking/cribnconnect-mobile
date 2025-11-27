@@ -380,7 +380,9 @@ const HostManagement = ({
               </Text>
               <Switch
                   value={availabilityToggle}
-                  onValueChange={(val) => { setAvailabilityToggle(val); handleToggleAvailability(val); }}
+                  // Do NOT flip the UI immediately. Call handler which will show confirmation
+                  // and only setAvailabilityToggle on success, or leave it unchanged on cancel.
+                  onValueChange={(val) => handleToggleAvailability(val)}
                   trackColor={{ false: Colors.gray300, true: Colors.primary }}
                   thumbColor={availabilityToggle ? Colors.white : Colors.white}
                 />
