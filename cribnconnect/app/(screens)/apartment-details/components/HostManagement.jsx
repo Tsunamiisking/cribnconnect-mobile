@@ -435,9 +435,12 @@ const HostManagement = ({
 
           <View style={styles.modalFooter}>
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[
+                styles.modalButton,
+                (isSaving || (availabilityToggle && (!editedAvailabilityFrom || !editedAvailabilityTo))) && styles.modalButtonDisabled,
+              ]}
               onPress={handleSaveAvailability}
-              disabled={isSaving}
+              disabled={isSaving || (availabilityToggle && (!editedAvailabilityFrom || !editedAvailabilityTo))}
             >
               <Text style={styles.modalButtonText}>
                 {isSaving ? "Saving..." : "Save Changes"}
@@ -924,6 +927,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
+  },
+  modalButtonDisabled: {
+    backgroundColor: Colors.gray300,
+    opacity: 0.9,
   },
   modalButtonText: {
     fontSize: 16,
