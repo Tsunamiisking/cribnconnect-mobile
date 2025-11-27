@@ -1,24 +1,24 @@
 import api from "@/api/api";
 import { Colors } from "@/constants/Colors";
 import {
-    Calendar,
-    DollarSign,
-    Eye,
-    MoreVertical,
-    Trash2,
-    X,
+  Calendar,
+  DollarSign,
+  Eye,
+  MoreVertical,
+  Trash2,
+  X,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-    Alert,
-    Modal,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const HostManagement = ({
@@ -33,13 +33,13 @@ const HostManagement = ({
   const [showEditAvailabilityModal, setShowEditAvailabilityModal] =
     useState(false);
   const [editedPricePerNight, setEditedPricePerNight] = useState(
-    apartment.pricing?.perNight || ""
+    apartment.pricing?.perNight ? String(apartment.pricing.perNight) : ""
   );
   const [editedPricePerWeek, setEditedPricePerWeek] = useState(
-    apartment.pricing?.perWeek || ""
+    apartment.pricing?.perWeek ? String(apartment.pricing.perWeek) : ""
   );
   const [editedPricePerMonth, setEditedPricePerMonth] = useState(
-    apartment.pricing?.perMonth || ""
+    apartment.pricing?.perMonth ? String(apartment.pricing.perMonth) : ""
   );
   const [editedAvailabilityFrom, setEditedAvailabilityFrom] = useState("");
   const [editedAvailabilityTo, setEditedAvailabilityTo] = useState("");
@@ -53,6 +53,34 @@ const HostManagement = ({
   const handleEditAvailability = () => {
     setShowHostMenu(false);
     setShowEditAvailabilityModal(true);
+  };
+
+  // Format a raw numeric string into localized thousands-separated string as user types
+  const formatNaira = (value) => {
+    if (value === null || value === undefined) return "";
+    const str = String(value);
+    // remove any non-digit characters
+    const digits = str.replace(/[^0-9]/g, "");
+    if (digits.length === 0) return "";
+    // format with locale separators, no decimals
+    try {
+      return parseInt(digits, 10).toLocaleString();
+    } catch (e) {
+      return digits;
+    }
+  };
+
+  // Display formatter with Naira sign and two decimals for readout
+  const formatNairaDisplay = (value) => {
+    if (!value) return "";
+    const digits = String(value).replace(/[^0-9]/g, "");
+    if (!digits) return "";
+    try {
+      const num = parseInt(digits, 10);
+      return `₦${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    } catch (e) {
+      return `₦${digits}`;
+    }
   };
 
   const renderModals = () => (
@@ -139,31 +167,86 @@ const HostManagement = ({
           <ScrollView style={styles.modalContent}>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Price per Night (₦)</Text>
-              <TextInput
-                style={styles.input}
-                value={editedPricePerNight}
-                onChangeText={setEditedPricePerNight}
-                keyboardType="numeric"
-                placeholder="Enter price per night"
-                placeholderTextColor={Colors.gray400}
-              />
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                height: 60,
+                borderWidth: 1,
+                borderColor: Colors.borderColor || Colors.gray300,
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                backgroundColor: '#f9fafb',
+              }}>
+                <Text style={{ 
+                  fontFamily: 'Sora-Medium', 
+                  fontSize: 18, 
+                  color: Colors.primary,
+                  marginRight: 8
+                }}>₦</Text>
+                <TextInput
+                  style={{
+                    flex: 1,
+                    fontFamily: 'Sora-Regular',
+                    fontSize: 16,
+                    color: Colors.primary,
+                    padding: 0,
+                  }}
+                  placeholder="5000"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="numeric"
+                  value={editedPricePerNight || ""}
+                  onChangeText={(t) => setEditedPricePerNight(String(t).replace(/[^0-9]/g, ''))}
+                />
+              </View>
+              {editedPricePerNight && (
+                <Text style={[styles.inputHint, { marginTop: 8 }]}>
+                  {formatNairaDisplay(editedPricePerNight)} per night
+                </Text>
+              )}
             </View>
-
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
                 Price per Week (₦) - Optional
               </Text>
-              <TextInput
-                style={styles.input}
-                value={editedPricePerWeek}
-                onChangeText={setEditedPricePerWeek}
-                keyboardType="numeric"
-                placeholder="Enter price per week"
-                placeholderTextColor={Colors.gray400}
-              />
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                height: 60,
+                borderWidth: 1,
+                borderColor: Colors.borderColor || Colors.gray300,
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                backgroundColor: '#f9fafb',
+              }}>
+                <Text style={{ 
+                  fontFamily: 'Sora-Medium', 
+                  fontSize: 18, 
+                  color: Colors.primary,
+                  marginRight: 8
+                }}>₦</Text>
+                <TextInput
+                  style={{
+                    flex: 1,
+                    fontFamily: 'Sora-Regular',
+                    fontSize: 16,
+                    color: Colors.primary,
+                    padding: 0,
+                  }}
+                  placeholder="30000"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="numeric"
+                  value={editedPricePerWeek || ""}
+                  onChangeText={(t) => setEditedPricePerWeek(String(t).replace(/[^0-9]/g, ''))}
+                />
+              </View>
+              {editedPricePerWeek && (
+                <Text style={[styles.inputHint, { marginTop: 8 }]}>
+                  {formatNairaDisplay(editedPricePerWeek)} per week
+                </Text>
+              )}
             </View>
 
-            <View style={styles.inputGroup}>
+            {/* <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
                 Price per Month (₦) - Optional
               </Text>
@@ -175,7 +258,7 @@ const HostManagement = ({
                 placeholder="Enter price per month"
                 placeholderTextColor={Colors.gray400}
               />
-            </View>
+            </View> */}
           </ScrollView>
 
           <View style={styles.modalFooter}>
