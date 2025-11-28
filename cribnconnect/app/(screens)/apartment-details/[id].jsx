@@ -186,7 +186,7 @@ const ApartmentDetailsScreen = () => {
   };
 
   const handleApartmentUpdate = (updatedApartment) => {
-    console.log("Apartment updated:", updatedApartment);
+    // console.log("Apartment updated:", updatedApartment);
     setApartment(updatedApartment);
   };
 

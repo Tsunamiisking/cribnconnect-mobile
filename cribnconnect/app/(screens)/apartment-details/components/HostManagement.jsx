@@ -12,6 +12,7 @@ import {
 import React, { useState } from "react";
 import {
   Alert,
+  ActivityIndicator,
   Modal,
   SafeAreaView,
   ScrollView,
@@ -48,6 +49,7 @@ const HostManagement = ({
   const [availabilityToggle, setAvailabilityToggle] = useState(
     apartment?.isAvailable === undefined ? true : apartment.isAvailable
   );
+  const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleEditPrice = () => {
@@ -378,14 +380,24 @@ const HostManagement = ({
               <Text style={[styles.largeLabel, { marginBottom: 0 }]}>
                 Mark as {availabilityToggle ? "Unavailable" : "Available"}
               </Text>
-              <Switch
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Switch
                   value={availabilityToggle}
                   // Do NOT flip the UI immediately. Call handler which will show confirmation
                   // and only setAvailabilityToggle on success, or leave it unchanged on cancel.
                   onValueChange={(val) => handleToggleAvailability(val)}
                   trackColor={{ false: Colors.gray300, true: Colors.primary }}
                   thumbColor={availabilityToggle ? Colors.white : Colors.white}
+                  disabled={isUpdatingAvailability}
                 />
+                {isUpdatingAvailability && (
+                  <ActivityIndicator
+                    size="small"
+                    color={Colors.primary}
+                    style={{ marginLeft: 8 }}
+                  />
+                )}
+              </View>
             </View>
 
             {availabilityToggle ? (
@@ -522,6 +534,7 @@ const HostManagement = ({
         {
           text: newStatus ? "Available" : "Unavailable",
           onPress: async () => {
+            setIsUpdatingAvailability(true);
             try {
               const response = await api.put(
                 `/apartments/${apartment.id}/status`,
@@ -551,6 +564,8 @@ const HostManagement = ({
                 "Error",
                 "Failed to update status. Please try again."
               );
+            } finally {
+              setIsUpdatingAvailability(false);
             }
           },
         },
@@ -688,22 +703,25 @@ const HostManagement = ({
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.hostActionsGrid}>
           <TouchableOpacity
-            style={styles.hostActionCard}
+            style={[styles.hostActionCard, isUpdatingAvailability && styles.disabledHostAction]}
             onPress={handleEditPrice}
+            disabled={isUpdatingAvailability}
           >
             <DollarSign size={24} color={Colors.primary} />
             <Text style={styles.hostActionText}>Edit Pricing</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.hostActionCard}
+            style={[styles.hostActionCard, isUpdatingAvailability && styles.disabledHostAction]}
             onPress={handleEditAvailability}
+            disabled={isUpdatingAvailability}
           >
             <Calendar size={24} color={Colors.primary} />
             <Text style={styles.hostActionText}>Availability</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.hostActionCard}
-            onPress={handleToggleAvailability}
+            style={[styles.hostActionCard, isUpdatingAvailability && styles.disabledHostAction]}
+            onPress={() => handleToggleAvailability()}
+            disabled={isUpdatingAvailability}
           >
             <Eye
               size={24}
@@ -933,6 +951,9 @@ const styles = StyleSheet.create({
   modalButtonDisabled: {
     backgroundColor: Colors.gray300,
     opacity: 0.9,
+  },
+  disabledHostAction: {
+    opacity: 0.6,
   },
   modalButtonText: {
     fontSize: 16,
