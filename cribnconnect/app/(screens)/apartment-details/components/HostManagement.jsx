@@ -579,8 +579,8 @@ const HostManagement = ({
     Alert.alert(
       newStatus ? "Publish?" : "Unpublish?",
       newStatus
-        ? "Make this publicly available for Users?"
-        : "Make this apartment private (not visible to Users)?",
+        ? "Remove This Apartment From Drafts?"
+        : "Move This Apartment To Drafts?",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -604,7 +604,7 @@ const HostManagement = ({
 
               Alert.alert(
                 "Success",
-                `Apartment ${newStatus ? "published" : "unpublished"} successfully`
+                `Apartment ${newStatus ? "Moved From Drafts " : "Moved To Drafts"} successfully`
               );
             } catch (error) {
               console.error("Failed to update publish status:", error);
