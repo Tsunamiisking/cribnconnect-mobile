@@ -32,7 +32,7 @@ const ApartmentCard = ({ apartment }) => {
         return Colors.warning;
       case "suspended":
         return Colors.error;
-      case "draft":
+      case "drafts":
         return Colors.gray500;
       default:
         return Colors.gray500;
@@ -47,8 +47,8 @@ const ApartmentCard = ({ apartment }) => {
         return "Inactive";
       case "suspended":
         return "Suspended";
-      case "draft":
-        return "Unpublished";
+      case "drafts":
+        return "Unpublished / Draft";
       default:
         return "Unknown";
     }

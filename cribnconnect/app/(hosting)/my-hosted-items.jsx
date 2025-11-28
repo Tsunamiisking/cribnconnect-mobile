@@ -17,7 +17,7 @@ const APARTMENT_CATEGORIES = [
   "All",
   "Active", 
   "Inactive",
-  "Unpublished",
+  "Drafts",
   "Suspended"
 ];
 
@@ -95,7 +95,7 @@ export default function MyHostedItemsScreen() {
           title: apt.title,
           location: `${apt.address.city}, ${apt.address.state}`,
           price: `₦${apt.pricePerNight.toLocaleString()}/night`,
-          status: apt.isPublished ? (apt.isAvailable ? 'active' : 'inactive') : 'draft',
+          status: apt.isPublished ? (apt.isAvailable ? 'active' : 'inactive') : 'drafts',
           category: apt.apartmentCategory,
           bookings: apt.bookingCount || 0,
           rating: apt.averageRating || 0,
