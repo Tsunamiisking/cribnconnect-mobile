@@ -11,8 +11,8 @@ import {
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  Alert,
   ActivityIndicator,
+  Alert,
   Modal,
   SafeAreaView,
   ScrollView,
