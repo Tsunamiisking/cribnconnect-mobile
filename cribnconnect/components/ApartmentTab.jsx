@@ -160,9 +160,9 @@ const ApartmentCard = ({ apartment }) => {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+          {/* <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
             <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     </TouchableOpacity>
