@@ -114,7 +114,7 @@ const ApartmentInfo = ({ apartment, apartmentTypeIcons }) => {
 
 const styles = StyleSheet.create({
   infoSection: {
-    padding: 20,
+    paddingHorizontal: 20,
   },
   titleSection: {
     marginBottom: 16,
