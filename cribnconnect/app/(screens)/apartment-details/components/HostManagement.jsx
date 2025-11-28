@@ -543,7 +543,7 @@ const HostManagement = ({
                 }
               );
 
-              console.log("Availability status updated:", response.data);
+              // console.log("Availability status updated:", response.data);
 
               // Update parent state so the UI reflects the change
               onApartmentUpdate({
@@ -591,15 +591,17 @@ const HostManagement = ({
                 `/apartments/${apartment.id}/status`,
                 {
                   isPublished: newStatus,
+                  isAvailable: newStatus,
                 }
               );
 
-              console.log("Publish status updated:", response.data);
+              // console.log("Publish status updated:", response.data);
 
               // Update parent with the published flag
               onApartmentUpdate({
                 ...apartment,
                 isPublished: newStatus,
+                isAvailable: newStatus,
               });
 
               Alert.alert(
