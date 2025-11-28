@@ -311,28 +311,51 @@ const ApartmentDetailsScreen = () => {
 
         {/* Availability badge for hosts (below media, above title) */}
         {isHost && (
-          <View style={styles.availabilityBadgeContainer}>
-            <View
-              style={[
-                styles.availabilityBadge,
-                {
-                  backgroundColor: apartment.isAvailable
-                    ? Colors.success
-                    : Colors.error,
-                },
-              ]}
-            >
+          <>
+            <View style={styles.availabilityBadgeContainer}>
               <View
                 style={[
-                  styles.availabilityDot,
-                  { backgroundColor: Colors.white },
+                  styles.availabilityBadge,
+                  {
+                    backgroundColor: apartment.isAvailable
+                      ? Colors.success
+                      : Colors.error,
+                  },
                 ]}
-              />
-              <Text style={styles.availabilityText}>
-                {apartment.isAvailable ? "Available" : "Unavailable"}
-              </Text>
+              >
+                <View
+                  style={[
+                    styles.availabilityDot,
+                    { backgroundColor: Colors.white },
+                  ]}
+                />
+                <Text style={styles.availabilityText}>
+                  {apartment.isAvailable ? "Available" : "Unavailable"}
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.availabilityBadge,
+                  {
+                    backgroundColor: apartment.isPublished
+                      ? Colors.success
+                      : Colors.gray500,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.availabilityDot,
+                    { backgroundColor: Colors.white },
+                  ]}
+                />
+                <Text style={styles.availabilityText}>
+                  {apartment.isPublished ? "Published" : "Unpublished"}
+                </Text>
+              </View>
             </View>
-          </View>
+          </>
         )}
 
         {/* Apartment Info */}
@@ -494,6 +517,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 8,
     marginBottom: 12,
+    justifyContent: "space-between",
+    flexDirection: "row"
+
   },
   availabilityBadge: {
     alignSelf: "flex-start",
@@ -502,6 +528,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
+    marginVertical: 5,
   },
   availabilityDot: {
     width: 8,
