@@ -93,40 +93,52 @@ const HostManagement = ({
   // Format date input as YYYY-MM-DD while typing
   // Accepts any string, strips non-digits, inserts dashes after YYYY and MM
   // Clamps month to 1-12 and day to 1-31 (basic clamp)
-  const formatDateInput = (value) => {
-    if (value === null || value === undefined) return "";
-    // keep only digits
-    let digits = String(value)
-      .replace(/[^0-9]/g, "")
-      .slice(0, 8); // YYYYMMDD max
+const formatDateInput = (value) => {
+  if (value === null || value === undefined) return "";
 
-    const y = digits.slice(0, 4);
-    const m = digits.slice(4, 6);
-    const d = digits.slice(6, 8);
+  let digits = String(value)
+    .replace(/[^0-9]/g, "")
+    .slice(0, 8); // YYYYMMDD max
 
-    const parts = [];
-    if (y) parts.push(y);
-    if (m) {
-      // basic clamp for month
+  const y = digits.slice(0, 4);
+  const m = digits.slice(4, 6);
+  const d = digits.slice(6, 8);
+
+  const parts = [];
+
+  if (y) parts.push(y);
+
+  if (m) {
+    let mm = m;
+
+    // Only clamp if user fully entered 2 digits AND it's above 12
+    if (m.length === 2) {
       const mn = parseInt(m, 10);
-      const mm = isNaN(mn)
-        ? m
-        : String(Math.max(1, Math.min(12, mn))).padStart(m.length, "0");
-      parts.push(mm);
-    } else if (digits.length > 4 && !m) {
-      parts.push(digits.slice(4));
-    }
-    if (d) {
-      // basic clamp for day
-      const dn = parseInt(d, 10);
-      const dd = isNaN(dn)
-        ? d
-        : String(Math.max(1, Math.min(31, dn))).padStart(d.length, "0");
-      parts.push(dd);
+      if (!isNaN(mn) && mn > 12) mm = "12";
+      if (!isNaN(mn) && mn === 0) mm = "01"; // optional: convert 00 → 01
     }
 
-    return parts.join("-");
-  };
+    parts.push(mm);
+  } else if (digits.length > 4 && !m) {
+    parts.push(digits.slice(4));
+  }
+
+  if (d) {
+    let dd = d;
+
+    // Only clamp day after full entry
+    if (d.length === 2) {
+      const dn = parseInt(d, 10);
+      if (!isNaN(dn) && dn > 31) dd = "31";
+      if (!isNaN(dn) && dn === 0) dd = "01"; // optional
+    }
+
+    parts.push(dd);
+  }
+
+  return parts.join("-");
+};
+
 
   const renderModals = () => (
     <>
