@@ -144,3 +144,58 @@ export const getMyEvents = async (params = {}) => {
     throw error;
   }
 };
+
+// Update event location
+export const updateEventLocation = async (eventId, location) => {
+  try {
+    const res = await api.put(`/events/${eventId}/location`, { location });
+    return res.data;
+  } catch (error) {
+    console.error('Error updating event location:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Update event date and time
+export const updateEventDateTime = async (eventId, dateTime) => {
+  try {
+    const res = await api.put(`/events/${eventId}/datetime`, dateTime);
+    return res.data;
+  } catch (error) {
+    console.error('Error updating event date/time:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Update event safety tips
+export const updateEventSafety = async (eventId, safetyTips) => {
+  try {
+    const res = await api.put(`/events/${eventId}/safety`, { eventSafetyTips: safetyTips });
+    return res.data;
+  } catch (error) {
+    console.error('Error updating event safety tips:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Cancel event (with refunds)
+export const cancelEvent = async (eventId) => {
+  try {
+    const res = await api.put(`/events/${eventId}/cancel`);
+    return res.data;
+  } catch (error) {
+    console.error('Error canceling event:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Delete event
+export const deleteEvent = async (eventId) => {
+  try {
+    const res = await api.delete(`/events/${eventId}`);
+    return res.data;
+  } catch (error) {
+    console.error('Error deleting event:', error.response?.data || error.message);
+    throw error;
+  }
+};
