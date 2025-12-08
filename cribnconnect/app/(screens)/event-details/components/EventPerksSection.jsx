@@ -1,5 +1,5 @@
-import api from '@/api/api';
-import { Colors } from '@/constants/Colors';
+import api from "@/api/api";
+import { Colors } from "@/constants/Colors";
 import {
   Badge,
   Beer,
@@ -28,8 +28,8 @@ import {
   Wine,
   X,
   Zap,
-} from 'lucide-react-native';
-import React, { useState } from 'react';
+} from "lucide-react-native";
+import React, { useState } from "react";
 import {
   Alert,
   Modal,
@@ -38,8 +38,8 @@ import {
   Text,
   TouchableOpacity,
   View,
-  SafeAreaView
-} from 'react-native';
+  SafeAreaView,
+} from "react-native";
 // import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
@@ -89,50 +89,50 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
   // Perks categories (same as EventSpecialPerks)
   const perkCategories = {
     Entertainment: [
-      { id: 'live_music', name: 'Live Music', icon: Music },
-      { id: 'live_dj', name: 'Live DJ / Set', icon: Zap },
-      { id: 'mc_host', name: 'MC / Host', icon: Mic },
-      { id: 'photo_booth', name: 'Photo Booth / Content Setup', icon: Camera },
-      { id: 'games', name: 'Games & Fun Activities', icon: Gamepad },
-      { id: 'performances', name: 'Guest Performances', icon: Star },
+      { id: "live_music", name: "Live Music", icon: Music },
+      { id: "live_dj", name: "Live DJ / Set", icon: Zap },
+      { id: "mc_host", name: "MC / Host", icon: Mic },
+      { id: "photo_booth", name: "Photo Booth / Content Setup", icon: Camera },
+      { id: "games", name: "Games & Fun Activities", icon: Gamepad },
+      { id: "performances", name: "Guest Performances", icon: Star },
     ],
-    'Food & Drink': [
-      { id: 'catering', name: 'Food Catering', icon: Utensils },
-      { id: 'open_bar', name: 'Open Bar', icon: Wine },
-      { id: 'snacks_pastries', name: 'Snacks & Small Chops', icon: Cookie },
-      { id: 'welcome_drinks', name: 'Welcome Drinks', icon: Gift },
-      { id: 'bottle_service', name: 'VIP / Bottle Service', icon: Beer },
+    "Food & Drink": [
+      { id: "catering", name: "Food Catering", icon: Utensils },
+      { id: "open_bar", name: "Open Bar", icon: Wine },
+      { id: "snacks_pastries", name: "Snacks & Small Chops", icon: Cookie },
+      { id: "welcome_drinks", name: "Welcome Drinks", icon: Gift },
+      { id: "bottle_service", name: "VIP / Bottle Service", icon: Beer },
     ],
     Experience: [
-      { id: 'vip_access', name: 'VIP Access', icon: Crown },
-      { id: 'afterparty', name: 'Afterparty Access', icon: Moon },
-      { id: 'meet_greet', name: 'Meet & Greet', icon: Users },
+      { id: "vip_access", name: "VIP Access", icon: Crown },
+      { id: "afterparty", name: "Afterparty Access", icon: Moon },
+      { id: "meet_greet", name: "Meet & Greet", icon: Users },
       {
-        id: 'exclusive_content',
-        name: 'Exclusive Photos / Recap',
+        id: "exclusive_content",
+        name: "Exclusive Photos / Recap",
         icon: Sparkles,
       },
-      { id: 'networking', name: 'Networking Sessions', icon: Share },
+      { id: "networking", name: "Networking Sessions", icon: Share },
     ],
-    'Comfort & Convenience': [
-      { id: 'wifi', name: 'Free WiFi', icon: Wifi },
-      { id: 'parking', name: 'Parking Available', icon: Car },
-      { id: 'shuttle', name: 'Shuttle/Transport to Venue', icon: Bus },
-      { id: 'ac', name: 'AC / Climate Control', icon: Wind },
-      { id: 'first_aid', name: 'On-site First Aid / Medical', icon: Heart },
-      { id: 'rest_areas', name: 'Rest Area / Lounge Space', icon: Sofa },
+    "Comfort & Convenience": [
+      { id: "wifi", name: "Free WiFi", icon: Wifi },
+      { id: "parking", name: "Parking Available", icon: Car },
+      { id: "shuttle", name: "Shuttle/Transport to Venue", icon: Bus },
+      { id: "ac", name: "AC / Climate Control", icon: Wind },
+      { id: "first_aid", name: "On-site First Aid / Medical", icon: Heart },
+      { id: "rest_areas", name: "Rest Area / Lounge Space", icon: Sofa },
     ],
-    'Security & Logistics': [
-      { id: 'security_team', name: 'Security Team Present', icon: Shield },
-      { id: 'id_check', name: 'ID / Verification at Gate', icon: Badge },
+    "Security & Logistics": [
+      { id: "security_team", name: "Security Team Present", icon: Shield },
+      { id: "id_check", name: "ID / Verification at Gate", icon: Badge },
       {
-        id: 'bag_check',
-        name: 'Bag Check & Controlled Entry',
+        id: "bag_check",
+        name: "Bag Check & Controlled Entry",
         icon: Lock,
       },
       {
-        id: 'crowd_control',
-        name: 'Hostess & Crowd Management',
+        id: "crowd_control",
+        name: "Hostess & Crowd Management",
         icon: Users,
       },
     ],
@@ -140,40 +140,40 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
 
   const perkNames = {
     // Entertainment
-    live_music: 'Live Music',
-    live_dj: 'Live DJ / Set',
-    mc_host: 'MC / Host',
-    photo_booth: 'Photo Booth / Content Setup',
-    games: 'Games & Fun Activities',
-    performances: 'Guest Performances',
+    live_music: "Live Music",
+    live_dj: "Live DJ / Set",
+    mc_host: "MC / Host",
+    photo_booth: "Photo Booth / Content Setup",
+    games: "Games & Fun Activities",
+    performances: "Guest Performances",
 
     // Food & Drink
-    catering: 'Food Catering',
-    open_bar: 'Open Bar',
-    snacks_pastries: 'Snacks & Small Chops',
-    welcome_drinks: 'Welcome Drinks',
-    bottle_service: 'VIP / Bottle Service',
+    catering: "Food Catering",
+    open_bar: "Open Bar",
+    snacks_pastries: "Snacks & Small Chops",
+    welcome_drinks: "Welcome Drinks",
+    bottle_service: "VIP / Bottle Service",
 
     // Experience
-    vip_access: 'VIP Access',
-    afterparty: 'Afterparty Access',
-    meet_greet: 'Meet & Greet',
-    exclusive_content: 'Exclusive Photos / Recap',
-    networking: 'Networking Sessions',
+    vip_access: "VIP Access",
+    afterparty: "Afterparty Access",
+    meet_greet: "Meet & Greet",
+    exclusive_content: "Exclusive Photos / Recap",
+    networking: "Networking Sessions",
 
     // Comfort & Convenience
-    wifi: 'Free WiFi',
-    parking: 'Parking Available',
-    shuttle: 'Shuttle/Transport to Venue',
-    ac: 'AC / Climate Control',
-    first_aid: 'On-site First Aid / Medical',
-    rest_areas: 'Rest Area / Lounge Space',
+    wifi: "Free WiFi",
+    parking: "Parking Available",
+    shuttle: "Shuttle/Transport to Venue",
+    ac: "AC / Climate Control",
+    first_aid: "On-site First Aid / Medical",
+    rest_areas: "Rest Area / Lounge Space",
 
     // Security & Logistics
-    security_team: 'Security Team Present',
-    id_check: 'ID / Verification at Gate',
-    bag_check: 'Bag Check & Controlled Entry',
-    crowd_control: 'Hostess & Crowd Management',
+    security_team: "Security Team Present",
+    id_check: "ID / Verification at Gate",
+    bag_check: "Bag Check & Controlled Entry",
+    crowd_control: "Hostess & Crowd Management",
   };
 
   const handleOpenPerksModal = () => {
@@ -198,17 +198,17 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
       });
 
       if (response.data) {
-        Alert.alert('Success', 'Special perks updated successfully');
+        Alert.alert("Success", "Special perks updated successfully");
         if (onPerksUpdate) {
           onPerksUpdate({ ...event, eventSpecialPerks: selectedPerks });
         }
         setShowEditPerksModal(false);
       }
     } catch (error) {
-      console.error('Error updating perks:', error);
+      console.error("Error updating perks:", error);
       Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to update special perks'
+        "Error",
+        error.response?.data?.message || "Failed to update special perks"
       );
     }
   };
@@ -221,7 +221,7 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
         {IconComponent && <IconComponent size={24} color={Colors.primary} />}
         <Text style={styles.perkText}>
           {perkNames[perkId] ||
-            perkId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+            perkId.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
         </Text>
       </View>
     );
@@ -239,18 +239,16 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
         <Text style={styles.sectionTitle}>Special Perks</Text>
         <View style={styles.perksGrid}>
           {perks.map(renderPerk)}
+          {isHost && (
+            <TouchableOpacity
+              style={styles.perkItem}
+              onPress={handleOpenPerksModal}
+            >
+              <Text style={styles.perkText}>Add/Remove Special Perks</Text>
+              <Edit size={20} color={Colors.primary} />
+            </TouchableOpacity>
+          )}
         </View>
-        {isHost && (
-          <TouchableOpacity
-            style={styles.perkItem}
-            onPress={handleOpenPerksModal}
-          >
-            <Text style={styles.perkText}>
-              Add/Remove Special Perks
-            </Text>
-            <Edit size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Edit Perks Modal */}
@@ -335,7 +333,7 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
                       return perk?.name;
                     })
                     .filter(Boolean)
-                    .join(', ')}
+                    .join(", ")}
                 </Text>
               </View>
             )}
@@ -375,18 +373,18 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.black,
     marginBottom: 12,
   },
   perksGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 16,
   },
   perkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Colors.gray50,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -396,26 +394,26 @@ const styles = StyleSheet.create({
   },
   perkText: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray700,
   },
   addPerkButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: Colors.white,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.primary,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     gap: 8,
     marginTop: 16,
   },
   addPerkButtonText: {
     fontSize: 15,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.primary,
   },
   // Modal styles
@@ -424,9 +422,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -434,7 +432,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Sora-Bold',
+    fontFamily: "Sora-Bold",
     color: Colors.black,
   },
   closeButton: {
@@ -442,8 +440,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: Colors.gray100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
     flex: 1,
@@ -452,7 +450,7 @@ const styles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 14,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.gray600,
     marginBottom: 24,
     lineHeight: 20,
@@ -462,7 +460,7 @@ const styles = StyleSheet.create({
   },
   perkCategoryTitle: {
     fontSize: 18,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     color: Colors.primary,
     marginBottom: 12,
   },
@@ -470,16 +468,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   typeOption: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: "#f9fafb",
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 12,
     paddingVertical: 18,
     paddingHorizontal: 20,
   },
   typeOptionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
   },
   selectedTypeOption: {
@@ -489,7 +487,7 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 16,
     color: Colors.primary,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
   },
   selectedTypeOptionText: {
     color: Colors.primary,
@@ -497,7 +495,7 @@ const styles = StyleSheet.create({
   selectedPerksInfo: {
     backgroundColor: Colors.blue50,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 12,
     paddingVertical: 18,
     paddingHorizontal: 20,
@@ -507,19 +505,19 @@ const styles = StyleSheet.create({
   selectedPerksLabel: {
     fontSize: 16,
     color: Colors.primary,
-    fontFamily: 'Sora-Medium',
+    fontFamily: "Sora-Medium",
     marginBottom: 8,
   },
   selectedPerksList: {
     fontSize: 14,
     marginTop: 6,
     color: Colors.gray600,
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     lineHeight: 20,
   },
   modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
@@ -530,7 +528,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalButtonSecondary: {
     backgroundColor: Colors.gray100,
@@ -540,12 +538,12 @@ const styles = StyleSheet.create({
   },
   modalButtonTextSecondary: {
     fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.gray700,
   },
   modalButtonTextPrimary: {
     fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     color: Colors.white,
   },
 });
