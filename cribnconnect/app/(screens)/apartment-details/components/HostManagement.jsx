@@ -9,7 +9,7 @@ import {
   Trash2,
   X,
 } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -52,6 +52,13 @@ const HostManagement = ({
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Sync availabilityToggle with apartment.isAvailable when prop changes
+  useEffect(() => {
+    setAvailabilityToggle(
+      apartment?.isAvailable === undefined ? true : apartment.isAvailable
+    );
+  }, [apartment?.isAvailable]);
+
   const handleEditPrice = () => {
     setShowHostMenu(false);
     setShowEditPriceModal(true);
@@ -59,6 +66,10 @@ const HostManagement = ({
 
   const handleEditAvailability = () => {
     setShowHostMenu(false);
+    // Sync toggle state when opening modal
+    setAvailabilityToggle(
+      apartment?.isAvailable === undefined ? true : apartment.isAvailable
+    );
     setShowEditAvailabilityModal(true);
   };
 
