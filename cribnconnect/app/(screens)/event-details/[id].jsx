@@ -1,4 +1,5 @@
 import { getEventById } from '@/api/services/eventServices';
+import api from '@/api/api';
 import { Colors } from '@/constants/Colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
@@ -13,6 +14,7 @@ import {
   Coffee,
   Cookie,
   Crown,
+  Edit,
   Gamepad,
   Gift,
   Heart,
@@ -34,6 +36,7 @@ import {
   Wifi,
   Wind,
   Wine,
+  X,
   Zap,
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
@@ -731,6 +734,17 @@ const EventDetailsScreen = () => {
               <Text style={styles.sectionTitle}>Special Perks</Text>
               <View style={styles.perksGrid}>
                 {(event.eventSpecialPerks || event.specialPerks).map(renderPerk)}
+                {isHost && (
+                  <TouchableOpacity
+                    style={styles.addPerkButton}
+                    onPress={handleOpenPerksModal}
+                  >
+                    <Text style={styles.addPerkButtonText}>
+                      Add/Remove Special Perks
+                    </Text>
+                    <Edit size={16} color={Colors.black} strokeWidth={2.5} />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
