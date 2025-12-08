@@ -77,24 +77,24 @@ const EventCard = ({ event }) => {
     router.push(`/(screens)/event-details/${event.id}`);
   };
 
-  const handleEditPress = () => {
-    // Determine which step to redirect to based on event completion status
-    const getEditStep = () => {
-      if (!event.title || !event.description) return 1; // Basic Info
-      if (!event.category || !event.eventType) return 2; // Category & Type
-      if (!event.date || !event.time || !event.location) return 3; // Date, Time & Location
-      if (!event.capacity || !event.price) return 4; // Capacity & Pricing
-      if (!event.eventSpecialPerks || event.eventSpecialPerks.length === 0)
-        return 5; // Special Perks
-      if (!event.eventSafetyTips || event.eventSafetyTips.length === 0)
-        return 6; // Safety Tips
-      if (!event.images || event.images.length === 0) return 7; // Photos
-      return 8; // Review (final step)
-    };
+  // const handleEditPress = () => {
+  //   // Determine which step to redirect to based on event completion status
+  //   const getEditStep = () => {
+  //     if (!event.title || !event.description) return 1; // Basic Info
+  //     if (!event.category || !event.eventType) return 2; // Category & Type
+  //     if (!event.date || !event.time || !event.location) return 3; // Date, Time & Location
+  //     if (!event.capacity || !event.price) return 4; // Capacity & Pricing
+  //     if (!event.eventSpecialPerks || event.eventSpecialPerks.length === 0)
+  //       return 5; // Special Perks
+  //     if (!event.eventSafetyTips || event.eventSafetyTips.length === 0)
+  //       return 6; // Safety Tips
+  //     if (!event.images || event.images.length === 0) return 7; // Photos
+  //     return 8; // Review (final step)
+  //   };
 
-    const step = getEditStep();
-    router.push(`/(hosting)/add-event?step=${step}&editId=${event.id}`);
-  };
+  //   const step = getEditStep();
+  //   router.push(`/(hosting)/add-event?step=${step}&editId=${event.id}`);
+  // };
 
   return (
     <TouchableOpacity
@@ -178,9 +178,9 @@ const EventCard = ({ event }) => {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+          {/* <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
             <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     </TouchableOpacity>
