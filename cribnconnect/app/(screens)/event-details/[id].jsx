@@ -47,6 +47,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Modal,
   TouchableOpacity,
   View
 } from 'react-native';
@@ -736,10 +737,10 @@ const EventDetailsScreen = () => {
                 {(event.eventSpecialPerks || event.specialPerks).map(renderPerk)}
                 {isHost && (
                   <TouchableOpacity
-                    style={styles.addPerkButton}
+                    style={styles.perkItem}
                     onPress={handleOpenPerksModal}
                   >
-                    <Text style={styles.addPerkButtonText}>
+                    <Text style={styles.perkText}>
                       Add/Remove Special Perks
                     </Text>
                     <Edit size={16} color={Colors.black} strokeWidth={2.5} />
@@ -827,59 +828,109 @@ const EventDetailsScreen = () => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Edit Perks Modal */}
+      <Modal
+        visible={showEditPerksModal}
+        animationType="slide"
+        onRequestClose={() => setShowEditPerksModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              onPress={() => setShowEditPerksModal(false)}
+              style={styles.closeButton}
+            >
+              <X size={24} color={Colors.gray700} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Special Perks</Text>
+            <View style={{ width: 40 }} />
+          </View>
+
+          <ScrollView
+            style={styles.modalContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.modalSubtitle}>
+              Select perks that will be available at your event
+            </Text>
+
+            {Object.entries(perkCategories).map(([categoryName, perks]) => (
+              <View key={categoryName} style={styles.perkCategory}>
+                <Text style={styles.perkCategoryTitle}>{categoryName}</Text>
+                <View style={styles.perksGridModal}>
+                  {perks.map((perk) => {
+                    const isSelected = selectedPerks.includes(perk.id);
+                    const IconComponent = perk.icon;
+
+                    return (
+                      <TouchableOpacity
+                        key={perk.id}
+                        onPress={() => handleTogglePerk(perk.id)}
+                        style={[
+                          styles.perkCardModal,
+                          isSelected && styles.perkCardModalSelected,
+                        ]}
+                      >
+                        <View style={styles.perkCardContent}>
+                          {IconComponent && (
+                            <IconComponent
+                              size={24}
+                              color={isSelected ? Colors.white : Colors.gray600}
+                            />
+                          )}
+                          <Text
+                            style={[
+                              styles.perkCardTextModal,
+                              isSelected && styles.perkCardTextModalSelected,
+                            ]}
+                          >
+                            {perk.name}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+
+            {/* Selected Perks Summary */}
+            {selectedPerks.length > 0 && (
+              <View style={styles.selectedPerksInfo}>
+                <Sparkles size={18} color={Colors.primary} />
+                <Text style={styles.selectedPerksText}>
+                  {selectedPerks.length} perk{selectedPerks.length !== 1 ? 's' : ''} selected
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Footer: Save / Cancel */}
+          <View style={styles.modalFooter}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonSecondary]}
+              onPress={() => {
+                setSelectedPerks(initialPerks);
+                setShowEditPerksModal(false);
+              }}
+            >
+              <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonPrimary]}
+              onPress={handleSavePerks}
+            >
+              <Text style={styles.modalButtonTextPrimary}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-// Mock data matching the event steps structure
-const mockEventData = {
-  category: "Entertainment & Nightlife",
-  eventType: "House Party",
-  title: "Summer Rooftop Celebration",
-  description: "Join us for an amazing sunset rooftop party with great music, drinks, and city views. This will be an unforgettable night with DJs, photo booths, and networking opportunities. Experience the best of nightlife with stunning panoramic views and premium entertainment.",
-  date: "2025-12-15T00:00:00.000Z",
-  time: "7:00 PM",
-  endTime: "11:00 PM",
-  location: {
-    street: "123 Manhattan Avenue",
-    city: "Lagos",
-    state: "Lagos",
-    zip: "100001",
-    country: "Nigeria",
-    venue: "Sky Lounge Lagos"
-  },
-  capacity: 150,
-  attendees: 87,
-  isFree: false,
-  isPublished: true,
-  isActive: true,
-  status: "active",
-  ticketTypes: [
-    { id: 'regular', name: 'Regular', price: '15000' },
-    { id: 'vip', name: 'VIP', price: '25000' },
-    { id: 'vvip', name: 'VVIP', price: '40000' }
-  ],
-  specialPerks: ["live_music", "photography", "bar_service", "vip_access", "wifi", "parking"],
-  safetyTips: ["Please arrive on time. Dress code: Smart casual. Valid ID required for entry. No outside food or drinks allowed."],
-  ticketPolicies: {
-    refundable: true,
-    transferable: false,
-    upgradable: true,
-    termsAccepted: true
-  },
-  media: [
-    {
-      url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-      resource_type: "image",
-      thumbnail_url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=640&q=80"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-      resource_type: "image",
-      thumbnail_url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=640&q=80"
-    }
-  ],
-};
+
 
 const styles = StyleSheet.create({
   container: {
@@ -1334,6 +1385,131 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontFamily: "Sora-Medium",
+    color: Colors.white,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: "Sora-Bold",
+    color: Colors.black,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.gray100,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  perkCategory: {
+    marginBottom: 24,
+  },
+  perkCategoryTitle: {
+    fontSize: 15,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.primary,
+    marginBottom: 12,
+  },
+  perksGridModal: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  perkCardModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.gray50,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  perkCardModalSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  perkCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  perkCardTextModal: {
+    fontSize: 13,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray700,
+  },
+  perkCardTextModalSelected: {
+    color: Colors.white,
+  },
+  selectedPerksInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.blue50,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+    gap: 8,
+  },
+  selectedPerksText: {
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.primary,
+  },
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray200,
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalButtonSecondary: {
+    backgroundColor: Colors.gray100,
+  },
+  modalButtonPrimary: {
+    backgroundColor: Colors.primary,
+  },
+  modalButtonTextSecondary: {
+    fontSize: 16,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.gray700,
+  },
+  modalButtonTextPrimary: {
+    fontSize: 16,
+    fontFamily: "Sora-SemiBold",
     color: Colors.white,
   },
 });
