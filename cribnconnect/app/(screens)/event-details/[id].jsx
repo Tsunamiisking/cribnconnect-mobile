@@ -85,6 +85,7 @@ const eventPerksIcons = {
   "games": Star,
   "catering": Utensils,
   "bar_service": Wine,
+  "open_bar": Wine,
   "coffee_station": Coffee,
   "welcome_drinks": Gift,
   "vip_access": Star,
@@ -263,9 +264,7 @@ const EventDetailsScreen = () => {
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Media Skeleton */}
-          <View style={styles.mediaSection}>
-            <ShimmerView style={styles.mediaContainer} />
-          </View>
+          <ShimmerView style={styles.mediaContainer} />
 
           {/* Content Skeleton */}
           <View style={styles.infoSection}>
@@ -505,20 +504,22 @@ const EventDetailsScreen = () => {
           )}
 
           {/* Special Perks */}
-          {event.specialPerks && event.specialPerks.length > 0 && (
+          {(event.eventSpecialPerks || event.specialPerks) && (event.eventSpecialPerks || event.specialPerks).length > 0 && (
             <View style={styles.perksSection}>
               <Text style={styles.sectionTitle}>Special Perks</Text>
               <View style={styles.perksGrid}>
-                {event.specialPerks.map(renderPerk)}
+                {(event.eventSpecialPerks || event.specialPerks).map(renderPerk)}
               </View>
             </View>
           )}
 
           {/* Safety Tips / House Rules */}
-          {event.safetyTips && event.safetyTips.length > 0 && (
+          {(event.eventSafetyTips || event.safetyTips) && (event.eventSafetyTips || event.safetyTips).length > 0 && (
             <View style={styles.rulesSection}>
-              <Text style={styles.sectionTitle}>House Rules</Text>
-              <Text style={styles.rulesText}>{event.safetyTips[0]}</Text>
+              <Text style={styles.sectionTitle}>Safety Guidelines</Text>
+              {(event.eventSafetyTips || event.safetyTips).map((tip, index) => (
+                <Text key={index} style={styles.rulesText}>• {tip}</Text>
+              ))}
             </View>
           )}
 
@@ -625,9 +626,17 @@ const mockEventData = {
     upgradable: true,
     termsAccepted: true
   },
-  images: [
-    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+  media: [
+    {
+      url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+      resource_type: "image",
+      thumbnail_url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=640&q=80"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+      resource_type: "image",
+      thumbnail_url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=640&q=80"
+    }
   ],
 };
 
@@ -964,6 +973,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: 'hidden',
     position: 'relative',
+  },
+  mediaContainer: {
+    width: screenWidth,
+    height: 300,
+    backgroundColor: Colors.gray200,
   },
   skeletonTitle: {
     height: 28,
