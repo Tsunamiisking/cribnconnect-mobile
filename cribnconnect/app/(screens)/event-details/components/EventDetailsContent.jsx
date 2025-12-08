@@ -2,16 +2,14 @@ import { Colors } from '@/constants/Colors';
 import {
   Calendar,
   MapPin,
-  Star,
   Ticket,
-  Users,
+  Users
 } from 'lucide-react-native';
 import React from 'react';
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 const EventDetailsContent = ({
