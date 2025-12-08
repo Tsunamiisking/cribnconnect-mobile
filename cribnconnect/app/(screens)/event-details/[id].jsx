@@ -1,61 +1,19 @@
 import { getEventById } from '@/api/services/eventServices';
-import api from '@/api/api';
 import { Colors } from '@/constants/Colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
-import {
-  ArrowLeft,
-  Badge,
-  Beer,
-  Bus,
-  Calendar,
-  Camera,
-  Car,
-  Coffee,
-  Cookie,
-  Crown,
-  Edit,
-  Gamepad,
-  Gift,
-  Heart,
-  Heart as HeartIcon,
-  Lock,
-  MapPin,
-  Mic,
-  Moon,
-  Music,
-  Share,
-  Share2,
-  Shield,
-  Sofa,
-  Sparkles,
-  Star,
-  Ticket,
-  Users,
-  Utensils,
-  Wifi,
-  Wind,
-  Wine,
-  X,
-  Zap,
-} from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Animated,
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  Modal,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MediaCarousel from '../apartment-details/components/MediaCarousel';
-import EventHostManagement from './components/EventHostManagement';
-
-const { width: screenWidth } = Dimensions.get('window');
+import EventAdditionalSections from './components/EventAdditionalSections';
+import EventBottomBar from './components/EventBottomBar';
+import EventDetailsContent from './components/EventDetailsContent';
+import EventHeader from './components/EventHeader';
+import EventLoadingSkeleton from './components/EventLoadingSkeleton';
+import EventPerksSection from './components/EventPerksSection';
+import EventStatusBadges from './components/EventStatusBadges';
+import { eventCategoryIcons, formatDate, formatPrice } from './utils/eventHelpers';
 
 // Event category icons mapping
 const eventCategoryIcons = {
