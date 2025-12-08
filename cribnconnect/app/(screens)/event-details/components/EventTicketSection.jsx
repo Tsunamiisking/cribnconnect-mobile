@@ -23,6 +23,7 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
   const [customTicketName, setCustomTicketName] = useState('');
   const [customTicketPrice, setCustomTicketPrice] = useState('');
   const [customTicketQuantity, setCustomTicketQuantity] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Predefined ticket types
   const predefinedTypes = [
@@ -50,7 +51,30 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
 
   const handleOpenTicketModal = () => {
     setIsFree(event.isFree || false);
-    setTicketTypes(event.ticketTypes || []);
+    // Ensure all ticket types have unique ids and convert price/quantity to strings
+    const ticketsWithIds = (event.ticketTypes || []).map((ticket, index) => {
+      // Check if this is a predefined ticket type by name and assign correct id
+      let ticketId = ticket.id || ticket._id;
+      const ticketNameLower = ticket.name?.toLowerCase();
+      
+      if (ticketNameLower === 'regular' && !ticketId) {
+        ticketId = 'regular';
+      } else if (ticketNameLower === 'vip' && !ticketId) {
+        ticketId = 'vip';
+      } else if (ticketNameLower === 'vvip' && !ticketId) {
+        ticketId = 'vvip';
+      } else if (!ticketId) {
+        ticketId = `ticket_${index}_${Date.now()}`;
+      }
+      
+      return {
+        ...ticket,
+        id: ticketId,
+        price: ticket.price?.toString() || '',
+        quantity: ticket.quantity?.toString() || '',
+      };
+    });
+    setTicketTypes(ticketsWithIds);
     setCapacity(event.capacity?.toString() || '');
     setShowEditTicketModal(true);
   };
@@ -141,6 +165,8 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
   };
 
   const handleSaveTickets = async () => {
+    if (isSaving) return; // Prevent multiple clicks
+    
     try {
       // Validate capacity
       if (!capacity || parseInt(capacity) <= 0) {
@@ -176,6 +202,8 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
         }
       }
 
+      setIsSaving(true);
+
       const payload = {
         isFree,
         capacity: parseInt(capacity),
@@ -203,6 +231,8 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
         'Error',
         error.response?.data?.message || 'Failed to update ticket information'
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -632,14 +662,22 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
                 setCapacity(event.capacity?.toString() || '');
                 setShowEditTicketModal(false);
               }}
+              disabled={isSaving}
             >
               <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonPrimary]}
+              style={[
+                styles.modalButton,
+                styles.modalButtonPrimary,
+                isSaving && styles.modalButtonDisabled,
+              ]}
               onPress={handleSaveTickets}
+              disabled={isSaving}
             >
-              <Text style={styles.modalButtonTextPrimary}>Save Changes</Text>
+              <Text style={styles.modalButtonTextPrimary}>
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -820,6 +858,9 @@ const styles = StyleSheet.create({
   },
   modalButtonPrimary: {
     backgroundColor: Colors.primary,
+  },
+  modalButtonDisabled: {
+    opacity: 0.6,
   },
   modalButtonTextSecondary: {
     fontSize: 16,
