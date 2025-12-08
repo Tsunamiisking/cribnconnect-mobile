@@ -20,7 +20,21 @@ import {
   Utensils,
   Wifi,
   Wine,
-  Zap
+  Zap,
+  Mic,
+  Cookie,
+  Beer,
+  Moon,
+  Share,
+  Crown,
+  Bus,
+  Wind,
+  Heart as HeartIcon,
+  Sofa,
+  Shield,
+  Badge,
+  Lock,
+  Gamepad,
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -79,21 +93,46 @@ const eventCategoryIcons = {
 
 // Event perks icons mapping
 const eventPerksIcons = {
+  // Entertainment
   "live_music": Music,
-  "photography": Camera,
   "live_dj": Zap,
-  "games": Star,
+  "mc_host": Mic,
+  "photo_booth": Camera,
+  "games": Gamepad,
+  "performances": Star,
+  
+  // Food & Drink
   "catering": Utensils,
-  "bar_service": Wine,
   "open_bar": Wine,
-  "coffee_station": Coffee,
+  "snacks_pastries": Cookie,
   "welcome_drinks": Gift,
-  "vip_access": Star,
+  "bottle_service": Beer,
+  
+  // Experience
+  "vip_access": Crown,
+  "afterparty": Moon,
   "meet_greet": Users,
   "exclusive_content": Sparkles,
-  "networking": Users,
+  "networking": Share,
+  
+  // Comfort & Convenience
   "wifi": Wifi,
   "parking": Car,
+  "shuttle": Bus,
+  "ac": Wind,
+  "first_aid": HeartIcon,
+  "rest_areas": Sofa,
+  
+  // Security & Logistics
+  "security_team": Shield,
+  "id_check": Badge,
+  "bag_check": Lock,
+  "crowd_control": Users,
+  
+  // Legacy/Deprecated (for backwards compatibility)
+  "photography": Camera,
+  "bar_service": Wine,
+  "coffee_station": Coffee,
   "accessibility": Star,
   "coat_check": Gift,
 };
