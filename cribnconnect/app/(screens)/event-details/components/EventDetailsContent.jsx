@@ -117,25 +117,6 @@ const EventDetailsContent = ({
           <Text style={styles.description}>{event.description}</Text>
         </View>
       )}
-
-      {/* Ticket Types */}
-      {!event.isFree &&
-        event.ticketTypes &&
-        event.ticketTypes.length > 0 && (
-          <View style={styles.ticketsSection}>
-            <Text style={styles.sectionTitle}>Ticket Types</Text>
-            {event.ticketTypes.map((ticket, index) => (
-              <View key={ticket.id || index} style={styles.ticketItem}>
-                <View style={styles.ticketInfo}>
-                  <Text style={styles.ticketName}>{ticket.name}</Text>
-                  <Text style={styles.ticketPrice}>
-                    {formatPrice(ticket.price)}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
     </View>
   );
 };
@@ -228,33 +209,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Sora-Regular',
     color: Colors.gray700,
     lineHeight: 24,
-  },
-  ticketsSection: {
-    marginBottom: 24,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray200,
-  },
-  ticketItem: {
-    backgroundColor: Colors.gray50,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  ticketInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ticketName: {
-    fontSize: 16,
-    fontFamily: 'Sora-SemiBold',
-    color: Colors.black,
-  },
-  ticketPrice: {
-    fontSize: 16,
-    fontFamily: 'Sora-Bold',
-    color: Colors.primary,
   },
 });
 

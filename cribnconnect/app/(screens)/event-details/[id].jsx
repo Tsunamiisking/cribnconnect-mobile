@@ -13,6 +13,7 @@ import EventHeader from './components/EventHeader';
 import EventLoadingSkeleton from './components/EventLoadingSkeleton';
 import EventPerksSection from './components/EventPerksSection';
 import EventStatusBadges from './components/EventStatusBadges';
+import EventTicketSection from './components/EventTicketSection';
 import { eventCategoryIcons, formatDate, formatPrice } from './utils/eventHelpers';
 
 
@@ -143,6 +144,14 @@ const EventDetailsScreen = () => {
           formatDate={formatDate}
           formatPrice={formatPrice}
           handleContactOrganizer={handleContactOrganizer}
+        />
+
+        {/* Ticket Information Section with Edit Modal */}
+        <EventTicketSection
+          event={event}
+          isHost={isHost}
+          onTicketUpdate={handleEventUpdate}
+          formatPrice={formatPrice}
         />
 
         {/* Special Perks Section with Edit Modal */}
