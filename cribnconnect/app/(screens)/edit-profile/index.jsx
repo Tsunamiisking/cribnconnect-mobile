@@ -2,9 +2,8 @@ import {
   createPaystackSubAccount,
   editUser,
   getMyProfile,
-  getUserById,
   verifyBankAccount,
-  withdrawFromWallet,
+  withdrawFromWallet
 } from "@/api/services/userServices";
 import BackHeader from "@/components/BackHeader";
 import BankSelectionModal from "@/components/modals/BankSelectionModal";

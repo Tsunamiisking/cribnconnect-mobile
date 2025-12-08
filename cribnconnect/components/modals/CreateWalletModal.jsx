@@ -2,16 +2,16 @@ import { Colors } from "@/constants/Colors";
 import { AlertCircle, CheckCircle, ChevronDown, Wallet } from "lucide-react-native";
 import React from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const CreateWalletModal = ({
