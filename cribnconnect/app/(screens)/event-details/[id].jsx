@@ -175,7 +175,36 @@ const EventDetailsScreen = () => {
         // Check if current user is the host
         const auth = getAuth();
         const currentUserId = auth?.currentUser?.uid;
-        setIsHost(currentUserId === eventData.hostId);
+        
+        // Handle host field - it can be:
+        // 1. A populated user object with uid field (most common)
+        // 2. An object with $oid (MongoDB ObjectId)
+        // 3. A plain string ID
+        let hostId;
+        if (typeof eventData.host === 'object') {
+          if (eventData.host?.uid) {
+            // Populated user object with Firebase UID
+            hostId = eventData.host.uid;
+          } else if (eventData.host?.$oid) {
+            // MongoDB ObjectId format
+            hostId = eventData.host.$oid;
+          } else if (eventData.host?._id) {
+            // Fallback to _id field
+            hostId = eventData.host._id;
+          }
+        } else {
+          // Plain string ID
+          hostId = eventData.host;
+        }
+        
+        // console.log('=== HOST DETECTION DEBUG ===');
+        // console.log('Current User ID:', currentUserId);
+        // console.log('Event Host (raw):', eventData.host);
+        // console.log('Event Host ID (processed):', hostId);
+        // console.log('Is Host:', currentUserId === hostId);
+        // console.log('===========================');
+        
+        setIsHost(currentUserId === hostId);
         
         setEvent(eventData);
         setLoading(false);
