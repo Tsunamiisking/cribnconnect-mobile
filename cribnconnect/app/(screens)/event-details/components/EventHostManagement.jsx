@@ -1,26 +1,26 @@
 import api from "@/api/api";
 import { Colors } from "@/constants/Colors";
 import {
-    AlertTriangle,
-    Calendar,
-    MapPin,
-    MoreVertical,
-    Shield,
-    Trash2,
-    X,
+  AlertTriangle,
+  Calendar,
+  MapPin,
+  MoreVertical,
+  Shield,
+  Trash2,
+  X,
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const EventHostManagement = ({
@@ -55,9 +55,7 @@ const EventHostManagement = ({
 
   // Safety rules state
   const [safetyRulesText, setSafetyRulesText] = useState(
-    Array.isArray(event.eventSafetyTips)
-      ? event.eventSafetyTips.join("\n")
-      : ""
+    Array.isArray(event.eventSafetyTips) ? event.eventSafetyTips.join("\n") : ""
   );
 
   // Sync states when event prop changes
@@ -102,7 +100,11 @@ const EventHostManagement = ({
       setIsSaving(true);
 
       // Validate required fields
-      if (!editedLocation.venue || !editedLocation.city || !editedLocation.state) {
+      if (
+        !editedLocation.venue ||
+        !editedLocation.city ||
+        !editedLocation.state
+      ) {
         Alert.alert(
           "Validation Error",
           "Venue, city, and state are required fields"
@@ -222,7 +224,9 @@ const EventHostManagement = ({
 
   const handleDelete = async () => {
     // Check if event is paid and has attendees
-    const attendeeCount = Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0);
+    const attendeeCount = Array.isArray(event.attendees)
+      ? event.attendees.length
+      : event.attendees || 0;
     const hasPaidAttendees = !event.isFree && attendeeCount > 0;
 
     if (hasPaidAttendees) {
@@ -341,18 +345,28 @@ const EventHostManagement = ({
               onPress={handleEditSafety}
             >
               <Shield size={20} color={Colors.primary} />
-              <Text style={styles.hostMenuItemText}>Edit Safety Guidelines</Text>
+              <Text style={styles.hostMenuItemText}>
+                Edit Safety Guidelines
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.hostMenuDivider} />
 
-            {(Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0)) > 0 && !event.isFree ? (
+            {(Array.isArray(event.attendees)
+              ? event.attendees.length
+              : event.attendees || 0) > 0 && !event.isFree ? (
               <TouchableOpacity
                 style={[styles.hostMenuItem, styles.hostMenuItemDanger]}
                 onPress={handleCancelEvent}
               >
                 <AlertTriangle size={20} color={Colors.warning} />
-                <Text style={[styles.hostMenuItemText, styles.hostMenuItemDangerText, { color: Colors.warning }]}>
+                <Text
+                  style={[
+                    styles.hostMenuItemText,
+                    styles.hostMenuItemDangerText,
+                    { color: Colors.warning },
+                  ]}
+                >
                   Cancel Event (Refunds)
                 </Text>
               </TouchableOpacity>
@@ -362,7 +376,14 @@ const EventHostManagement = ({
                 onPress={handleDelete}
               >
                 <Trash2 size={20} color={Colors.error} />
-                <Text style={[styles.hostMenuItemText, styles.hostMenuItemDangerText]}>Delete Event</Text>
+                <Text
+                  style={[
+                    styles.hostMenuItemText,
+                    styles.hostMenuItemDangerText,
+                  ]}
+                >
+                  Delete Event
+                </Text>
               </TouchableOpacity>
             )}
 
@@ -506,9 +527,7 @@ const EventHostManagement = ({
               {isSaving ? (
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
-                <Text style={styles.modalButtonTextPrimary}>
-                  Save Changes
-                </Text>
+                <Text style={styles.modalButtonTextPrimary}>Save Changes</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -546,6 +565,7 @@ const EventHostManagement = ({
                 onChangeText={setEditedDate}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={Colors.gray400}
+                keyboardType="numeric"
               />
               <Text style={styles.inputHint}>Format: YYYY-MM-DD</Text>
             </View>
@@ -560,6 +580,7 @@ const EventHostManagement = ({
                 onChangeText={setEditedTime}
                 placeholder="19:00"
                 placeholderTextColor={Colors.gray400}
+                keyboardType="numeric"
               />
               <Text style={styles.inputHint}>Format: HH:MM (24-hour)</Text>
             </View>
@@ -572,6 +593,7 @@ const EventHostManagement = ({
                 onChangeText={setEditedEndTime}
                 placeholder="23:00"
                 placeholderTextColor={Colors.gray400}
+                keyboardType="numeric"
               />
               <Text style={styles.inputHint}>Format: HH:MM (24-hour)</Text>
             </View>
@@ -603,9 +625,7 @@ const EventHostManagement = ({
               {isSaving ? (
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
-                <Text style={styles.modalButtonTextPrimary}>
-                  Save Changes
-                </Text>
+                <Text style={styles.modalButtonTextPrimary}>Save Changes</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -680,9 +700,7 @@ const EventHostManagement = ({
               {isSaving ? (
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
-                <Text style={styles.modalButtonTextPrimary}>
-                  Save Changes
-                </Text>
+                <Text style={styles.modalButtonTextPrimary}>Save Changes</Text>
               )}
             </TouchableOpacity>
           </View>
