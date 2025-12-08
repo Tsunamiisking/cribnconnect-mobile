@@ -27,8 +27,19 @@ const EditProfile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingWallet, setIsCreatingWallet] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isVerifyingBank, setIsVerifyingBank] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Bank account fields
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [selectedBank, setSelectedBank] = useState(null); // { name, code, slug }
+  const [verifiedAccountName, setVerifiedAccountName] = useState("");
+  const [isAccountVerified, setIsAccountVerified] = useState(false);
+  const [banks, setBanks] = useState([]);
   
   const [item, setItem] = useState({
     ImageUri: require("../../../assets/images/displayimageCC.jpg"),
