@@ -4,37 +4,37 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import {
   ArrowLeft,
+  Badge,
+  Beer,
+  Bus,
   Calendar,
   Camera,
   Car,
   Coffee,
+  Cookie,
+  Crown,
+  Gamepad,
   Gift,
   Heart,
+  Heart as HeartIcon,
+  Lock,
   MapPin,
+  Mic,
+  Moon,
   Music,
+  Share,
   Share2,
+  Shield,
+  Sofa,
   Sparkles,
   Star,
   Ticket,
   Users,
   Utensils,
   Wifi,
+  Wind,
   Wine,
   Zap,
-  Mic,
-  Cookie,
-  Beer,
-  Moon,
-  Share,
-  Crown,
-  Bus,
-  Wind,
-  Heart as HeartIcon,
-  Sofa,
-  Shield,
-  Badge,
-  Lock,
-  Gamepad,
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -263,21 +263,46 @@ const EventDetailsScreen = () => {
   const renderPerk = (perkId) => {
     const IconComponent = eventPerksIcons[perkId];
     const perkNames = {
+      // Entertainment
       "live_music": "Live Music",
-      "photography": "Professional Photography", 
-      "live_dj": "Live DJ",
-      "games": "Games & Activities",
-      "catering": "Catering Service",
-      "bar_service": "Bar Service",
+      "live_dj": "Live DJ / Set",
+      "mc_host": "MC / Host",
+      "photo_booth": "Photo Booth / Content Setup",
+      "games": "Games & Fun Activities",
+      "performances": "Guest Performances",
+      
+      // Food & Drink
+      "catering": "Food Catering",
       "open_bar": "Open Bar",
-      "coffee_station": "Coffee Station",
+      "snacks_pastries": "Snacks & Small Chops",
       "welcome_drinks": "Welcome Drinks",
+      "bottle_service": "VIP / Bottle Service",
+      
+      // Experience
       "vip_access": "VIP Access",
+      "afterparty": "Afterparty Access",
       "meet_greet": "Meet & Greet",
-      "exclusive_content": "Exclusive Content",
-      "networking": "Networking Session",
+      "exclusive_content": "Exclusive Photos / Recap",
+      "networking": "Networking Sessions",
+      
+      // Comfort & Convenience
       "wifi": "Free WiFi",
       "parking": "Parking Available",
+      "shuttle": "Shuttle/Transport to Venue",
+      "ac": "AC / Climate Control",
+      "first_aid": "On-site First Aid / Medical",
+      "rest_areas": "Rest Area / Lounge Space",
+      
+      // Security & Logistics
+      "security_team": "Security Team Present",
+      "id_check": "ID / Verification at Gate",
+      "bag_check": "Bag Check & Controlled Entry",
+      "crowd_control": "Hostess & Crowd Management",
+      
+      // Legacy/Deprecated (for backwards compatibility)
+      "photography": "Professional Photography",
+      "bar_service": "Bar Service",
+      "coffee_station": "Coffee Station",
       "accessibility": "Wheelchair Accessible",
       "coat_check": "Coat Check",
     };
@@ -407,27 +432,30 @@ const EventDetailsScreen = () => {
           <ArrowLeft size={24} color={Colors.black} />
         </TouchableOpacity>
         <View style={styles.headerActions}>
-          {isHost && (
+          {isHost ? (
             <EventHostManagement
               event={event}
               isHost={isHost}
               onEventUpdate={handleEventUpdate}
               onEventDelete={handleEventDelete}
             />
+          ) : (
+            <>
+              <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
+                <Share2 size={24} color={Colors.black} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => setIsLiked(!isLiked)} 
+                style={styles.headerButton}
+              >
+                <Heart 
+                  size={24} 
+                  color={isLiked ? Colors.primary : Colors.black}
+                  fill={isLiked ? Colors.primary : 'transparent'}
+                />
+              </TouchableOpacity>
+            </>
           )}
-          <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
-            <Share2 size={24} color={Colors.black} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            onPress={() => setIsLiked(!isLiked)} 
-            style={styles.headerButton}
-          >
-            <Heart 
-              size={24} 
-              color={isLiked ? Colors.primary : Colors.black}
-              fill={isLiked ? Colors.primary : 'transparent'}
-            />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -444,6 +472,53 @@ const EventDetailsScreen = () => {
               height: item.height
             }))} 
           />
+        )}
+
+        {/* Status badges for hosts (below media, above title) */}
+        {isHost && (
+          <View style={styles.statusBadgeContainer}>
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: event.isActive
+                    ? Colors.success
+                    : Colors.error,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: Colors.white },
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {event.isActive ? "Active" : "Inactive"}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: event.isPublished
+                    ? Colors.success
+                    : Colors.gray500,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: Colors.white },
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {event.isPublished ? "Published" : "Unpublished"}
+              </Text>
+            </View>
+          </View>
         )}
 
         {/* Event Info */}
@@ -610,25 +685,27 @@ const EventDetailsScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <View style={styles.bottomPricing}>
-          <Text style={styles.bottomPrice}>
-            {event.isFree ? "Free Event" : `From ${formatPrice(minPrice.toString())}`}
-          </Text>
-          <Text style={styles.bottomAttendance}>
-            {Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0)} attending
-          </Text>
+      {/* Bottom Action Bar - Only visible to guests */}
+      {!isHost && (
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomPricing}>
+            <Text style={styles.bottomPrice}>
+              {event.isFree ? "Free Event" : `From ${formatPrice(minPrice.toString())}`}
+            </Text>
+            <Text style={styles.bottomAttendance}>
+              {Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0)} attending
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={[styles.rsvpButton, isAttending && styles.attendingButton]} 
+            onPress={handleRSVP}
+          >
+            <Text style={styles.rsvpButtonText}>
+              {isAttending ? 'Attending ✓' : 'RSVP Now'}
+            </Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          style={[styles.rsvpButton, isAttending && styles.attendingButton]} 
-          onPress={handleRSVP}
-        >
-          <Text style={styles.rsvpButtonText}>
-            {isAttending ? 'Attending ✓' : 'RSVP Now'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -653,6 +730,9 @@ const mockEventData = {
   capacity: 150,
   attendees: 87,
   isFree: false,
+  isPublished: true,
+  isActive: true,
+  status: "active",
   ticketTypes: [
     { id: 'regular', name: 'Regular', price: '15000' },
     { id: 'vip', name: 'VIP', price: '25000' },
@@ -1106,6 +1186,34 @@ const styles = StyleSheet.create({
     height: 48,
     width: 120,
     borderRadius: 12,
+  },
+  // Status Badge Styles (for hosts)
+  statusBadgeContainer: {
+    paddingHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 12,
+    justifyContent: "space-between",
+    flexDirection: "row",
+  },
+  statusBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginVertical: 5,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  statusText: {
+    fontSize: 12,
+    fontFamily: "Sora-Medium",
+    color: Colors.white,
   },
 });
 
