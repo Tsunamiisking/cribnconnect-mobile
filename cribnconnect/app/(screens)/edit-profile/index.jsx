@@ -1,31 +1,28 @@
 import {
   createPaystackSubAccount,
   editUser,
-  getNigerianBanks,
   getMyProfile,
   getUserById,
   verifyBankAccount,
   withdrawFromWallet,
 } from "@/api/services/userServices";
 import BackHeader from "@/components/BackHeader";
+import BankSelectionModal from "@/components/modals/BankSelectionModal";
+import CreateWalletModal from "@/components/modals/CreateWalletModal";
+import WithdrawModal from "@/components/modals/WithdrawModal";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   AlertCircle,
-  CheckCircle,
-  ChevronDown,
   CreditCard,
-  Search,
   Wallet,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Image,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -47,15 +44,12 @@ const EditProfile = () => {
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
 
   // Bank account fields
   const [bankAccountNumber, setBankAccountNumber] = useState("");
-  const [selectedBank, setSelectedBank] = useState(null); // { name, code, slug }
+  const [selectedBank, setSelectedBank] = useState(null); // { name, code }
   const [verifiedAccountName, setVerifiedAccountName] = useState("");
   const [isAccountVerified, setIsAccountVerified] = useState(false);
-  const [banks, setBanks] = useState([]);
-  const [paymentSearchTerm, setPaymentSearchTerm] = useState("");
   const [item, setItem] = useState({
     ImageUri: require("../../../assets/images/displayimageCC.jpg"),
     _id: "",
@@ -97,10 +91,6 @@ const EditProfile = () => {
             rating: userData.rating || 0,
             paystackSubAccount: userData.paystackSubAccount || null,
           });
-
-          // Fetch banks for wallet creation
-          const banksResponse = await getNigerianBanks();
-          setBanks(banksResponse.banks || []);
         } catch (error) {
           console.error("Error fetching data:", error);
           Alert.alert("Error", "Failed to load user data");
@@ -112,123 +102,6 @@ const EditProfile = () => {
 
     fetchData();
   }, [publicProfile]);
-
-  // List of Nigerian banks
-  const nigerianBanks = [
-    "Access Bank",
-    "Citibank Nigeria",
-    "Ecobank Nigeria",
-    "Fidelity Bank",
-    "First Bank of Nigeria",
-    "First City Monument Bank (FCMB)",
-    "Globus Bank",
-    "Guaranty Trust Bank (GTBank)",
-    "Heritage Bank",
-    "Jaiz Bank",
-    "Keystone Bank",
-    "Polaris Bank",
-    "Providus Bank",
-    "Stanbic IBTC Bank",
-    "Standard Chartered Bank",
-    "Sterling Bank",
-    "SunTrust Bank",
-    "Titan Trust Bank",
-    "Union Bank of Nigeria",
-    "United Bank for Africa (UBA)",
-    "Unity Bank",
-    "Wema Bank",
-    "Zenith Bank",
-    "Kuda Bank",
-    "Opay",
-    "PalmPay",
-    "Moniepoint",
-    "VFD Microfinance Bank",
-    "Carbon (Formerly Paylater)",
-    "Rubies Bank",
-    "TAJ Bank",
-    "Parallex Bank",
-    "Premium Trust Bank",
-    "Lotus Bank",
-    "Coronation Merchant Bank",
-    "FBN Merchant Bank",
-    "FSDH Merchant Bank",
-    "Greenwich Merchant Bank",
-    "Nova Merchant Bank",
-    "Rand Merchant Bank",
-  ];
-
-  // Paystack payment methods
-  const paystackPaymentMethods = [
-    "Card (Visa, Mastercard, Verve)",
-    "Bank Transfer",
-    "USSD",
-    "Mobile Money",
-    "QR Code",
-    "Apple Pay",
-    "Google Pay",
-    "Bank Branch",
-    "POS",
-    "EFT",
-  ];
-
-  // Payout methods for African countries
-  const payoutMethods = ["Bank Transfer", "Mobile Money (Momo)", "M-Pesa"];
-
-  // Mobile Money providers
-  const mobileProviders = [
-    "MTN Mobile Money",
-    "Airtel Money",
-    "Orange Money",
-    "Vodafone Cash",
-    "Tigo Cash",
-    "Ecobank Mobile",
-    "UBA Mobile Money",
-  ];
-
-  // Filter banks based on search term
-  const filteredBanks = nigerianBanks.filter((bank) =>
-    bank.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Filter payment methods based on search term
-  const filteredPaymentMethods = paystackPaymentMethods.filter((method) =>
-    method.toLowerCase().includes(paymentSearchTerm.toLowerCase())
-  );
-
-  const selectBank = (bankName) => {
-    setItem({ ...item, selectedBank: bankName });
-    setShowBankModal(false);
-    setSearchTerm("");
-  };
-
-  const selectPaymentMethod = (paymentMethod) => {
-    setItem({ ...item, paymentMethod });
-    setShowPaymentModal(false);
-    setPaymentSearchTerm("");
-  };
-
-  const selectPayoutMethod = (payoutMethod) => {
-    // Reset relevant fields when changing payout method
-    const updatedItem = {
-      ...item,
-      payoutMethod,
-      // Reset fields
-      bankAccountNumber: "",
-      bankAccountName: "",
-      selectedBank: "",
-      mobileNumber: "",
-      mobileProvider: "",
-      mpesaNumber: "",
-      mpesaName: "",
-    };
-    setItem(updatedItem);
-    setShowPayoutModal(false);
-  };
-
-  const selectMobileProvider = (provider) => {
-    setItem({ ...item, mobileProvider: provider });
-    setShowMobileProviderModal(false);
-  };
 
   const handleVerifyBankAccount = async () => {
     if (!bankAccountNumber || bankAccountNumber.length !== 10) {
@@ -499,7 +372,9 @@ const EditProfile = () => {
               Manage your earnings and withdrawals
             </Text>
 
-            {item.paystackSubAccount ? (
+            {item.paystackSubAccount && 
+             item.paystackSubAccount.accountNumber && 
+             item.paystackSubAccount.accountName ? (
               <View style={styles.walletCard}>
                 <View style={styles.walletInfo}>
                   <View style={styles.walletRow}>
@@ -596,259 +471,57 @@ const EditProfile = () => {
       </KeyboardAvoidingView>
 
       {/* Withdraw Modal */}
-      <Modal
+      <WithdrawModal
         visible={showWithdrawModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        transparent={true}
-        onRequestClose={() => setShowWithdrawModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.withdrawModalContainer}>
-            <View style={styles.withdrawModalHeader}>
-              <Text style={styles.modalTitle}>Withdraw Funds</Text>
-              <TouchableOpacity
-                onPress={() => setShowWithdrawModal(false)}
-                style={styles.closeButton}
-              >
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.withdrawModalContent}>
-              <View style={styles.balanceInfo}>
-                <Text style={styles.balanceLabel}>Available Balance</Text>
-                <Text style={styles.balanceAmount}>
-                  ₦
-                  {(
-                    (item.paystackSubAccount?.balance || 0) / 100
-                  ).toLocaleString("en-NG", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-
-              <View style={{ marginTop: 24 }}>
-                <Text style={styles.label}>Amount to Withdraw</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter amount (minimum ₦1,000)"
-                  placeholderTextColor="#B0B0B0"
-                  value={withdrawAmount}
-                  onChangeText={setWithdrawAmount}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={styles.withdrawInfo}>
-                <AlertCircle size={16} color={Colors.gray600} />
-                <Text style={styles.withdrawInfoText}>
-                  Withdrawals are processed within 24-48 hours to your
-                  registered bank account
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={[styles.button, isWithdrawing && styles.buttonDisabled]}
-                onPress={handleWithdraw}
-                disabled={isWithdrawing}
-              >
-                {isWithdrawing ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={styles.buttonText}>Confirm Withdrawal</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowWithdrawModal(false)}
+        balance={item.paystackSubAccount?.balance || 0}
+        withdrawAmount={withdrawAmount}
+        setWithdrawAmount={setWithdrawAmount}
+        onWithdraw={handleWithdraw}
+        isWithdrawing={isWithdrawing}
+      />
 
       {/* Create Wallet Modal */}
-      <Modal
-        visible={showCreateWalletModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        transparent={true}
-        onRequestClose={() => setShowCreateWalletModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.withdrawModalContainer}>
-            <View style={styles.withdrawModalHeader}>
-              <Text style={styles.modalTitle}>Create Wallet</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowCreateWalletModal(false);
-                  setBankAccountNumber("");
-                  setSelectedBank(null);
-                  setVerifiedAccountName("");
-                  setIsAccountVerified(false);
-                }}
-                style={styles.closeButton}
-              >
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.withdrawModalContent}>
-              <View style={styles.withdrawInfo}>
-                <AlertCircle size={16} color={Colors.primary} />
-                <Text style={styles.infoTextPrimary}>
-                  Link your bank account to receive payments and withdraw
-                  earnings
-                </Text>
-              </View>
-
-              {/* Account Number Input */}
-              <View style={{ marginTop: 20 }}>
-                <Text style={styles.label}>Account Number</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter 10-digit account number"
-                  placeholderTextColor="#B0B0B0"
-                  value={bankAccountNumber}
-                  onChangeText={setBankAccountNumber}
-                  keyboardType="numeric"
-                  maxLength={10}
-                />
-              </View>
-
-              {/* Bank Selection */}
-              <View style={{ marginTop: 20 }}>
-                <Text style={styles.label}>Select Bank</Text>
-                <TouchableOpacity
-                  style={[styles.input, styles.bankSelector]}
-                  onPress={() => setShowBankModal(true)}
-                >
-                  <Text
-                    style={[
-                      styles.bankSelectorText,
-                      !selectedBank && styles.placeholderText,
-                    ]}
-                  >
-                    {selectedBank ? selectedBank.name : "Select your bank"}
-                  </Text>
-                  <ChevronDown size={20} color={Colors.gray600} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Verified Account Name */}
-              {isAccountVerified && verifiedAccountName && (
-                <View style={styles.verifiedAccountInfo}>
-                  <CheckCircle size={20} color="#10b981" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.verifiedLabel}>Account Name</Text>
-                    <Text style={styles.verifiedName}>
-                      {verifiedAccountName}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Verify Button */}
-              {!isAccountVerified && (
-                <TouchableOpacity
-                  style={[
-                    styles.verifyButton,
-                    isVerifyingBank && styles.buttonDisabled,
-                  ]}
-                  onPress={handleVerifyBankAccount}
-                  disabled={
-                    isVerifyingBank || !bankAccountNumber || !selectedBank
-                  }
-                >
-                  {isVerifyingBank ? (
-                    <ActivityIndicator size="small" color={Colors.primary} />
-                  ) : (
-                    <Text style={styles.verifyButtonText}>Verify Account</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-
-              {/* Create Wallet Button */}
-              {isAccountVerified && (
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    isCreatingWallet && styles.buttonDisabled,
-                  ]}
-                  onPress={handleCreateWallet}
-                  disabled={isCreatingWallet}
-                >
-                  {isCreatingWallet ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <>
-                      <Wallet size={20} color="white" />
-                      <Text style={styles.buttonText}>Create Wallet</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CreateWalletModal
+        visible={showCreateWalletModal && !showBankModal}
+        onClose={() => {
+          console.log("Closing Create Wallet Modal");
+          setShowCreateWalletModal(false);
+          setBankAccountNumber("");
+          setSelectedBank(null);
+          setVerifiedAccountName("");
+          setIsAccountVerified(false);
+        }}
+        bankAccountNumber={bankAccountNumber}
+        setBankAccountNumber={setBankAccountNumber}
+        selectedBank={selectedBank}
+        onSelectBank={() => {
+          console.log("Opening bank selection modal");
+          setShowBankModal(true);
+        }}
+        verifiedAccountName={verifiedAccountName}
+        isAccountVerified={isAccountVerified}
+        onVerifyAccount={handleVerifyBankAccount}
+        isVerifyingBank={isVerifyingBank}
+        onCreateWallet={handleCreateWallet}
+        isCreatingWallet={isCreatingWallet}
+      />
 
       {/* Bank Selection Modal */}
-      <Modal
+      <BankSelectionModal
         visible={showBankModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowBankModal(false)}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Bank</Text>
-            <TouchableOpacity
-              onPress={() => setShowBankModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Search Input */}
-          <View style={styles.searchContainer}>
-            <Search
-              size={20}
-              color={Colors.gray600}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search banks..."
-              placeholderTextColor="#B0B0B0"
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-            />
-          </View>
-
-          {/* Banks List */}
-          <FlatList
-            data={banks.filter((bank) =>
-              bank.name.toLowerCase().includes(searchTerm.toLowerCase())
-            )}
-            keyExtractor={(item, index) => item.code || index.toString()}
-            renderItem={({ item: bank }) => (
-              <TouchableOpacity
-                style={styles.bankItem}
-                onPress={() => {
-                  setSelectedBank(bank);
-                  setShowBankModal(false);
-                  setSearchTerm("");
-                  setIsAccountVerified(false);
-                  setVerifiedAccountName("");
-                }}
-              >
-                <Text style={styles.bankItemText}>{bank.name}</Text>
-              </TouchableOpacity>
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        </SafeAreaView>
-      </Modal>
+        onClose={() => {
+          console.log("Closing bank selection modal");
+          setShowBankModal(false);
+        }}
+        onSelectBank={(bank) => {
+          console.log("Bank selected in parent:", bank);
+          setSelectedBank(bank);
+          setIsAccountVerified(false);
+          setVerifiedAccountName("");
+          setShowBankModal(false);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -1046,174 +719,6 @@ const styles = StyleSheet.create({
   },
   createWalletButtonText: {
     color: "white",
-    fontFamily: "Sora-SemiBold",
-    fontSize: 14,
-  },
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  withdrawModalContainer: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: Platform.OS === "ios" ? 40 : 20,
-  },
-  withdrawModalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderColor,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontFamily: "Sora-SemiBold",
-    color: Colors.primary,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  closeButtonText: {
-    color: Colors.primary,
-    fontFamily: "Sora-Medium",
-    fontSize: 16,
-  },
-  withdrawModalContent: {
-    padding: 18,
-  },
-  balanceInfo: {
-    backgroundColor: "#f0f9ff",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  balanceLabel: {
-    fontSize: 12,
-    fontFamily: "Sora-Regular",
-    color: Colors.gray600,
-  },
-  balanceAmount: {
-    fontSize: 32,
-    fontFamily: "Sora-Bold",
-    color: Colors.primary,
-    marginTop: 4,
-  },
-  withdrawInfo: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#f9fafb",
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-    gap: 8,
-  },
-  withdrawInfoText: {
-    flex: 1,
-    fontSize: 12,
-    fontFamily: "Sora-Regular",
-    color: Colors.gray600,
-    lineHeight: 18,
-  },
-  infoTextPrimary: {
-    flex: 1,
-    fontSize: 12,
-    fontFamily: "Sora-Regular",
-    color: Colors.primary,
-    lineHeight: 18,
-  },
-  bankSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  bankSelectorText: {
-    fontSize: 14,
-    fontFamily: "Sora-Regular",
-    color: Colors.primary,
-    flex: 1,
-  },
-  placeholderText: {
-    color: "#B0B0B0",
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderColor,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    margin: 18,
-    borderWidth: 1,
-    borderColor: Colors.borderColor,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: Platform.OS === "ios" ? 50 : 60,
-  },
-  searchIcon: {
-    marginRight: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Sora-Regular",
-    color: Colors.primary,
-  },
-  bankItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-  },
-  bankItemText: {
-    fontSize: 14,
-    fontFamily: "Sora-Regular",
-    color: Colors.primary,
-  },
-  verifiedAccountInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f0fdf4",
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: "#86efac",
-  },
-  verifiedLabel: {
-    fontSize: 12,
-    fontFamily: "Sora-Regular",
-    color: Colors.gray600,
-  },
-  verifiedName: {
-    fontSize: 14,
-    fontFamily: "Sora-SemiBold",
-    color: Colors.primary,
-    marginTop: 2,
-  },
-  verifyButton: {
-    backgroundColor: "white",
-    padding: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  verifyButtonText: {
-    color: Colors.primary,
     fontFamily: "Sora-SemiBold",
     fontSize: 14,
   },
