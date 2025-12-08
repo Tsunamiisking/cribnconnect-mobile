@@ -146,6 +146,11 @@ const EventDetailsScreen = () => {
   const [isAttending, setIsAttending] = useState(false);
   const [isHost, setIsHost] = useState(false);
   
+  // Perks modal state
+  const [showEditPerksModal, setShowEditPerksModal] = useState(false);
+  const [selectedPerks, setSelectedPerks] = useState([]);
+  const [initialPerks, setInitialPerks] = useState([]);
+  
   // Shimmer animation
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
 
@@ -226,6 +231,79 @@ const EventDetailsScreen = () => {
   const handleEventDelete = () => {
     console.log('Event deleted, navigating back');
     router.back();
+  };
+
+  // Perks categories (same as EventSpecialPerks)
+  const perkCategories = {
+    Entertainment: [
+      { id: "live_music", name: "Live Music", icon: Music },
+      { id: "live_dj", name: "Live DJ / Set", icon: Zap },
+      { id: "mc_host", name: "MC / Host", icon: Mic },
+      { id: "photo_booth", name: "Photo Booth / Content Setup", icon: Camera },
+      { id: "games", name: "Games & Fun Activities", icon: Gamepad },
+      { id: "performances", name: "Guest Performances", icon: Star },
+    ],
+    "Food & Drink": [
+      { id: "catering", name: "Food Catering", icon: Utensils },
+      { id: "open_bar", name: "Open Bar", icon: Wine },
+      { id: "snacks_pastries", name: "Snacks & Small Chops", icon: Cookie },
+      { id: "welcome_drinks", name: "Welcome Drinks", icon: Gift },
+      { id: "bottle_service", name: "VIP / Bottle Service", icon: Beer },
+    ],
+    Experience: [
+      { id: "vip_access", name: "VIP Access", icon: Crown },
+      { id: "afterparty", name: "Afterparty Access", icon: Moon },
+      { id: "meet_greet", name: "Meet & Greet", icon: Users },
+      { id: "exclusive_content", name: "Exclusive Photos / Recap", icon: Sparkles },
+      { id: "networking", name: "Networking Sessions", icon: Share },
+    ],
+    "Comfort & Convenience": [
+      { id: "wifi", name: "Free WiFi", icon: Wifi },
+      { id: "parking", name: "Parking Available", icon: Car },
+      { id: "shuttle", name: "Shuttle/Transport to Venue", icon: Bus },
+      { id: "ac", name: "AC / Climate Control", icon: Wind },
+      { id: "first_aid", name: "On-site First Aid / Medical", icon: HeartIcon },
+      { id: "rest_areas", name: "Rest Area / Lounge Space", icon: Sofa },
+    ],
+    "Security & Logistics": [
+      { id: "security_team", name: "Security Team Present", icon: Shield },
+      { id: "id_check", name: "ID / Verification at Gate", icon: Badge },
+      { id: "bag_check", name: "Bag Check & Controlled Entry", icon: Lock },
+      { id: "crowd_control", name: "Hostess & Crowd Management", icon: Users },
+    ],
+  };
+
+  const handleOpenPerksModal = () => {
+    const currentPerks = event.eventSpecialPerks || event.specialPerks || [];
+    setInitialPerks(currentPerks);
+    setSelectedPerks(currentPerks);
+    setShowEditPerksModal(true);
+  };
+
+  const handleTogglePerk = (perkId) => {
+    setSelectedPerks((prev) =>
+      prev.includes(perkId) ? prev.filter((id) => id !== perkId) : [...prev, perkId]
+    );
+  };
+
+  const handleSavePerks = async () => {
+    try {
+      const response = await api.put(`/events/${event._id || event.id}`, {
+        eventSpecialPerks: selectedPerks,
+      });
+
+      if (response.data) {
+        Alert.alert("Success", "Special perks updated successfully");
+        setEvent({ ...event, eventSpecialPerks: selectedPerks });
+        setShowEditPerksModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating perks:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to update special perks"
+      );
+    }
   };
 
   // Shimmer component

@@ -8,6 +8,30 @@ import {
   Shield,
   Trash2,
   X,
+  Sparkles,
+  Music,
+  Zap,
+  Mic,
+  Camera,
+  Gamepad,
+  Star,
+  Utensils,
+  Wine,
+  Cookie,
+  Gift,
+  Beer,
+  Crown,
+  Moon,
+  Users,
+  Share,
+  Wifi,
+  Car,
+  Bus,
+  Wind,
+  Heart,
+  Sofa,
+  Badge,
+  Lock,
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -34,7 +58,53 @@ const EventHostManagement = ({
   const [showEditLocationModal, setShowEditLocationModal] = useState(false);
   const [showEditDateModal, setShowEditDateModal] = useState(false);
   const [showEditSafetyModal, setShowEditSafetyModal] = useState(false);
+  const [showEditPerksModal, setShowEditPerksModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Perks categories (same as EventSpecialPerks)
+  const perkCategories = {
+    Entertainment: [
+      { id: "live_music", name: "Live Music", icon: Music },
+      { id: "live_dj", name: "Live DJ / Set", icon: Zap },
+      { id: "mc_host", name: "MC / Host", icon: Mic },
+      { id: "photo_booth", name: "Photo Booth / Content Setup", icon: Camera },
+      { id: "games", name: "Games & Fun Activities", icon: Gamepad },
+      { id: "performances", name: "Guest Performances", icon: Star },
+    ],
+    "Food & Drink": [
+      { id: "catering", name: "Food Catering", icon: Utensils },
+      { id: "open_bar", name: "Open Bar", icon: Wine },
+      { id: "snacks_pastries", name: "Snacks & Small Chops", icon: Cookie },
+      { id: "welcome_drinks", name: "Welcome Drinks", icon: Gift },
+      { id: "bottle_service", name: "VIP / Bottle Service", icon: Beer },
+    ],
+    Experience: [
+      { id: "vip_access", name: "VIP Access", icon: Crown },
+      { id: "afterparty", name: "Afterparty Access", icon: Moon },
+      { id: "meet_greet", name: "Meet & Greet", icon: Users },
+      { id: "exclusive_content", name: "Exclusive Photos / Recap", icon: Sparkles },
+      { id: "networking", name: "Networking Sessions", icon: Share },
+    ],
+    "Comfort & Convenience": [
+      { id: "wifi", name: "Free WiFi", icon: Wifi },
+      { id: "parking", name: "Parking Available", icon: Car },
+      { id: "shuttle", name: "Shuttle/Transport to Venue", icon: Bus },
+      { id: "ac", name: "AC / Climate Control", icon: Wind },
+      { id: "first_aid", name: "On-site First Aid / Medical", icon: Heart },
+      { id: "rest_areas", name: "Rest Area / Lounge Space", icon: Sofa },
+    ],
+    "Security & Logistics": [
+      { id: "security_team", name: "Security Team Present", icon: Shield },
+      { id: "id_check", name: "ID / Verification at Gate", icon: Badge },
+      { id: "bag_check", name: "Bag Check & Controlled Entry", icon: Lock },
+      { id: "crowd_control", name: "Hostess & Crowd Management", icon: Users },
+    ],
+  };
+
+  // Perks state
+  const [selectedPerks, setSelectedPerks] = useState(
+    event.eventSpecialPerks || event.specialPerks || []
+  );
 
   // Location state
   const [editedLocation, setEditedLocation] = useState({
@@ -78,6 +148,7 @@ const EventHostManagement = ({
         ? event.eventSafetyTips.join("\n")
         : ""
     );
+    setSelectedPerks(event.eventSpecialPerks || event.specialPerks || []);
   }, [event]);
 
   const handleEditLocation = () => {
@@ -93,6 +164,40 @@ const EventHostManagement = ({
   const handleEditSafety = () => {
     setShowHostMenu(false);
     setShowEditSafetyModal(true);
+  };
+
+  const togglePerk = (perkId) => {
+    setSelectedPerks((prev) => {
+      if (prev.includes(perkId)) {
+        return prev.filter((id) => id !== perkId);
+      } else {
+        return [...prev, perkId];
+      }
+    });
+  };
+
+  const handleSavePerks = async () => {
+    try {
+      setIsSaving(true);
+
+      const response = await api.put(`/events/${event._id || event.id}`, {
+        eventSpecialPerks: selectedPerks,
+      });
+
+      if (response.data) {
+        Alert.alert("Success", "Special perks updated successfully");
+        onEventUpdate(response.data);
+        setShowEditPerksModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating perks:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to update special perks"
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveLocation = async () => {
@@ -706,6 +811,107 @@ const EventHostManagement = ({
           </View>
         </SafeAreaView>
       </Modal>
+
+      {/* Edit Perks Modal */}
+      <Modal
+        visible={showEditPerksModal}
+        animationType="slide"
+        onRequestClose={() => setShowEditPerksModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Edit Special Perks</Text>
+            <TouchableOpacity
+              onPress={() => setShowEditPerksModal(false)}
+              style={styles.closeButton}
+            >
+              <X size={24} color={Colors.gray700} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            style={styles.modalContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.perksSectionSubtitle}>
+              Select perks that will be available at your event
+            </Text>
+
+            {Object.entries(perkCategories).map(([categoryName, perks]) => (
+              <View key={categoryName} style={styles.perkCategory}>
+                <Text style={styles.perkCategoryTitle}>{categoryName}</Text>
+                <View style={styles.perksGrid}>
+                  {perks.map((perk) => {
+                    const isSelected = selectedPerks.includes(perk.id);
+                    const IconComponent = perk.icon;
+
+                    return (
+                      <TouchableOpacity
+                        key={perk.id}
+                        onPress={() => togglePerk(perk.id)}
+                        style={[
+                          styles.perkCard,
+                          isSelected && styles.perkCardSelected,
+                        ]}
+                      >
+                        <IconComponent
+                          size={24}
+                          color={isSelected ? Colors.white : Colors.primary}
+                        />
+                        <Text
+                          style={[
+                            styles.perkCardText,
+                            isSelected && styles.perkCardTextSelected,
+                          ]}
+                        >
+                          {perk.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+
+            {selectedPerks.length > 0 && (
+              <View style={styles.selectedPerksInfo}>
+                <Sparkles size={20} color={Colors.primary} />
+                <Text style={styles.selectedPerksText}>
+                  {selectedPerks.length} perk{selectedPerks.length !== 1 ? "s" : ""} selected
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonSecondary]}
+              onPress={() => {
+                // Reset to original perks on cancel
+                setSelectedPerks(event.eventSpecialPerks || event.specialPerks || []);
+                setShowEditPerksModal(false);
+              }}
+            >
+              <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.modalButton,
+                styles.modalButtonPrimary,
+                isSaving && styles.modalButtonDisabled,
+              ]}
+              onPress={handleSavePerks}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <Text style={styles.modalButtonTextPrimary}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </>
   );
 
@@ -957,6 +1163,64 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Sora-SemiBold",
     color: Colors.white,
+  },
+  perksSectionSubtitle: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  perkCategory: {
+    marginBottom: 24,
+  },
+  perkCategoryTitle: {
+    fontSize: 16,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.black,
+    marginBottom: 12,
+  },
+  perksGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  perkCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.gray50,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  perkCardSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  perkCardText: {
+    fontSize: 13,
+    fontFamily: "Sora-Medium",
+    color: Colors.gray700,
+  },
+  perkCardTextSelected: {
+    color: Colors.white,
+  },
+  selectedPerksInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.blue50,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+    gap: 8,
+  },
+  selectedPerksText: {
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.primary,
   },
 });
 
