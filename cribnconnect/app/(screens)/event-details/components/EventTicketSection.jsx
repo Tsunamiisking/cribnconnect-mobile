@@ -127,7 +127,18 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
       isActive: true,
     };
 
-    setTicketTypes((prev) => [...prev, newTicket]);
+    const updatedTickets = [...ticketTypes, newTicket];
+    setTicketTypes(updatedTickets);
+    
+    // Update capacity based on total tickets
+    const totalQuantity = updatedTickets.reduce(
+      (sum, t) => sum + (parseInt(t.quantity) || 0),
+      0
+    );
+    if (totalQuantity > 0) {
+      setCapacity(totalQuantity.toString());
+    }
+    
     setCustomTicketName('');
     setCustomTicketPrice('');
     setCustomTicketQuantity('');
@@ -135,7 +146,15 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
   };
 
   const removeTicket = (ticketId) => {
-    setTicketTypes((prev) => prev.filter((t) => t.id !== ticketId));
+    const updatedTickets = ticketTypes.filter((t) => t.id !== ticketId);
+    setTicketTypes(updatedTickets);
+    
+    // Update capacity based on remaining tickets
+    const totalQuantity = updatedTickets.reduce(
+      (sum, t) => sum + (parseInt(t.quantity) || 0),
+      0
+    );
+    setCapacity(totalQuantity > 0 ? totalQuantity.toString() : '');
   };
 
   const updateTicketPrice = (ticketId, price) => {
@@ -149,13 +168,21 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
   };
 
   const updateTicketQuantity = (ticketId, quantity) => {
-    setTicketTypes((prev) =>
-      prev.map((ticket) =>
-        ticket.id === ticketId
-          ? { ...ticket, quantity: handleQuantityChange(quantity) }
-          : ticket
-      )
+    const updatedTickets = ticketTypes.map((ticket) =>
+      ticket.id === ticketId
+        ? { ...ticket, quantity: handleQuantityChange(quantity) }
+        : ticket
     );
+    setTicketTypes(updatedTickets);
+    
+    // Update capacity based on total tickets
+    const totalQuantity = updatedTickets.reduce(
+      (sum, t) => sum + (parseInt(t.quantity) || 0),
+      0
+    );
+    if (totalQuantity > 0) {
+      setCapacity(totalQuantity.toString());
+    }
   };
 
   const getAvailablePredefinedTypes = () => {
