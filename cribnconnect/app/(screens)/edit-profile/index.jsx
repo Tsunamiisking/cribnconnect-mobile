@@ -1,8 +1,23 @@
-import { createPaystackSubAccount, editUser, getNigerianBanks, getMyProfile, getUserById, verifyBankAccount, withdrawFromWallet } from "@/api/services/userServices";
+import {
+  createPaystackSubAccount,
+  editUser,
+  getNigerianBanks,
+  getMyProfile,
+  getUserById,
+  verifyBankAccount,
+  withdrawFromWallet,
+} from "@/api/services/userServices";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle, CheckCircle, ChevronDown, CreditCard, Search, Wallet } from "lucide-react-native";
+import {
+  AlertCircle,
+  CheckCircle,
+  ChevronDown,
+  CreditCard,
+  Search,
+  Wallet,
+} from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,7 +32,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -33,14 +48,13 @@ const EditProfile = () => {
   const [showBankModal, setShowBankModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Bank account fields
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [selectedBank, setSelectedBank] = useState(null); // { name, code, slug }
   const [verifiedAccountName, setVerifiedAccountName] = useState("");
   const [isAccountVerified, setIsAccountVerified] = useState(false);
   const [banks, setBanks] = useState([]);
-    const [searchTerm, setSearchTerm] = useState("");
   const [paymentSearchTerm, setPaymentSearchTerm] = useState("");
   const [item, setItem] = useState({
     ImageUri: require("../../../assets/images/displayimageCC.jpg"),
@@ -64,11 +78,11 @@ const EditProfile = () => {
       if (publicProfile?._id) {
         try {
           setLoading(true);
-          
+
           // Fetch user data using /users/me endpoint
           const response = await getMyProfile();
           const userData = response.user;
-          
+
           setItem({
             ...item,
             _id: userData._id,
@@ -83,7 +97,7 @@ const EditProfile = () => {
             rating: userData.rating || 0,
             paystackSubAccount: userData.paystackSubAccount || null,
           });
-          
+
           // Fetch banks for wallet creation
           const banksResponse = await getNigerianBanks();
           setBanks(banksResponse.banks || []);
@@ -158,11 +172,7 @@ const EditProfile = () => {
   ];
 
   // Payout methods for African countries
-  const payoutMethods = [
-    "Bank Transfer",
-    "Mobile Money (Momo)",
-    "M-Pesa",
-  ];
+  const payoutMethods = ["Bank Transfer", "Mobile Money (Momo)", "M-Pesa"];
 
   // Mobile Money providers
   const mobileProviders = [
@@ -176,12 +186,12 @@ const EditProfile = () => {
   ];
 
   // Filter banks based on search term
-  const filteredBanks = nigerianBanks.filter(bank =>
+  const filteredBanks = nigerianBanks.filter((bank) =>
     bank.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Filter payment methods based on search term
-  const filteredPaymentMethods = paystackPaymentMethods.filter(method =>
+  const filteredPaymentMethods = paystackPaymentMethods.filter((method) =>
     method.toLowerCase().includes(paymentSearchTerm.toLowerCase())
   );
 
@@ -233,16 +243,25 @@ const EditProfile = () => {
 
     try {
       setIsVerifyingBank(true);
-      const response = await verifyBankAccount(bankAccountNumber, selectedBank.code);
-      
+      const response = await verifyBankAccount(
+        bankAccountNumber,
+        selectedBank.code
+      );
+
       if (response.success && response.accountDetails) {
         setVerifiedAccountName(response.accountDetails.accountName);
         setIsAccountVerified(true);
-        Alert.alert("Success", `Account verified: ${response.accountDetails.accountName}`);
+        Alert.alert(
+          "Success",
+          `Account verified: ${response.accountDetails.accountName}`
+        );
       }
     } catch (error) {
       console.error("Error verifying bank account:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to verify bank account");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to verify bank account"
+      );
       setIsAccountVerified(false);
     } finally {
       setIsVerifyingBank(false);
@@ -262,7 +281,7 @@ const EditProfile = () => {
         bankAccountNumber,
         selectedBank.code
       );
-      
+
       if (response.success && response.paystackSubAccount) {
         setItem({
           ...item,
@@ -278,14 +297,21 @@ const EditProfile = () => {
       }
     } catch (error) {
       console.error("Error creating wallet:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to create wallet");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to create wallet"
+      );
     } finally {
       setIsCreatingWallet(false);
     }
   };
 
   const handleWithdraw = async () => {
-    if (!withdrawAmount || isNaN(withdrawAmount) || parseFloat(withdrawAmount) <= 0) {
+    if (
+      !withdrawAmount ||
+      isNaN(withdrawAmount) ||
+      parseFloat(withdrawAmount) <= 0
+    ) {
       Alert.alert("Error", "Please enter a valid amount");
       return;
     }
@@ -306,7 +332,7 @@ const EditProfile = () => {
     try {
       setIsWithdrawing(true);
       const response = await withdrawFromWallet(item._id, { amount });
-      
+
       if (response.success) {
         // Refresh user data to get updated balance
         const userResponse = await getMyProfile();
@@ -314,14 +340,20 @@ const EditProfile = () => {
           ...item,
           paystackSubAccount: userResponse.user.paystackSubAccount || null,
         });
-        
+
         setShowWithdrawModal(false);
         setWithdrawAmount("");
-        Alert.alert("Success", response.message || "Withdrawal request submitted successfully!");
+        Alert.alert(
+          "Success",
+          response.message || "Withdrawal request submitted successfully!"
+        );
       }
     } catch (error) {
       console.error("Error withdrawing:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to process withdrawal");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to process withdrawal"
+      );
     } finally {
       setIsWithdrawing(false);
     }
@@ -337,13 +369,16 @@ const EditProfile = () => {
         phone: item.phone,
         bio: item.bio,
       };
-      
+
       await editUser(item._id, updateData);
       await refreshPublicProfile();
       Alert.alert("Success", "Profile updated successfully!");
     } catch (error) {
       console.error("Error saving changes:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to save changes");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to save changes"
+      );
     } finally {
       setIsSaving(false);
     }
@@ -431,7 +466,7 @@ const EditProfile = () => {
                 onChangeText={(text) => setItem({ ...item, bio: text })}
               />
             </View>
-            
+
             {/* User Type and Verification Status */}
             <View style={styles.infoRow}>
               <View style={styles.infoItem}>
@@ -440,13 +475,20 @@ const EditProfile = () => {
               </View>
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Verified</Text>
-                <Text style={[styles.infoValue, { color: item.isVerified ? Colors.primary : Colors.gray600 }]}>
+                <Text
+                  style={[
+                    styles.infoValue,
+                    {
+                      color: item.isVerified ? Colors.primary : Colors.gray600,
+                    },
+                  ]}
+                >
                   {item.isVerified ? "Yes" : "No"}
                 </Text>
               </View>
             </View>
           </View>
-          
+
           {/* Paystack Wallet Section */}
           <View style={{ marginHorizontal: 18, marginTop: 24 }}>
             <View style={styles.walletHeader}>
@@ -481,7 +523,13 @@ const EditProfile = () => {
                   <View style={styles.walletRow}>
                     <Text style={styles.walletLabel}>Available Balance</Text>
                     <Text style={[styles.walletValue, styles.balanceText]}>
-                      ₦{((item.paystackSubAccount.balance || 0) / 100).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₦
+                      {(
+                        (item.paystackSubAccount.balance || 0) / 100
+                      ).toLocaleString("en-NG", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </Text>
                   </View>
                 </View>
@@ -489,16 +537,24 @@ const EditProfile = () => {
                 <TouchableOpacity
                   style={[
                     styles.withdrawButton,
-                    (!item.paystackSubAccount.balance || item.paystackSubAccount.balance < 100000) && styles.withdrawButtonDisabled
+                    (!item.paystackSubAccount.balance ||
+                      item.paystackSubAccount.balance < 100000) &&
+                      styles.withdrawButtonDisabled,
                   ]}
                   onPress={() => setShowWithdrawModal(true)}
-                  disabled={!item.paystackSubAccount.balance || item.paystackSubAccount.balance < 100000}
+                  disabled={
+                    !item.paystackSubAccount.balance ||
+                    item.paystackSubAccount.balance < 100000
+                  }
                 >
                   <CreditCard size={20} color="white" />
                   <Text style={styles.withdrawButtonText}>Withdraw Funds</Text>
                 </TouchableOpacity>
-                {(!item.paystackSubAccount.balance || item.paystackSubAccount.balance < 100000) && (
-                  <Text style={styles.minWithdrawText}>Minimum withdrawal: ₦1,000</Text>
+                {(!item.paystackSubAccount.balance ||
+                  item.paystackSubAccount.balance < 100000) && (
+                  <Text style={styles.minWithdrawText}>
+                    Minimum withdrawal: ₦1,000
+                  </Text>
                 )}
               </View>
             ) : (
@@ -506,21 +562,24 @@ const EditProfile = () => {
                 <AlertCircle size={48} color={Colors.gray600} />
                 <Text style={styles.noWalletTitle}>No Wallet Yet</Text>
                 <Text style={styles.noWalletDescription}>
-                  Create a Paystack wallet to receive payments and manage your earnings
+                  Create a Paystack wallet to receive payments and manage your
+                  earnings
                 </Text>
                 <TouchableOpacity
                   style={styles.createWalletButton}
                   onPress={() => setShowCreateWalletModal(true)}
                 >
                   <Wallet size={20} color="white" />
-                  <Text style={styles.createWalletButtonText}>Create Wallet</Text>
+                  <Text style={styles.createWalletButtonText}>
+                    Create Wallet
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
 
-          <TouchableOpacity 
-            style={[styles.button, isSaving && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.button, isSaving && styles.buttonDisabled]}
             onPress={saveChanges}
             disabled={isSaving}
           >
@@ -560,7 +619,13 @@ const EditProfile = () => {
               <View style={styles.balanceInfo}>
                 <Text style={styles.balanceLabel}>Available Balance</Text>
                 <Text style={styles.balanceAmount}>
-                  ₦{((item.paystackSubAccount?.balance || 0) / 100).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ₦
+                  {(
+                    (item.paystackSubAccount?.balance || 0) / 100
+                  ).toLocaleString("en-NG", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </Text>
               </View>
 
@@ -579,7 +644,8 @@ const EditProfile = () => {
               <View style={styles.withdrawInfo}>
                 <AlertCircle size={16} color={Colors.gray600} />
                 <Text style={styles.withdrawInfoText}>
-                  Withdrawals are processed within 24-48 hours to your registered bank account
+                  Withdrawals are processed within 24-48 hours to your
+                  registered bank account
                 </Text>
               </View>
 
@@ -629,7 +695,8 @@ const EditProfile = () => {
               <View style={styles.withdrawInfo}>
                 <AlertCircle size={16} color={Colors.primary} />
                 <Text style={styles.infoTextPrimary}>
-                  Link your bank account to receive payments and withdraw earnings
+                  Link your bank account to receive payments and withdraw
+                  earnings
                 </Text>
               </View>
 
@@ -654,10 +721,12 @@ const EditProfile = () => {
                   style={[styles.input, styles.bankSelector]}
                   onPress={() => setShowBankModal(true)}
                 >
-                  <Text style={[
-                    styles.bankSelectorText,
-                    !selectedBank && styles.placeholderText
-                  ]}>
+                  <Text
+                    style={[
+                      styles.bankSelectorText,
+                      !selectedBank && styles.placeholderText,
+                    ]}
+                  >
                     {selectedBank ? selectedBank.name : "Select your bank"}
                   </Text>
                   <ChevronDown size={20} color={Colors.gray600} />
@@ -670,7 +739,9 @@ const EditProfile = () => {
                   <CheckCircle size={20} color="#10b981" />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.verifiedLabel}>Account Name</Text>
-                    <Text style={styles.verifiedName}>{verifiedAccountName}</Text>
+                    <Text style={styles.verifiedName}>
+                      {verifiedAccountName}
+                    </Text>
                   </View>
                 </View>
               )}
@@ -678,9 +749,14 @@ const EditProfile = () => {
               {/* Verify Button */}
               {!isAccountVerified && (
                 <TouchableOpacity
-                  style={[styles.verifyButton, isVerifyingBank && styles.buttonDisabled]}
+                  style={[
+                    styles.verifyButton,
+                    isVerifyingBank && styles.buttonDisabled,
+                  ]}
                   onPress={handleVerifyBankAccount}
-                  disabled={isVerifyingBank || !bankAccountNumber || !selectedBank}
+                  disabled={
+                    isVerifyingBank || !bankAccountNumber || !selectedBank
+                  }
                 >
                   {isVerifyingBank ? (
                     <ActivityIndicator size="small" color={Colors.primary} />
@@ -693,7 +769,10 @@ const EditProfile = () => {
               {/* Create Wallet Button */}
               {isAccountVerified && (
                 <TouchableOpacity
-                  style={[styles.button, isCreatingWallet && styles.buttonDisabled]}
+                  style={[
+                    styles.button,
+                    isCreatingWallet && styles.buttonDisabled,
+                  ]}
                   onPress={handleCreateWallet}
                   disabled={isCreatingWallet}
                 >
@@ -729,10 +808,14 @@ const EditProfile = () => {
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
-          
+
           {/* Search Input */}
           <View style={styles.searchContainer}>
-            <Search size={20} color={Colors.gray600} style={styles.searchIcon} />
+            <Search
+              size={20}
+              color={Colors.gray600}
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.searchInput}
               placeholder="Search banks..."
@@ -744,7 +827,7 @@ const EditProfile = () => {
 
           {/* Banks List */}
           <FlatList
-            data={banks.filter(bank =>
+            data={banks.filter((bank) =>
               bank.name.toLowerCase().includes(searchTerm.toLowerCase())
             )}
             keyExtractor={(item, index) => item.code || index.toString()}
