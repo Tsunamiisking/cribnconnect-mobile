@@ -178,6 +178,39 @@ export const updateEventSafety = async (eventId, safetyTips) => {
   }
 };
 
+// Update event ticket types and capacity
+export const updateEventTickets = async (eventId, ticketData) => {
+  try {
+    const res = await api.put(`/events/${eventId}/tickets`, ticketData);
+    return res.data;
+  } catch (error) {
+    console.error('Error updating event tickets:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Update event special perks
+export const updateEventPerks = async (eventId, perks) => {
+  try {
+    const res = await api.put(`/events/${eventId}/perks`, { eventSpecialPerks: perks });
+    return res.data;
+  } catch (error) {
+    console.error('Error updating event perks:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// General update event (for other fields like title, description, status, etc.)
+export const updateEvent = async (eventId, updateData) => {
+  try {
+    const res = await api.put(`/events/${eventId}`, updateData);
+    return res.data;
+  } catch (error) {
+    console.error('Error updating event:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // Cancel event (with refunds)
 export const cancelEvent = async (eventId) => {
   try {

@@ -1,4 +1,4 @@
-import api from "@/api/api";
+import { updateEvent, updateEventPerks } from "@/api/services/eventServices";
 import { Colors } from "@/constants/Colors";
 import {
   AlertTriangle,
@@ -46,6 +46,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import api from "@/api/api";
 
 const EventHostManagement = ({
   event,
@@ -82,7 +83,11 @@ const EventHostManagement = ({
       { id: "vip_access", name: "VIP Access", icon: Crown },
       { id: "afterparty", name: "Afterparty Access", icon: Moon },
       { id: "meet_greet", name: "Meet & Greet", icon: Users },
-      { id: "exclusive_content", name: "Exclusive Photos / Recap", icon: Sparkles },
+      {
+        id: "exclusive_content",
+        name: "Exclusive Photos / Recap",
+        icon: Sparkles,
+      },
       { id: "networking", name: "Networking Sessions", icon: Share },
     ],
     "Comfort & Convenience": [
@@ -180,13 +185,15 @@ const EventHostManagement = ({
     try {
       setIsSaving(true);
 
-      const response = await api.put(`/events/${event._id || event.id}`, {
-        eventSpecialPerks: selectedPerks,
-      });
+      // Use the specific perks endpoint
+      const response = await updateEventPerks(
+        event._id || event.id,
+        selectedPerks
+      );
 
-      if (response.data) {
+      if (response) {
         Alert.alert("Success", "Special perks updated successfully");
-        onEventUpdate(response.data);
+        onEventUpdate(response.event || response);
         setShowEditPerksModal(false);
       }
     } catch (error) {
@@ -218,13 +225,14 @@ const EventHostManagement = ({
         return;
       }
 
-      const response = await api.put(`/events/${event.id}/location`, {
+      // Use general update endpoint
+      const response = await updateEvent(event.id, {
         location: editedLocation,
       });
 
-      if (response.data) {
+      if (response) {
         Alert.alert("Success", "Location updated successfully");
-        onEventUpdate(response.data.event);
+        onEventUpdate(response.event || response);
         setShowEditLocationModal(false);
       }
     } catch (error) {
@@ -270,11 +278,12 @@ const EventHostManagement = ({
         payload.endTime = editedEndTime;
       }
 
-      const response = await api.put(`/events/${event.id}/datetime`, payload);
+      // Use general update endpoint
+      const response = await updateEvent(event.id, payload);
 
-      if (response.data) {
+      if (response) {
         Alert.alert("Success", "Date and time updated successfully");
-        onEventUpdate(response.data.event);
+        onEventUpdate(response.event || response);
         setShowEditDateModal(false);
       }
     } catch (error) {
@@ -307,13 +316,14 @@ const EventHostManagement = ({
         return;
       }
 
-      const response = await api.put(`/events/${event.id}/safety`, {
+      // Use general update endpoint
+      const response = await updateEvent(event.id, {
         eventSafetyTips: safetyTipsArray,
       });
 
-      if (response.data) {
+      if (response) {
         Alert.alert("Success", "Safety guidelines updated successfully");
-        onEventUpdate(response.data.event);
+        onEventUpdate(response.event || response);
         setShowEditSafetyModal(false);
       }
     } catch (error) {
@@ -583,33 +593,17 @@ const EventHostManagement = ({
               </View>
             </View>
 
-            <View style={styles.inputRow}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.inputLabel}>ZIP Code</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editedLocation.zip}
-                  onChangeText={(text) =>
-                    setEditedLocation({ ...editedLocation, zip: text })
-                  }
-                  placeholder="100001"
-                  placeholderTextColor={Colors.gray400}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.inputLabel}>Country</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editedLocation.country}
-                  onChangeText={(text) =>
-                    setEditedLocation({ ...editedLocation, country: text })
-                  }
-                  placeholder="Nigeria"
-                  placeholderTextColor={Colors.gray400}
-                />
-              </View>
+            <View style={[styles.inputGroup]}>
+              <Text style={styles.inputLabel}>Country</Text>
+              <TextInput
+                style={styles.input}
+                value={editedLocation.country}
+                onChangeText={(text) =>
+                  setEditedLocation({ ...editedLocation, country: text })
+                }
+                placeholder="Nigeria"
+                placeholderTextColor={Colors.gray400}
+              />
             </View>
           </ScrollView>
 
@@ -877,7 +871,8 @@ const EventHostManagement = ({
               <View style={styles.selectedPerksInfo}>
                 <Sparkles size={20} color={Colors.primary} />
                 <Text style={styles.selectedPerksText}>
-                  {selectedPerks.length} perk{selectedPerks.length !== 1 ? "s" : ""} selected
+                  {selectedPerks.length} perk
+                  {selectedPerks.length !== 1 ? "s" : ""} selected
                 </Text>
               </View>
             )}
@@ -888,7 +883,9 @@ const EventHostManagement = ({
               style={[styles.modalButton, styles.modalButtonSecondary]}
               onPress={() => {
                 // Reset to original perks on cancel
-                setSelectedPerks(event.eventSpecialPerks || event.specialPerks || []);
+                setSelectedPerks(
+                  event.eventSpecialPerks || event.specialPerks || []
+                );
                 setShowEditPerksModal(false);
               }}
             >
@@ -1112,7 +1109,7 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: "row",
-    marginBottom: 20,
+    marginBottom: 5,
   },
   infoBox: {
     flexDirection: "row",

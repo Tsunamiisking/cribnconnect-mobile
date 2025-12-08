@@ -1,4 +1,4 @@
-import api from "@/api/api";
+import { updateEventPerks } from "@/api/services/eventServices";
 import { Colors } from "@/constants/Colors";
 import {
   Badge,
@@ -23,8 +23,8 @@ import {
   Star,
   Users,
   Utensils,
-  Wind,
   Wifi,
+  Wind,
   Wine,
   X,
   Zap,
@@ -33,12 +33,12 @@ import React, { useState } from "react";
 import {
   Alert,
   Modal,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  SafeAreaView,
 } from "react-native";
 // import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -193,11 +193,13 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
 
   const handleSavePerks = async () => {
     try {
-      const response = await api.put(`/events/${event._id || event.id}`, {
-        eventSpecialPerks: selectedPerks,
-      });
+      // Use the specific perks endpoint
+      const response = await updateEventPerks(
+        event._id || event.id,
+        selectedPerks
+      );
 
-      if (response.data) {
+      if (response) {
         Alert.alert("Success", "Special perks updated successfully");
         if (onPerksUpdate) {
           onPerksUpdate({ ...event, eventSpecialPerks: selectedPerks });

@@ -1,17 +1,17 @@
-import api from '@/api/api';
+import { updateEventTickets } from '@/api/services/eventServices';
 import { Colors } from '@/constants/Colors';
 import { Edit, Plus, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
@@ -182,9 +182,10 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
         ticketTypes: isFree ? [] : ticketTypes,
       };
 
-      const response = await api.put(`/events/${event._id || event.id}`, payload);
+      // Use the specific tickets endpoint
+      const response = await updateEventTickets(event._id || event.id, payload);
 
-      if (response.data) {
+      if (response) {
         Alert.alert('Success', 'Ticket information updated successfully');
         if (onTicketUpdate) {
           onTicketUpdate({
