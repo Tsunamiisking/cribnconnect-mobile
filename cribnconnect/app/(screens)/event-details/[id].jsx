@@ -230,6 +230,7 @@ const EventDetailsScreen = () => {
       "games": "Games & Activities",
       "catering": "Catering Service",
       "bar_service": "Bar Service",
+      "open_bar": "Open Bar",
       "coffee_station": "Coffee Station",
       "welcome_drinks": "Welcome Drinks",
       "vip_access": "VIP Access",
@@ -245,7 +246,7 @@ const EventDetailsScreen = () => {
     return (
       <View key={perkId} style={styles.perkItem}>
         {IconComponent && <IconComponent size={24} color={Colors.primary} />}
-        <Text style={styles.perkText}>{perkNames[perkId] || perkId}</Text>
+        <Text style={styles.perkText}>{perkNames[perkId] || perkId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</Text>
       </View>
     );
   };
@@ -458,10 +459,10 @@ const EventDetailsScreen = () => {
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Attendance</Text>
                 <Text style={styles.detailValue}>
-                  {event.attendees || 0} attending
+                  {Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0)} attending
                 </Text>
                 <Text style={styles.detailSubtext}>
-                  {event.capacity} capacity • {event.capacity - (event.attendees || 0)} spots left
+                  {event.capacity} capacity • {event.capacity - (Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0))} spots left
                 </Text>
               </View>
             </View>
@@ -577,7 +578,7 @@ const EventDetailsScreen = () => {
             {event.isFree ? "Free Event" : `From ${formatPrice(minPrice.toString())}`}
           </Text>
           <Text style={styles.bottomAttendance}>
-            {event.attendees || 0} attending
+            {Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0)} attending
           </Text>
         </View>
         <TouchableOpacity 

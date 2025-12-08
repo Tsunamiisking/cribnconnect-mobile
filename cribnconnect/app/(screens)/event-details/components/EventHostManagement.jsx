@@ -222,7 +222,8 @@ const EventHostManagement = ({
 
   const handleDelete = async () => {
     // Check if event is paid and has attendees
-    const hasPaidAttendees = !event.isFree && event.attendees > 0;
+    const attendeeCount = Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0);
+    const hasPaidAttendees = !event.isFree && attendeeCount > 0;
 
     if (hasPaidAttendees) {
       Alert.alert(
@@ -235,8 +236,8 @@ const EventHostManagement = ({
 
     Alert.alert(
       "Delete Event",
-      event.attendees > 0
-        ? `This event has ${event.attendees} registered attendees. Are you sure you want to delete it?`
+      attendeeCount > 0
+        ? `This event has ${attendeeCount} registered attendees. Are you sure you want to delete it?`
         : "Are you sure you want to delete this event? This action cannot be undone.",
       [
         {
@@ -343,7 +344,7 @@ const EventHostManagement = ({
               <Text style={styles.hostMenuItemText}>Edit Safety Guidelines</Text>
             </TouchableOpacity>
 
-            {event.attendees > 0 && !event.isFree ? (
+            {(Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0)) > 0 && !event.isFree ? (
               <TouchableOpacity
                 style={styles.hostMenuItem}
                 onPress={handleCancelEvent}
