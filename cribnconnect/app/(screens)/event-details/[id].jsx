@@ -1,4 +1,6 @@
+import { getEventById } from '@/api/services/eventServices';
 import { Colors } from '@/constants/Colors';
+import { getAuth } from 'firebase/auth';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
@@ -22,6 +24,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -33,6 +36,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import EventHostManagement from './components/EventHostManagement';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -101,38 +105,60 @@ const EventDetailsScreen = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAttending, setIsAttending] = useState(false);
+  const [isHost, setIsHost] = useState(false);
   
   // Shimmer animation
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
 
-  // Mock event data - in real app, fetch based on id
+  // Fetch event data from API
   useEffect(() => {
-    // Start shimmer animation
-    const shimmerLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmerAnimation, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: false,
-        }),
-        Animated.timing(shimmerAnimation, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: false,
-        }),
-      ])
-    );
-    shimmerLoop.start();
+    const fetchEvent = async () => {
+      try {
+        // Start shimmer animation
+        const shimmerLoop = Animated.loop(
+          Animated.sequence([
+            Animated.timing(shimmerAnimation, {
+              toValue: 1,
+              duration: 1000,
+              useNativeDriver: false,
+            }),
+            Animated.timing(shimmerAnimation, {
+              toValue: 0,
+              duration: 1000,
+              useNativeDriver: false,
+            }),
+          ])
+        );
+        shimmerLoop.start();
 
-    // Simulate API call
-    setTimeout(() => {
-      setEvent(mockEventData);
-      setLoading(false);
-      shimmerLoop.stop();
-    }, 1000);
+        const eventData = await getEventById(id);
+        
+        // Check if current user is the host
+        const auth = getAuth();
+        const currentUserId = auth?.currentUser?.uid;
+        setIsHost(currentUserId === eventData.hostId);
+        
+        setEvent(eventData);
+        setLoading(false);
+        shimmerLoop.stop();
+      } catch (error) {
+        console.error('Error fetching event:', error);
+        Alert.alert('Error', 'Failed to load event details. Please try again.');
+        setLoading(false);
+      }
+    };
 
-    return () => shimmerLoop.stop();
+    fetchEvent();
   }, [id]);
+
+  const handleEventUpdate = (updatedEvent) => {
+    setEvent(updatedEvent);
+  };
+
+  const handleEventDelete = () => {
+    console.log('Event deleted, navigating back');
+    router.back();
+  };
 
   // Shimmer component
   const ShimmerView = ({ style, children }) => {
@@ -343,6 +369,14 @@ const EventDetailsScreen = () => {
           <ArrowLeft size={24} color={Colors.black} />
         </TouchableOpacity>
         <View style={styles.headerActions}>
+          {isHost && (
+            <EventHostManagement
+              event={event}
+              isHost={isHost}
+              onEventUpdate={handleEventUpdate}
+              onEventDelete={handleEventDelete}
+            />
+          )}
           <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
             <Share2 size={24} color={Colors.black} />
           </TouchableOpacity>
