@@ -1,9 +1,12 @@
+import { createPaystackSubAccount, editUser, getUserById, withdrawFromWallet } from "@/api/services/userServices";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
-import { ChevronDown, Search } from "lucide-react-native";
-import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { AlertCircle, CreditCard, Wallet } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import {
-  FlatList,
+  ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -13,37 +16,33 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const EditProfile = () => {
+  const { publicProfile, refreshPublicProfile } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCreatingWallet, setIsCreatingWallet] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  
   const [item, setItem] = useState({
     ImageUri: require("../../../assets/images/displayimageCC.jpg"),
-    fullName: "John Doe",
-    email: "douglasallendev@gmail.com",
-    address: {
-      street: "123 Main St",
-      city: "Anytown",
-      state: "CA",
-      zip: "12345",
-      country: "USA",
-    },
-    bankName: "",
-    accountNumber: "",
-    accountName: "Douglas Allen Oluwatobi",
-    paymentMethod: "",
-    payoutMethod: "", // New field for payout method
-    // Bank Transfer fields
-    bankAccountNumber: "",
-    bankAccountName: "",
-    selectedBank: "",
-    // Mobile Money fields
-    mobileNumber: "",
-    mobileProvider: "",
-    // M-Pesa fields
-    mpesaNumber: "",
-    mpesaName: "",
+    _id: "",
+    uid: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    bio: "",
+    isVerified: false,
+    userType: "guest",
+    rating: 0,
+    // Paystack wallet fields
+    paystackSubAccount: null, // { subAccountCode, accountNumber, accountName, bankName, balance }
   });
 
   const [showBankModal, setShowBankModal] = useState(false);
@@ -52,6 +51,39 @@ const EditProfile = () => {
   const [showMobileProviderModal, setShowMobileProviderModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentSearchTerm, setPaymentSearchTerm] = useState("");
+
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (publicProfile?._id) {
+        try {
+          setLoading(true);
+          const userData = await getUserById(publicProfile._id);
+          setItem({
+            ...item,
+            _id: userData._id,
+            uid: userData.uid,
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
+            email: userData.email || "",
+            phone: userData.phone || "",
+            bio: userData.bio || "",
+            isVerified: userData.isVerified || false,
+            userType: userData.userType || "guest",
+            rating: userData.rating || 0,
+            paystackSubAccount: userData.paystackSubAccount || null,
+          });
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          Alert.alert("Error", "Failed to load user data");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [publicProfile]);
 
   // List of Nigerian banks
   const nigerianBanks = [
@@ -174,10 +206,102 @@ const EditProfile = () => {
     setShowMobileProviderModal(false);
   };
 
-  const saveChanges = () => {
-    // Logic to save changes goes here
-    console.log("Changes saved:", item);
+  const handleCreateWallet = async () => {
+    try {
+      setIsCreatingWallet(true);
+      const response = await createPaystackSubAccount(item._id);
+      setItem({
+        ...item,
+        paystackSubAccount: response.paystackSubAccount,
+      });
+      await refreshPublicProfile();
+      Alert.alert("Success", "Wallet created successfully!");
+    } catch (error) {
+      console.error("Error creating wallet:", error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to create wallet");
+    } finally {
+      setIsCreatingWallet(false);
+    }
   };
+
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || isNaN(withdrawAmount) || parseFloat(withdrawAmount) <= 0) {
+      Alert.alert("Error", "Please enter a valid amount");
+      return;
+    }
+
+    const amount = parseFloat(withdrawAmount);
+    const balance = item.paystackSubAccount?.balance || 0;
+
+    if (amount > balance) {
+      Alert.alert("Error", "Insufficient balance");
+      return;
+    }
+
+    try {
+      setIsWithdrawing(true);
+      await withdrawFromWallet(item._id, { amount });
+      
+      // Update local balance
+      setItem({
+        ...item,
+        paystackSubAccount: {
+          ...item.paystackSubAccount,
+          balance: balance - amount,
+        },
+      });
+      
+      setShowWithdrawModal(false);
+      setWithdrawAmount("");
+      Alert.alert("Success", "Withdrawal request submitted successfully!");
+      
+      // Refresh user data
+      const userData = await getUserById(item._id);
+      setItem({
+        ...item,
+        paystackSubAccount: userData.paystackSubAccount || null,
+      });
+    } catch (error) {
+      console.error("Error withdrawing:", error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to process withdrawal");
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+  const saveChanges = async () => {
+    try {
+      setIsSaving(true);
+      const updateData = {
+        firstName: item.firstName,
+        lastName: item.lastName,
+        email: item.email,
+        phone: item.phone,
+        bio: item.bio,
+      };
+      
+      await editUser(item._id, updateData);
+      await refreshPublicProfile();
+      Alert.alert("Success", "Profile updated successfully!");
+    } catch (error) {
+      console.error("Error saving changes:", error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to save changes");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <BackHeader title="Edit Profile" showUser={false} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -201,13 +325,21 @@ const EditProfile = () => {
           </View>
           <View style={{ margin: 18 }}>
             <View style={{ marginTop: 24 }}>
-              <Text style={styles.label}>Full Name</Text>
+              <Text style={styles.label}>First Name</Text>
               <TextInput
-                labelText="Full Name"
-                // placeholder="Full Name"
-                value={item.fullName}
+                placeholder="First Name"
+                value={item.firstName}
                 style={styles.input}
-                onChangeText={(text) => setItem({ ...item, fullName: text })}
+                onChangeText={(text) => setItem({ ...item, firstName: text })}
+              />
+            </View>
+            <View style={{ marginTop: 24 }}>
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                placeholder="Last Name"
+                value={item.lastName}
+                style={styles.input}
+                onChangeText={(text) => setItem({ ...item, lastName: text })}
               />
             </View>
             <View style={{ marginTop: 24 }}>
@@ -221,231 +353,125 @@ const EditProfile = () => {
               />
             </View>
             <View style={{ marginTop: 24 }}>
-              <Text style={styles.label}>Address</Text>
+              <Text style={styles.label}>Phone</Text>
               <TextInput
+                placeholder="Phone Number"
+                value={item.phone}
                 style={styles.input}
-                placeholder="Enter address"
-                placeholderTextColor="#B0B0B0"
-                value={item.address.street}
-                onChangeText={(text) =>
-                  setItem({
-                    ...item,
-                    address: { ...item.address, street: text },
-                  })
-                }
+                keyboardType="phone-pad"
+                onChangeText={(text) => setItem({ ...item, phone: text })}
               />
-              <View style={styles.rowContainer}>
-                <View style={styles.rowInputContainer}>
-                  <TextInput
-                    style={styles.rowInput}
-                    placeholder="State"
-                    placeholderTextColor="#B0B0B0"
-                    value={item.address.state}
-                    onChangeText={(text) =>
-                      setItem({
-                        ...item,
-                        address: { ...item.address, state: text },
-                      })
-                    }
-                  />
-                </View>
-                <View style={styles.rowInputContainer}>
-                  <TextInput
-                    style={styles.rowInput}
-                    placeholder="City"
-                    placeholderTextColor="#B0B0B0"
-                    value={item.address.city}
-                    onChangeText={(text) =>
-                      setItem({
-                        ...item,
-                        address: { ...item.address, city: text },
-                      })
-                    }
-                  />
-                </View>
+            </View>
+            <View style={{ marginTop: 24 }}>
+              <Text style={styles.label}>Bio</Text>
+              <TextInput
+                placeholder="Tell us about yourself"
+                value={item.bio}
+                style={[styles.input, styles.textArea]}
+                multiline
+                numberOfLines={4}
+                onChangeText={(text) => setItem({ ...item, bio: text })}
+              />
+            </View>
+            
+            {/* User Type and Verification Status */}
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>User Type</Text>
+                <Text style={styles.infoValue}>{item.userType}</Text>
               </View>
-              <View style={styles.rowContainer}>
-                <View style={styles.rowInputContainer}>
-                  <TextInput
-                    style={styles.rowInput}
-                    placeholder="Zip Code"
-                    placeholderTextColor="#B0B0B0"
-                    value={item.address.zip}
-                    onChangeText={(text) =>
-                      setItem({
-                        ...item,
-                        address: { ...item.address, zip: text },
-                      })
-                    }
-                  />
-                </View>
-                <View style={styles.rowInputContainer}>
-                  <TextInput
-                    style={styles.rowInput}
-                    placeholder="Country"
-                    placeholderTextColor="#B0B0B0"
-                    value={item.address.country}
-                    onChangeText={(text) =>
-                      setItem({
-                        ...item,
-                        address: { ...item.address, country: text },
-                      })
-                    }
-                  />
-                </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Verified</Text>
+                <Text style={[styles.infoValue, { color: item.isVerified ? Colors.primary : Colors.gray600 }]}>
+                  {item.isVerified ? "Yes" : "No"}
+                </Text>
               </View>
             </View>
           </View>
           
-          {/* Payment Methods Section */}
+          {/* Paystack Wallet Section */}
           <View style={{ marginHorizontal: 18, marginTop: 24 }}>
-            <Text style={styles.label}>Payment Methods</Text>
+            <View style={styles.walletHeader}>
+              <Wallet size={24} color={Colors.primary} />
+              <Text style={styles.walletTitle}>Paystack Wallet</Text>
+            </View>
             <Text style={styles.sectionDescription}>
-              Choose your preferred payment method for transactions
+              Manage your earnings and withdrawals
             </Text>
-            
-            {/* Payment Method Selection */}
-            <TouchableOpacity
-              style={[styles.input, styles.bankSelector]}
-              onPress={() => setShowPaymentModal(true)}
-            >
-              <Text style={[
-                styles.bankSelectorText,
-                !item.paymentMethod && styles.placeholderText
-              ]}>
-                {item.paymentMethod || "Select Payment Method"}
-              </Text>
-              <ChevronDown size={20} color={Colors.gray600} />
-            </TouchableOpacity>
-          </View>
 
-          <View style={{ marginHorizontal: 18, marginTop: 24 }}>
-            <Text style={styles.label}>Payouts</Text>
-            <Text style={styles.sectionDescription}>
-              Choose how you want to receive payments
-            </Text>
-            
-            {/* Payout Method Selection */}
-            <TouchableOpacity
-              style={[styles.input, styles.bankSelector]}
-              onPress={() => setShowPayoutModal(true)}
-            >
-              <Text style={[
-                styles.bankSelectorText,
-                !item.payoutMethod && styles.placeholderText
-              ]}>
-                {item.payoutMethod || "Select Payout Method"}
-              </Text>
-              <ChevronDown size={20} color={Colors.gray600} />
-            </TouchableOpacity>
+            {item.paystackSubAccount ? (
+              <View style={styles.walletCard}>
+                <View style={styles.walletInfo}>
+                  <View style={styles.walletRow}>
+                    <Text style={styles.walletLabel}>Account Number</Text>
+                    <Text style={styles.walletValue}>
+                      {item.paystackSubAccount.accountNumber}
+                    </Text>
+                  </View>
+                  <View style={styles.walletRow}>
+                    <Text style={styles.walletLabel}>Account Name</Text>
+                    <Text style={styles.walletValue}>
+                      {item.paystackSubAccount.accountName}
+                    </Text>
+                  </View>
+                  <View style={styles.walletRow}>
+                    <Text style={styles.walletLabel}>Bank</Text>
+                    <Text style={styles.walletValue}>
+                      {item.paystackSubAccount.bankName}
+                    </Text>
+                  </View>
+                  <View style={styles.walletRow}>
+                    <Text style={styles.walletLabel}>Available Balance</Text>
+                    <Text style={[styles.walletValue, styles.balanceText]}>
+                      ₦{(item.paystackSubAccount.balance || 0).toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
 
-            {/* Bank Transfer Fields */}
-            {item.payoutMethod === "Bank Transfer" && (
-              <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Account Number"
-                  placeholderTextColor="#B0B0B0"
-                  value={item.bankAccountNumber}
-                  onChangeText={(text) =>
-                    setItem({ ...item, bankAccountNumber: text })
-                  }
-                  keyboardType="numeric"
-                  maxLength={10}
-                />
-                
-                {/* Bank Selection */}
                 <TouchableOpacity
-                  style={[styles.input, styles.bankSelector]}
-                  onPress={() => setShowBankModal(true)}
+                  style={styles.withdrawButton}
+                  onPress={() => setShowWithdrawModal(true)}
+                  disabled={!item.paystackSubAccount.balance || item.paystackSubAccount.balance <= 0}
                 >
-                  <Text style={[
-                    styles.bankSelectorText,
-                    !item.selectedBank && styles.placeholderText
-                  ]}>
-                    {item.selectedBank || "Select Bank"}
-                  </Text>
-                  <ChevronDown size={20} color={Colors.gray600} />
+                  <CreditCard size={20} color="white" />
+                  <Text style={styles.withdrawButtonText}>Withdraw Funds</Text>
                 </TouchableOpacity>
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="Account Name"
-                  placeholderTextColor="#B0B0B0"
-                  value={item.bankAccountName}
-                  onChangeText={(text) =>
-                    setItem({ ...item, bankAccountName: text })
-                  }
-                />
-              </>
-            )}
-
-            {/* Mobile Money Fields */}
-            {item.payoutMethod === "Mobile Money (Momo)" && (
-              <>
+              </View>
+            ) : (
+              <View style={styles.noWalletCard}>
+                <AlertCircle size={48} color={Colors.gray600} />
+                <Text style={styles.noWalletTitle}>No Wallet Yet</Text>
+                <Text style={styles.noWalletDescription}>
+                  Create a Paystack wallet to receive payments and manage your earnings
+                </Text>
                 <TouchableOpacity
-                  style={[styles.input, styles.bankSelector]}
-                  onPress={() => setShowMobileProviderModal(true)}
+                  style={styles.createWalletButton}
+                  onPress={handleCreateWallet}
+                  disabled={isCreatingWallet}
                 >
-                  <Text style={[
-                    styles.bankSelectorText,
-                    !item.mobileProvider && styles.placeholderText
-                  ]}>
-                    {item.mobileProvider || "Select Mobile Provider"}
-                  </Text>
-                  <ChevronDown size={20} color={Colors.gray600} />
+                  {isCreatingWallet ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <>
+                      <Wallet size={20} color="white" />
+                      <Text style={styles.createWalletButtonText}>Create Wallet</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="Mobile Number (e.g., +233XXXXXXXXX)"
-                  placeholderTextColor="#B0B0B0"
-                  value={item.mobileNumber}
-                  onChangeText={(text) =>
-                    setItem({ ...item, mobileNumber: text })
-                  }
-                  keyboardType="phone-pad"
-                />
-              </>
-            )}
-
-            {/* M-Pesa Fields */}
-            {item.payoutMethod === "M-Pesa" && (
-              <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="M-Pesa Number (e.g., +254XXXXXXXXX)"
-                  placeholderTextColor="#B0B0B0"
-                  value={item.mpesaNumber}
-                  onChangeText={(text) =>
-                    setItem({ ...item, mpesaNumber: text })
-                  }
-                  keyboardType="phone-pad"
-                />
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="Account Name"
-                  placeholderTextColor="#B0B0B0"
-                  value={item.mpesaName}
-                  onChangeText={(text) =>
-                    setItem({ ...item, mpesaName: text })
-                  }
-                />
-              </>
+              </View>
             )}
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={saveChanges}>
-            <Text
-              style={{
-                color: "white",
-                fontFamily: "Sora-SemiBold",
-                fontSize: 16,
-              }}
-            >
-              Save Changes
-            </Text>
+          <TouchableOpacity 
+            style={[styles.button, isSaving && styles.buttonDisabled]} 
+            onPress={saveChanges}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Save Changes</Text>
+            )}
           </TouchableOpacity>
 
           {/* Add bottom padding to ensure content isn't hidden behind keyboard */}
@@ -453,173 +479,67 @@ const EditProfile = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Bank Selection Modal */}
+      {/* Withdraw Modal */}
       <Modal
-        visible={showBankModal}
+        visible={showWithdrawModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowBankModal(false)}
+        transparent={true}
+        onRequestClose={() => setShowWithdrawModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Bank</Text>
-            <TouchableOpacity
-              onPress={() => setShowBankModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Search Input */}
-          <View style={styles.searchContainer}>
-            <Search size={20} color={Colors.gray600} style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search banks..."
-              placeholderTextColor="#B0B0B0"
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-            />
-          </View>
-
-          {/* Banks List */}
-          <FlatList
-            data={filteredBanks}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item: bank }) => (
+        <View style={styles.modalOverlay}>
+          <View style={styles.withdrawModalContainer}>
+            <View style={styles.withdrawModalHeader}>
+              <Text style={styles.modalTitle}>Withdraw Funds</Text>
               <TouchableOpacity
-                style={styles.bankItem}
-                onPress={() => selectBank(bank)}
+                onPress={() => setShowWithdrawModal(false)}
+                style={styles.closeButton}
               >
-                <Text style={styles.bankItemText}>{bank}</Text>
+                <Text style={styles.closeButtonText}>Close</Text>
               </TouchableOpacity>
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        </SafeAreaView>
-      </Modal>
+            </View>
 
-      {/* Payment Method Selection Modal */}
-      <Modal
-        visible={showPaymentModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowPaymentModal(false)}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Payment Method</Text>
-            <TouchableOpacity
-              onPress={() => setShowPaymentModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Search Input */}
-          <View style={styles.searchContainer}>
-            <Search size={20} color={Colors.gray600} style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search payment methods..."
-              placeholderTextColor="#B0B0B0"
-              value={paymentSearchTerm}
-              onChangeText={setPaymentSearchTerm}
-            />
-          </View>
-
-          {/* Payment Methods List */}
-          <FlatList
-            data={filteredPaymentMethods}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item: method }) => (
-              <TouchableOpacity
-                style={styles.bankItem}
-                onPress={() => selectPaymentMethod(method)}
-              >
-                <Text style={styles.bankItemText}>{method}</Text>
-              </TouchableOpacity>
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        </SafeAreaView>
-      </Modal>
-
-      {/* Payout Method Selection Modal */}
-      <Modal
-        visible={showPayoutModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowPayoutModal(false)}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Payout Method</Text>
-            <TouchableOpacity
-              onPress={() => setShowPayoutModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Payout Methods List */}
-          <FlatList
-            data={payoutMethods}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item: method }) => (
-              <TouchableOpacity
-                style={styles.bankItem}
-                onPress={() => selectPayoutMethod(method)}
-              >
-                <Text style={styles.bankItemText}>{method}</Text>
-                <Text style={styles.methodDescription}>
-                  {method === "Bank Transfer" && "Traditional bank account transfer"}
-                  {method === "Mobile Money (Momo)" && "MTN, Airtel, Orange, Vodafone mobile money"}
-                  {method === "M-Pesa" && "Safaricom M-Pesa (Kenya)"}
+            <View style={styles.withdrawModalContent}>
+              <View style={styles.balanceInfo}>
+                <Text style={styles.balanceLabel}>Available Balance</Text>
+                <Text style={styles.balanceAmount}>
+                  ₦{(item.paystackSubAccount?.balance || 0).toLocaleString()}
                 </Text>
-              </TouchableOpacity>
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        </SafeAreaView>
-      </Modal>
+              </View>
 
-      {/* Mobile Provider Selection Modal */}
-      <Modal
-        visible={showMobileProviderModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowMobileProviderModal(false)}
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Mobile Provider</Text>
-            <TouchableOpacity
-              onPress={() => setShowMobileProviderModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
+              <View style={{ marginTop: 24 }}>
+                <Text style={styles.label}>Amount to Withdraw</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter amount"
+                  placeholderTextColor="#B0B0B0"
+                  value={withdrawAmount}
+                  onChangeText={setWithdrawAmount}
+                  keyboardType="numeric"
+                />
+              </View>
 
-          {/* Mobile Providers List */}
-          <FlatList
-            data={mobileProviders}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item: provider }) => (
+              <View style={styles.withdrawInfo}>
+                <AlertCircle size={16} color={Colors.gray600} />
+                <Text style={styles.withdrawInfoText}>
+                  Withdrawals are processed within 24-48 hours to your registered bank account
+                </Text>
+              </View>
+
               <TouchableOpacity
-                style={styles.bankItem}
-                onPress={() => selectMobileProvider(provider)}
+                style={[styles.button, isWithdrawing && styles.buttonDisabled]}
+                onPress={handleWithdraw}
+                disabled={isWithdrawing}
               >
-                <Text style={styles.bankItemText}>{provider}</Text>
+                {isWithdrawing ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.buttonText}>Confirm Withdrawal</Text>
+                )}
               </TouchableOpacity>
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        </SafeAreaView>
+            </View>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -650,24 +570,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Sora-Regular",
   },
-  rowContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 12,
-  },
-  rowInputContainer: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  rowInput: {
-    height: Platform.OS === "ios" ? 50 : 60,
-    borderWidth: 1,
-    borderColor: Colors.borderColor,
-    borderRadius: 12,
-    color: Colors.primary,
-    paddingHorizontal: 16,
-    fontSize: 14,
-    fontFamily: "Sora-Regular",
+  textArea: {
+    height: 100,
+    paddingTop: 12,
+    textAlignVertical: "top",
   },
   label: {
     color: "#111827",
@@ -682,26 +588,162 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 18,
     marginTop: 20,
-  },
-  bankSelector: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 8,
   },
-  bankSelectorText: {
+  buttonText: {
+    color: "white",
+    fontFamily: "Sora-SemiBold",
+    fontSize: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
     fontSize: 14,
     fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+  },
+  sectionDescription: {
+    fontSize: 12,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 24,
+  },
+  infoItem: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 12,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+  },
+  infoValue: {
+    fontSize: 16,
+    fontFamily: "Sora-SemiBold",
     color: Colors.primary,
-    flex: 1,
+    marginTop: 4,
   },
-  placeholderText: {
-    color: "#B0B0B0",
+  // Wallet Styles
+  walletHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  modalContainer: {
+  walletTitle: {
+    fontSize: 18,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.primary,
+  },
+  walletCard: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+  },
+  walletInfo: {
+    gap: 12,
+  },
+  walletRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  walletLabel: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+  },
+  walletValue: {
+    fontSize: 14,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.primary,
+  },
+  balanceText: {
+    fontSize: 18,
+    color: Colors.primary,
+  },
+  withdrawButton: {
+    backgroundColor: Colors.primary,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+  },
+  withdrawButtonText: {
+    color: "white",
+    fontFamily: "Sora-SemiBold",
+    fontSize: 14,
+  },
+  noWalletCard: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 12,
+    padding: 24,
+    marginTop: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+  },
+  noWalletTitle: {
+    fontSize: 18,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.primary,
+    marginTop: 12,
+  },
+  noWalletDescription: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  createWalletButton: {
+    backgroundColor: Colors.primary,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    minWidth: 200,
+  },
+  createWalletButtonText: {
+    color: "white",
+    fontFamily: "Sora-SemiBold",
+    fontSize: 14,
+  },
+  // Modal Styles
+  modalOverlay: {
     flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  withdrawModalContainer: {
     backgroundColor: "white",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
-  modalHeader: {
+  withdrawModalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -722,48 +764,41 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Medium",
     fontSize: 16,
   },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    margin: 18,
-    borderWidth: 1,
-    borderColor: Colors.borderColor,
+  withdrawModalContent: {
+    padding: 18,
+  },
+  balanceInfo: {
+    backgroundColor: "#f0f9ff",
+    padding: 16,
     borderRadius: 12,
-    paddingHorizontal: 16,
-    height: Platform.OS === "ios" ? 50 : 60,
+    alignItems: "center",
   },
-  searchIcon: {
-    marginRight: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Sora-Regular",
-    color: Colors.primary,
-  },
-  bankItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-  },
-  bankItemText: {
-    fontSize: 14,
-    fontFamily: "Sora-Regular",
-    color: Colors.primary,
-  },
-  sectionDescription: {
+  balanceLabel: {
     fontSize: 12,
     fontFamily: "Sora-Regular",
     color: Colors.gray600,
-    marginTop: 4,
-    marginBottom: 8,
   },
-  methodDescription: {
-    fontSize: 11,
+  balanceAmount: {
+    fontSize: 32,
+    fontFamily: "Sora-Bold",
+    color: Colors.primary,
+    marginTop: 4,
+  },
+  withdrawInfo: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#f9fafb",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    gap: 8,
+  },
+  withdrawInfoText: {
+    flex: 1,
+    fontSize: 12,
     fontFamily: "Sora-Regular",
     color: Colors.gray600,
-    marginTop: 2,
+    lineHeight: 18,
   },
 });
 
