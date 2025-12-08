@@ -46,6 +46,7 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
   const [showEditPerksModal, setShowEditPerksModal] = useState(false);
   const [selectedPerks, setSelectedPerks] = useState([]);
   const [initialPerks, setInitialPerks] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Event perks icons mapping
   const eventPerksIcons = {
@@ -192,7 +193,11 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
   };
 
   const handleSavePerks = async () => {
+    if (isSaving) return; // Prevent multiple clicks
+    
     try {
+      setIsSaving(true);
+      
       // Use the specific perks endpoint
       const response = await updateEventPerks(
         event._id || event.id,
@@ -212,6 +217,8 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
         "Error",
         error.response?.data?.message || "Failed to update special perks"
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -349,14 +356,22 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
                 setSelectedPerks(initialPerks);
                 setShowEditPerksModal(false);
               }}
+              disabled={isSaving}
             >
               <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonPrimary]}
+              style={[
+                styles.modalButton,
+                styles.modalButtonPrimary,
+                isSaving && styles.modalButtonDisabled,
+              ]}
               onPress={handleSavePerks}
+              disabled={isSaving}
             >
-              <Text style={styles.modalButtonTextPrimary}>Save Changes</Text>
+              <Text style={styles.modalButtonTextPrimary}>
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -537,6 +552,9 @@ const styles = StyleSheet.create({
   },
   modalButtonPrimary: {
     backgroundColor: Colors.primary,
+  },
+  modalButtonDisabled: {
+    opacity: 0.6,
   },
   modalButtonTextSecondary: {
     fontSize: 16,
