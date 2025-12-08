@@ -9,7 +9,7 @@ import {
   Trash2,
   X,
 } from "lucide-react-native";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
