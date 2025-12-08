@@ -20,6 +20,7 @@ import {
   Moon,
   MoreVertical,
   Music,
+  Plus,
   Share,
   Shield,
   Sofa,
@@ -61,6 +62,25 @@ const EventHostManagement = ({
   const [showEditSafetyModal, setShowEditSafetyModal] = useState(false);
   const [showEditPerksModal, setShowEditPerksModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Safety tips state
+  const [safetyTips, setSafetyTips] = useState(event.eventSafetyTips || []);
+  const [newTip, setNewTip] = useState("");
+  const [showAddTip, setShowAddTip] = useState(false);
+
+  // Common safety tips
+  const commonSafetyTips = [
+    "Please arrive 30 minutes early for security check",
+    "Valid ID required for entry",
+    "No outside food or beverages allowed",
+    "Follow all venue safety guidelines",
+    "Emergency exits are clearly marked",
+    "Report any suspicious activity to security",
+    "Keep personal belongings secure at all times",
+    "No smoking inside the venue",
+    "Follow social distancing guidelines if applicable",
+    "Wear comfortable shoes for standing events",
+  ];
 
   // Perks categories (same as EventSpecialPerks)
   const perkCategories = {
@@ -153,6 +173,7 @@ const EventHostManagement = ({
         ? event.eventSafetyTips.join("\n")
         : ""
     );
+    setSafetyTips(event.eventSafetyTips || []);
     setSelectedPerks(event.eventSpecialPerks || event.specialPerks || []);
   }, [event]);
 
@@ -169,6 +190,39 @@ const EventHostManagement = ({
   const handleEditSafety = () => {
     setShowHostMenu(false);
     setShowEditSafetyModal(true);
+  };
+
+  const addSafetyTip = (tip) => {
+    if (!tip.trim()) {
+      Alert.alert('Error', 'Please enter a safety tip');
+      return;
+    }
+
+    if (tip.length > 200) {
+      Alert.alert('Error', 'Safety tip must be less than 200 characters');
+      return;
+    }
+
+    if (safetyTips.includes(tip.trim())) {
+      Alert.alert('Error', 'This safety tip has already been added');
+      return;
+    }
+
+    setSafetyTips([...safetyTips, tip.trim()]);
+    setNewTip("");
+    setShowAddTip(false);
+  };
+
+  const removeSafetyTip = (index) => {
+    setSafetyTips(safetyTips.filter((_, i) => i !== index));
+  };
+
+  const addCommonTip = (tip) => {
+    addSafetyTip(tip);
+  };
+
+  const getAvailableCommonTips = () => {
+    return commonSafetyTips.filter(tip => !safetyTips.includes(tip));
   };
 
   const togglePerk = (perkId) => {
@@ -301,13 +355,7 @@ const EventHostManagement = ({
     try {
       setIsSaving(true);
 
-      // Split by newlines and filter out empty lines
-      const safetyTipsArray = safetyRulesText
-        .split("\n")
-        .map((tip) => tip.trim())
-        .filter((tip) => tip.length > 0);
-
-      if (safetyTipsArray.length === 0) {
+      if (safetyTips.length === 0) {
         Alert.alert(
           "Validation Error",
           "Please add at least one safety guideline"
@@ -318,7 +366,7 @@ const EventHostManagement = ({
 
       // Use general update endpoint
       const response = await updateEvent(event.id, {
-        eventSafetyTips: safetyTipsArray,
+        eventSafetyTips: safetyTips,
       });
 
       if (response) {
@@ -739,51 +787,182 @@ const EventHostManagement = ({
       >
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Edit Safety Guidelines</Text>
             <TouchableOpacity
               onPress={() => setShowEditSafetyModal(false)}
               style={styles.closeButton}
             >
               <X size={24} color={Colors.gray700} />
             </TouchableOpacity>
+            <Text style={styles.modalTitle}>Safety Guidelines & Information</Text>
+            {/* <View style={{ width: 40 }} /> */}
           </View>
 
           <ScrollView
             style={styles.modalContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Safety Guidelines <Text style={styles.required}>*</Text>
-              </Text>
-              <Text style={styles.inputHint}>
-                Enter each guideline on a new line
-              </Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={safetyRulesText}
-                onChangeText={setSafetyRulesText}
-                placeholder="e.g.,&#10;Valid ID required for entry&#10;Dress code: Smart casual&#10;No outside food or drinks allowed"
-                placeholderTextColor={Colors.gray400}
-                multiline
-                numberOfLines={10}
-                textAlignVertical="top"
-              />
+            <Text style={styles.sectionSubtitle}>
+              Add important safety information and guidelines for your attendees
+            </Text>
+
+            {/* Current Safety Tips */}
+            {safetyTips.length > 0 && (
+              <View style={{ marginBottom: 24, marginTop: 24 }}>
+                <Text style={styles.label}>Your Safety Guidelines</Text>
+                {safetyTips.map((tip, index) => (
+                  <View key={index} style={[styles.typeOption, { marginTop: 8 }]}>
+                    <View style={styles.typeOptionRow}>
+                      <AlertTriangle size={16} color={Colors.warning} />
+                      <Text style={[styles.labelText, { flex: 1, marginLeft: 8 }]}>
+                        {tip}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => removeSafetyTip(index)}
+                        style={{
+                          padding: 4,
+                          backgroundColor: Colors.gray200,
+                          borderRadius: 4,
+                        }}
+                      >
+                        <X size={14} color={Colors.gray600} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Add Custom Safety Tip */}
+            <View style={{ marginBottom: 24, marginTop: safetyTips.length === 0 ? 24 : 0 }}>
+              <Text style={styles.label}>Add Custom Safety Tip</Text>
+              {!showAddTip ? (
+                <TouchableOpacity
+                  onPress={() => setShowAddTip(true)}
+                  style={[styles.typeOption, { backgroundColor: Colors.blue50, marginTop: 8 }]}
+                >
+                  <View style={styles.typeOptionRow}>
+                    <Plus size={20} color={Colors.primary} />
+                    <Text style={[styles.labelText, { color: Colors.primary }]}>
+                      Add Custom Safety Guideline
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <View style={[styles.typeOption, styles.selectedTypeOption, { marginTop: 8 }]}>
+                  <Text style={[styles.labelText, { marginBottom: 8 }]}>
+                    Enter Safety Guideline
+                  </Text>
+                  <TextInput
+                    style={[styles.input, { marginBottom: 12, height: 80 }]}
+                    placeholder="e.g., Please bring a valid ID for entry verification"
+                    value={newTip}
+                    onChangeText={setNewTip}
+                    multiline
+                    maxLength={200}
+                    textAlignVertical="top"
+                  />
+                  <Text style={[styles.typeOptionDescription, { marginBottom: 12 }]}>
+                    {newTip.length}/200 characters
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      onPress={() => addSafetyTip(newTip)}
+                      style={{
+                        flex: 1,
+                        backgroundColor: Colors.primary,
+                        padding: 12,
+                        borderRadius: 8,
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Text style={{ color: 'white', fontFamily: 'Sora-SemiBold' }}>
+                        Add Tip
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowAddTip(false);
+                        setNewTip("");
+                      }}
+                      style={{
+                        flex: 1,
+                        backgroundColor: Colors.gray600,
+                        padding: 12,
+                        borderRadius: 8,
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Text style={{ color: 'white', fontFamily: 'Sora-SemiBold' }}>
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </View>
 
-            <View style={styles.infoBox}>
-              <Shield size={20} color={Colors.primary} />
-              <Text style={styles.infoText}>
-                Clear safety guidelines help attendees know what to expect and
-                ensure a safe event
-              </Text>
+            {/* Common Safety Tips */}
+            {getAvailableCommonTips().length > 0 && (
+              <View style={{ marginBottom: 24 }}>
+                <Text style={styles.label}>Quick Add Common Guidelines</Text>
+                <Text style={styles.typeOptionDescription}>
+                  Tap to add commonly used safety guidelines
+                </Text>
+                <View style={{ marginTop: 12 }}>
+                  {getAvailableCommonTips().slice(0, 5).map((tip, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => addCommonTip(tip)}
+                      style={[styles.typeOption, { marginBottom: 8 }]}
+                    >
+                      <View style={styles.typeOptionRow}>
+                        <Plus size={16} color={Colors.primary} />
+                        <Text style={[styles.labelText, { flex: 1, marginLeft: 8 }]}>
+                          {tip}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Info Note */}
+            <View style={[styles.typeOption, { backgroundColor: Colors.yellow50, borderColor: Colors.warning }]}>
+              <View style={styles.typeOptionRow}>
+                <AlertTriangle size={20} color={Colors.warning} />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={[styles.labelText, { color: Colors.warning, marginBottom: 4 }]}>
+                    Safety First
+                  </Text>
+                  <Text style={styles.typeOptionDescription}>
+                    Clear safety guidelines help ensure a safe and enjoyable experience for all attendees.
+                    These will be displayed prominently on your event page.
+                  </Text>
+                </View>
+              </View>
             </View>
+
+            {/* Summary */}
+            {safetyTips.length > 0 && (
+              <View style={{ marginTop: 16, marginBottom: 20 }}>
+                <Text style={styles.typeOptionDescription}>
+                  ✅ {safetyTips.length} safety guideline(s) added
+                </Text>
+              </View>
+            )}
           </ScrollView>
 
           <View style={styles.modalFooter}>
             <TouchableOpacity
               style={[styles.modalButton, styles.modalButtonSecondary]}
-              onPress={() => setShowEditSafetyModal(false)}
+              onPress={() => {
+                setSafetyTips(event.eventSafetyTips || []);
+                setShowAddTip(false);
+                setNewTip("");
+                setShowEditSafetyModal(false);
+              }}
+              disabled={isSaving}
             >
               <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
             </TouchableOpacity>
@@ -1061,6 +1240,15 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Bold",
     color: Colors.primary,
   },
+  sectionSubtitle: {
+    color: "#6b7280",
+    fontFamily: "Sora-Regular",
+    marginBottom: 12,
+    flexWrap: "wrap",
+    width: "100%",
+    fontSize: 14,
+    lineHeight: 20,
+  },
   closeButton: {
     width: 40,
     height: 40,
@@ -1096,6 +1284,47 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Regular",
     color: Colors.gray900,
     backgroundColor: Colors.white,
+    height: 60,
+    marginTop: 0,
+  },
+  label: {
+    color: "#111827",
+    fontSize: 18,
+    fontFamily: "Sora-Regular",
+    color: Colors.primary,
+  },
+  labelText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: "Sora-Regular",
+  },
+  typeOption: {
+    backgroundColor: "#f9fafb",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
+  typeOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  selectedTypeOption: {
+    backgroundColor: Colors.blue50,
+    borderColor: Colors.primary,
+  },
+  typeOptionDescription: {
+    fontSize: 14,
+    marginTop: 6,
+    color: Colors.gray600,
+    fontFamily: "Sora-Regular",
+    flexWrap: "wrap",
+    width: "100%",
+  },
+  yellow50: {
+    backgroundColor: "#fef3c7",
   },
   textArea: {
     minHeight: 120,
