@@ -1,7 +1,7 @@
 import { getEventById } from '@/api/services/eventServices';
 import { Colors } from '@/constants/Colors';
-import { getAuth } from 'firebase/auth';
 import { router, useLocalSearchParams } from 'expo-router';
+import { getAuth } from 'firebase/auth';
 import {
   ArrowLeft,
   Calendar,
@@ -24,11 +24,9 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -36,6 +34,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MediaCarousel from '../apartment-details/components/MediaCarousel';
 import EventHostManagement from './components/EventHostManagement';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -394,22 +393,18 @@ const EventDetailsScreen = () => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Event Images */}
-        {event.images && event.images.length > 0 && (
-          <View style={styles.mediaSection}>
-            <Image 
-              source={{ uri: event.images[0] }} 
-              style={styles.mediaImage}
-              resizeMode="cover"
-            />
-            {event.images.length > 1 && (
-              <View style={styles.mediaIndicator}>
-                <Text style={styles.mediaIndicatorText}>
-                  1 / {event.images.length}
-                </Text>
-              </View>
-            )}
-          </View>
+        {/* Event Images with Carousel */}
+        {event.media && event.media.length > 0 && (
+          <MediaCarousel 
+            media={event.media.map(item => ({
+              url: item.url,
+              localUri: item.url,
+              localThumbnail: item.thumbnail_url,
+              resource_type: item.resource_type || 'image',
+              width: item.width,
+              height: item.height
+            }))} 
+          />
         )}
 
         {/* Event Info */}
@@ -462,9 +457,12 @@ const EventDetailsScreen = () => {
             <View style={styles.detailRow}>
               <Users size={20} color={Colors.gray600} />
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Capacity</Text>
+                <Text style={styles.detailLabel}>Attendance</Text>
                 <Text style={styles.detailValue}>
-                  {event.capacity} attendees maximum
+                  {event.attendees || 0} attending
+                </Text>
+                <Text style={styles.detailSubtext}>
+                  {event.capacity} capacity • {event.capacity - (event.attendees || 0)} spots left
                 </Text>
               </View>
             </View>
@@ -577,6 +575,9 @@ const EventDetailsScreen = () => {
           <Text style={styles.bottomPrice}>
             {event.isFree ? "Free Event" : `From ${formatPrice(minPrice.toString())}`}
           </Text>
+          <Text style={styles.bottomAttendance}>
+            {event.attendees || 0} attending
+          </Text>
         </View>
         <TouchableOpacity 
           style={[styles.rsvpButton, isAttending && styles.attendingButton]} 
@@ -597,7 +598,7 @@ const mockEventData = {
   eventType: "House Party",
   title: "Summer Rooftop Celebration",
   description: "Join us for an amazing sunset rooftop party with great music, drinks, and city views. This will be an unforgettable night with DJs, photo booths, and networking opportunities. Experience the best of nightlife with stunning panoramic views and premium entertainment.",
-  date: "2024-12-15T00:00:00.000Z",
+  date: "2025-12-15T00:00:00.000Z",
   time: "7:00 PM",
   endTime: "11:00 PM",
   location: {
@@ -609,6 +610,7 @@ const mockEventData = {
     venue: "Sky Lounge Lagos"
   },
   capacity: 150,
+  attendees: 87,
   isFree: false,
   ticketTypes: [
     { id: 'regular', name: 'Regular', price: '15000' },
@@ -658,31 +660,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  mediaSection: {
-    position: 'relative',
-  },
-  mediaContainer: {
-    width: screenWidth,
-    height: 250,
-  },
-  mediaImage: {
-    width: '100%',
-    height: 250,
-  },
-  mediaIndicator: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  mediaIndicatorText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontFamily: 'Sora-Medium',
   },
   infoSection: {
     padding: 20,
@@ -932,6 +909,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Sora-Bold',
     color: Colors.primary,
+  },
+  bottomAttendance: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+    marginTop: 2,
   },
   rsvpButton: {
     backgroundColor: Colors.primary,
