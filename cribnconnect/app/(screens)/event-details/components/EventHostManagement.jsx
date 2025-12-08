@@ -1,26 +1,26 @@
 import api from "@/api/api";
 import { Colors } from "@/constants/Colors";
 import {
-  AlertTriangle,
-  Calendar,
-  MapPin,
-  MoreVertical,
-  Shield,
-  Trash2,
-  X,
+    AlertTriangle,
+    Calendar,
+    MapPin,
+    MoreVertical,
+    Shield,
+    Trash2,
+    X,
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 const EventHostManagement = ({
