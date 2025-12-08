@@ -1,11 +1,28 @@
 import { Colors } from "@/constants/Colors";
-import { basicAmenities, luxuryAmenities, sharedAmenities } from "@/utils/amenities";
+import {
+  basicAmenities,
+  luxuryAmenities,
+  sharedAmenities,
+} from "@/utils/amenities";
 import { Edit, X } from "lucide-react-native";
 import { React, useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View, ScrollView, SafeAreaView } from "react-native";
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  SafeAreaView,
+} from "react-native";
 // import { SafeAreaView } from "react-native-safe-area-context";
 
-const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmenities }) => {
+const AmenitiesSection = ({
+  amenities,
+  amenityIcons,
+  isHost = false,
+  onSaveAmenities,
+}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [initialSelectedAmenities, setInitialSelectedAmenities] = useState([]);
@@ -28,12 +45,14 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
       category === "basic"
         ? amenities.basic || []
         : category === "luxury"
-        ? amenities.luxury || []
-        : category === "shared"
-        ? amenities.shared || []
-        : [];
+          ? amenities.luxury || []
+          : category === "shared"
+            ? amenities.shared || []
+            : [];
     // current may be array of names or objects; normalize to names
-    const normalized = (current || []).map((a) => (typeof a === "string" ? a : a.name));
+    const normalized = (current || []).map((a) =>
+      typeof a === "string" ? a : a.name
+    );
     setInitialSelectedAmenities(normalized);
     setSelectedAmenities(normalized);
     setModalVisible(true);
@@ -88,7 +107,9 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
         <View style={styles.categorySection}>
           <Text style={styles.categoryTitle}>Basic Amenities</Text>
           <View style={styles.amenitiesGrid}>
-            {amenities.basic.map((amenity) => renderAmenity(amenity, isHost, "basic"))}
+            {amenities.basic.map((amenity) =>
+              renderAmenity(amenity, isHost, "basic")
+            )}
             {isHost && (
               <TouchableOpacity
                 style={styles.addAmenityButton}
@@ -109,7 +130,9 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
         <View style={styles.categorySection}>
           <Text style={styles.categoryTitle}>Luxury Amenities</Text>
           <View style={styles.amenitiesGrid}>
-            {amenities.luxury.map((amenity) => renderAmenity(amenity, isHost, "luxury"))}
+            {amenities.luxury.map((amenity) =>
+              renderAmenity(amenity, isHost, "luxury")
+            )}
             {isHost && (
               <TouchableOpacity
                 style={styles.addAmenityButton}
@@ -130,7 +153,9 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
         <View style={styles.categorySection}>
           <Text style={styles.categoryTitle}>Shared Amenities</Text>
           <View style={styles.amenitiesGrid}>
-            {amenities.shared.map((amenity) => renderAmenity(amenity, isHost, "shared"))}
+            {amenities.shared.map((amenity) =>
+              renderAmenity(amenity, isHost, "shared")
+            )}
             {isHost && (
               <TouchableOpacity
                 style={styles.addAmenityButton}
@@ -163,7 +188,7 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
               <X color={Colors.black} size={24} strokeWidth={2.5} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
@@ -175,15 +200,29 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
           </View>
 
           <ScrollView style={{ padding: 20 }}>
+            <Text style={styles.modalSubtitle}>
+              Please select the amenities you want to offer:
+            </Text>
             {toRows(modalAmenities).map((row, idx) => (
-              <View key={idx} style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
+              <View
+                key={idx}
+                style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
+              >
                 {row.map((amenity) => {
                   const selected = selectedAmenities.includes(amenity.name);
                   const Icon = amenity.icon;
                   return (
                     <TouchableOpacity
                       key={amenity.name}
-                      style={[styles.typeOption, selected && styles.selectedTypeOption, { flex: 1, alignItems: "center", justifyContent: "center" }]}
+                      style={[
+                        styles.typeOption,
+                        selected && styles.selectedTypeOption,
+                        {
+                          flex: 1,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        },
+                      ]}
                       activeOpacity={0.85}
                       onPress={() => handleAmenitySelect(amenity.name)}
                     >
@@ -208,7 +247,11 @@ const AmenitiesSection = ({ amenities, amenityIcons, isHost = false, onSaveAmeni
                 setModalVisible(false);
               }}
             >
-              <Text style={[styles.modalButtonText, styles.modalCancelButtonText]}>Cancel</Text>
+              <Text
+                style={[styles.modalButtonText, styles.modalCancelButtonText]}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalButton}
@@ -369,6 +412,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.gray200,
     marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray600,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+    closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.gray100,
+    justifyContent: "center",
+    alignItems: "center",
   },
   selectedTypeOption: {
     backgroundColor: Colors.blue50,
