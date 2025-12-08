@@ -344,13 +344,15 @@ const EventHostManagement = ({
               <Text style={styles.hostMenuItemText}>Edit Safety Guidelines</Text>
             </TouchableOpacity>
 
+            <View style={styles.hostMenuDivider} />
+
             {(Array.isArray(event.attendees) ? event.attendees.length : (event.attendees || 0)) > 0 && !event.isFree ? (
               <TouchableOpacity
-                style={styles.hostMenuItem}
+                style={[styles.hostMenuItem, styles.hostMenuItemDanger]}
                 onPress={handleCancelEvent}
               >
                 <AlertTriangle size={20} color={Colors.warning} />
-                <Text style={[styles.hostMenuItemText, { color: Colors.warning }]}>
+                <Text style={[styles.hostMenuItemText, styles.hostMenuItemDangerText, { color: Colors.warning }]}>
                   Cancel Event (Refunds)
                 </Text>
               </TouchableOpacity>
@@ -360,9 +362,16 @@ const EventHostManagement = ({
                 onPress={handleDelete}
               >
                 <Trash2 size={20} color={Colors.error} />
-                <Text style={styles.hostMenuItemTextDanger}>Delete Event</Text>
+                <Text style={[styles.hostMenuItemText, styles.hostMenuItemDangerText]}>Delete Event</Text>
               </TouchableOpacity>
             )}
+
+            <TouchableOpacity
+              style={styles.hostMenuCancel}
+              onPress={() => setShowHostMenu(false)}
+            >
+              <Text style={styles.hostMenuCancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -751,37 +760,48 @@ const styles = StyleSheet.create({
   },
   hostMenuContainer: {
     backgroundColor: Colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
   hostMenuTitle: {
     fontSize: 20,
     fontFamily: "Sora-Bold",
-    color: Colors.primary,
+    color: Colors.black,
     marginBottom: 20,
+    textAlign: "center",
   },
   hostMenuItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray200,
+    gap: 16,
   },
   hostMenuItemText: {
     fontSize: 16,
     fontFamily: "Sora-Medium",
-    color: Colors.gray700,
-    marginLeft: 12,
+    color: Colors.black,
   },
-  hostMenuItemDanger: {
-    borderBottomWidth: 0,
-  },
-  hostMenuItemTextDanger: {
-    fontSize: 16,
-    fontFamily: "Sora-Medium",
+  hostMenuItemDanger: {},
+  hostMenuItemDangerText: {
     color: Colors.error,
-    marginLeft: 12,
+  },
+  hostMenuDivider: {
+    height: 1,
+    backgroundColor: Colors.gray200,
+    marginVertical: 12,
+  },
+  hostMenuCancel: {
+    marginTop: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  hostMenuCancelText: {
+    fontSize: 16,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.gray600,
   },
   quickActions: {
     flexDirection: "row",
