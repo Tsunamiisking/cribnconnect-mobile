@@ -1,12 +1,13 @@
-import { createPaystackSubAccount, editUser, getUserById, withdrawFromWallet } from "@/api/services/userServices";
+import { createPaystackSubAccount, editUser, getNigerianBanks, getMyProfile, getUserById, verifyBankAccount, withdrawFromWallet } from "@/api/services/userServices";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle, CreditCard, Wallet } from "lucide-react-native";
+import { AlertCircle, CheckCircle, ChevronDown, CreditCard, Search, Wallet } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Image,
   KeyboardAvoidingView,
   Modal,
