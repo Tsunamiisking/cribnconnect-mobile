@@ -239,18 +239,18 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
         <Text style={styles.sectionTitle}>Special Perks</Text>
         <View style={styles.perksGrid}>
           {perks.map(renderPerk)}
-          {isHost && (
-            <TouchableOpacity
-              style={styles.perkItem}
-              onPress={handleOpenPerksModal}
-            >
-              <Text style={styles.perkText}>
-                Add/Remove Special Perks
-              </Text>
-              <Edit size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          )}
         </View>
+        {isHost && (
+          <TouchableOpacity
+            style={styles.perkItem}
+            onPress={handleOpenPerksModal}
+          >
+            <Text style={styles.perkText}>
+              Add/Remove Special Perks
+            </Text>
+            <Edit size={20} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Edit Perks Modal */}
@@ -267,7 +267,7 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
             >
               <X size={24} color={Colors.gray700} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Special Perks</Text>
+            <Text style={styles.modalTitle}>Special Perks & Capacity</Text>
             <View style={{ width: 40 }} />
           </View>
 
@@ -276,13 +276,13 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
             showsVerticalScrollIndicator={false}
           >
             <Text style={styles.modalSubtitle}>
-              Select perks that will be available at your event
+              Add special perks to make your event more attractive
             </Text>
 
             {Object.entries(perkCategories).map(([categoryName, perks]) => (
               <View key={categoryName} style={styles.perkCategory}>
                 <Text style={styles.perkCategoryTitle}>{categoryName}</Text>
-                <View style={styles.perksGridModal}>
+                <View style={styles.verticalOptions}>
                   {perks.map((perk) => {
                     const isSelected = selectedPerks.includes(perk.id);
                     const IconComponent = perk.icon;
@@ -292,23 +292,23 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
                         key={perk.id}
                         onPress={() => handleTogglePerk(perk.id)}
                         style={[
-                          styles.perkCardModal,
-                          isSelected && styles.perkCardModalSelected,
+                          styles.typeOption,
+                          isSelected && styles.selectedTypeOption,
                         ]}
                       >
-                        <View style={styles.perkCardContent}>
+                        <View style={styles.typeOptionRow}>
                           {IconComponent && (
                             <IconComponent
-                              size={24}
+                              size={20}
                               color={
-                                isSelected ? Colors.white : Colors.gray600
+                                isSelected ? Colors.primary : Colors.gray600
                               }
                             />
                           )}
                           <Text
                             style={[
-                              styles.perkCardTextModal,
-                              isSelected && styles.perkCardTextModalSelected,
+                              styles.labelText,
+                              isSelected && styles.selectedTypeOptionText,
                             ]}
                           >
                             {perk.name}
@@ -324,10 +324,18 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
             {/* Selected Perks Summary */}
             {selectedPerks.length > 0 && (
               <View style={styles.selectedPerksInfo}>
-                <Sparkles size={18} color={Colors.primary} />
-                <Text style={styles.selectedPerksText}>
-                  {selectedPerks.length} perk
-                  {selectedPerks.length !== 1 ? 's' : ''} selected
+                <Text style={styles.selectedPerksLabel}>
+                  Selected Perks ({selectedPerks.length})
+                </Text>
+                <Text style={styles.selectedPerksList}>
+                  {selectedPerks
+                    .map((perkId) => {
+                      const allPerks = Object.values(perkCategories).flat();
+                      const perk = allPerks.find((p) => p.id === perkId);
+                      return perk?.name;
+                    })
+                    .filter(Boolean)
+                    .join(', ')}
                 </Text>
               </View>
             )}
@@ -348,7 +356,7 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
               style={[styles.modalButton, styles.modalButtonPrimary]}
               onPress={handleSavePerks}
             >
-              <Text style={styles.modalButtonTextPrimary}>Save</Text>
+              <Text style={styles.modalButtonTextPrimary}>Save Changes</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -396,20 +404,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.white,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: Colors.black,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
     borderStyle: 'dashed',
     gap: 8,
-    marginBottom: 8,
-    minWidth: 200,
+    marginTop: 16,
   },
   addPerkButtonText: {
-    fontSize: 13,
-    fontFamily: 'Sora-Medium',
-    color: Colors.black,
+    fontSize: 15,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.primary,
   },
   // Modal styles
   modalContainer: {
@@ -440,7 +447,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 20,
   },
   modalSubtitle: {
@@ -451,59 +458,64 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   perkCategory: {
-    marginBottom: 24,
+    marginVertical: 10,
   },
   perkCategoryTitle: {
-    fontSize: 15,
-    fontFamily: 'Sora-SemiBold',
+    fontSize: 18,
+    fontFamily: 'Sora-Regular',
     color: Colors.primary,
     marginBottom: 12,
   },
-  perksGridModal: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+  verticalOptions: {
+    gap: 10,
   },
-  perkCardModal: {
+  typeOption: {
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
+  typeOptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.gray50,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    gap: 16,
   },
-  perkCardModalSelected: {
-    backgroundColor: Colors.primary,
+  selectedTypeOption: {
+    backgroundColor: Colors.blue50,
     borderColor: Colors.primary,
   },
-  perkCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  labelText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontFamily: 'Sora-Regular',
   },
-  perkCardTextModal: {
-    fontSize: 13,
-    fontFamily: 'Sora-Medium',
-    color: Colors.gray700,
-  },
-  perkCardTextModalSelected: {
-    color: Colors.white,
+  selectedTypeOptionText: {
+    color: Colors.primary,
   },
   selectedPerksInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Colors.blue50,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-    gap: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 20,
   },
-  selectedPerksText: {
-    fontSize: 14,
-    fontFamily: 'Sora-Medium',
+  selectedPerksLabel: {
+    fontSize: 16,
     color: Colors.primary,
+    fontFamily: 'Sora-Medium',
+    marginBottom: 8,
+  },
+  selectedPerksList: {
+    fontSize: 14,
+    marginTop: 6,
+    color: Colors.gray600,
+    fontFamily: 'Sora-Regular',
+    lineHeight: 20,
   },
   modalFooter: {
     flexDirection: 'row',
