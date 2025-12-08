@@ -241,13 +241,13 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
           {perks.map(renderPerk)}
           {isHost && (
             <TouchableOpacity
-              style={styles.addPerkButton}
+              style={styles.perkItem}
               onPress={handleOpenPerksModal}
             >
-              <Text style={styles.addPerkButtonText}>
+              <Text style={styles.perkText}>
                 Add/Remove Special Perks
               </Text>
-              <Edit size={16} color={Colors.black} strokeWidth={2.5} />
+              <Edit size={20} color={Colors.primary} />
             </TouchableOpacity>
           )}
         </View>
@@ -359,6 +359,7 @@ const EventPerksSection = ({ event, isHost, onPerksUpdate }) => {
 
 const styles = StyleSheet.create({
   perksSection: {
+    paddingHorizontal: 20,
     marginBottom: 24,
     paddingBottom: 24,
     borderBottomWidth: 1,
