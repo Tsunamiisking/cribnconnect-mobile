@@ -1,11 +1,11 @@
+import { approveJoinRequest, markAsRead, rejectJoinRequest } from '@/api/services/notificationServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
-import { useLocalSearchParams, router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { CheckCircle, Copy, ExternalLink, XCircle } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Clipboard, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { ActivityIndicator, Alert, Clipboard, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { markAsRead, approveJoinRequest, rejectJoinRequest } from '@/api/services/notificationServices';
-import { CheckCircle, XCircle, Copy, ExternalLink } from 'lucide-react-native';
 
 export default function NotificationDetails() {
   const { id, notification: notificationParam } = useLocalSearchParams();
@@ -161,27 +161,38 @@ export default function NotificationDetails() {
       
       <View style={styles.actionButtons}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.approveButton]}
+          style={[styles.actionButton, styles.approveButton, actionLoading && styles.buttonDisabled]}
           onPress={handleApproveRequest}
           disabled={actionLoading}
+          activeOpacity={0.7}
         >
           {actionLoading ? (
-            <ActivityIndicator size="small" color={Colors.white} />
+            <>
+              <ActivityIndicator size="small" color={Colors.white} />
+              <Text style={styles.approveButtonText}>Approving...</Text>
+            </>
           ) : (
             <>
               <CheckCircle size={20} color={Colors.white} />
-              <Text style={styles.actionButtonText}>Approve Request</Text>
+              <Text style={styles.approveButtonText}>Approve Request</Text>
             </>
           )}
         </TouchableOpacity>
         
         <TouchableOpacity
-          style={[styles.actionButton, styles.rejectButton]}
+          style={[styles.actionButton, styles.rejectButton, actionLoading && styles.buttonDisabled]}
           onPress={handleRejectRequest}
           disabled={actionLoading}
+          activeOpacity={0.7}
         >
-          <XCircle size={20} color={Colors.white} />
-          <Text style={styles.actionButtonText}>Reject</Text>
+          {actionLoading ? (
+            <ActivityIndicator size="small" color="#ef4444" />
+          ) : (
+            <>
+              <XCircle size={20} color="#ef4444" />
+              <Text style={styles.rejectButtonText}>Reject</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -270,9 +281,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontFamily: 'Sora-Bold',
+    fontFamily: 'Urbanist-Bold',
     fontSize: 24,
-    color: Colors.black,
+    color: Colors.gray900,
     marginBottom: 8,
   },
   time: {
@@ -295,7 +306,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   messageContainer: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.gray50,
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
@@ -310,7 +321,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Sora-Regular',
     fontSize: 15,
     lineHeight: 22,
-    color: Colors.black,
+    color: Colors.gray900,
   },
   actionButtons: {
     gap: 12,
@@ -323,16 +334,26 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   approveButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: Colors.primary,
   },
-  rejectButton: {
-    backgroundColor: '#EF4444',
-  },
-  actionButtonText: {
+  approveButtonText: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 16,
     color: Colors.white,
+  },
+  rejectButton: {
+    backgroundColor: '#fee2e2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  rejectButtonText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 16,
+    color: '#ef4444',
   },
   codeContainer: {
     marginTop: 20,
@@ -347,7 +368,7 @@ const styles = StyleSheet.create({
   codeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.gray50,
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 12,
@@ -399,22 +420,28 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: Colors.gray200,
   },
   typeText: {
-    fontFamily: 'Sora-Medium',
+    fontFamily: 'Sora-SemiBold',
     fontSize: 12,
     color: Colors.white,
     textTransform: 'capitalize',
   },
   join_requestBadge: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: Colors.primary,
   },
   join_approvedBadge: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#10b981',
+  },
+  request_approved_confirmationBadge: {
+    backgroundColor: '#10b981',
   },
   user_joinedBadge: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: Colors.primary,
+  },
+  request_rejectedBadge: {
+    backgroundColor: '#ef4444',
   },
   infoBadge: {
     backgroundColor: '#3B82F6',

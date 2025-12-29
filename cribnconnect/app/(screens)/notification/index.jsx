@@ -1,23 +1,35 @@
+import { getNotifications, markAllAsRead, markAsRead } from '@/api/services/notificationServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
 import { Bell, CheckCircle, User, Users } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getNotifications, markAsRead, markAllAsRead } from '@/api/services/notificationServices';
 
 const NotificationScreen = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [markingAllRead, setMarkingAllRead] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [pagination, setPagination] = useState(null);
 
   const fetchNotifications = async () => {
     try {
       const data = await getNotifications();
-      if (data) console.log("Fetched notifications:", data);
-      setNotifications(data); 
+      if (data) {
+        // console.log("Fetched notifications:", JSON.stringify(data));
+        // Handle the response structure with notifications array
+        if (data.notifications) {
+          setNotifications(data.notifications);
+          setUnreadCount(data.unreadCount || 0);
+          setPagination(data.pagination || null);
+        } else {
+          // Fallback if response is just an array
+          setNotifications(Array.isArray(data) ? data : []);
+        }
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -40,9 +52,12 @@ const NotificationScreen = () => {
       case 'join_request':
         return <User size={20} color={Colors.primary} />;
       case 'join_approved':
-        return <CheckCircle size={20} color={Colors.success} />;
+      case 'request_approved_confirmation':
+        return <CheckCircle size={20} color="#10b981" />;
       case 'user_joined':
         return <Users size={20} color={Colors.primary} />;
+      case 'request_rejected':
+        return <User size={20} color="#ef4444" />;
       default:
         return <Bell size={20} color={Colors.gray600} />;
     }
@@ -59,6 +74,8 @@ const NotificationScreen = () => {
             n._id === notification._id ? { ...n, isRead: true } : n
           )
         );
+        // Decrement unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (error) {
         console.error('Error marking notification as read:', error);
       }
@@ -72,16 +89,16 @@ const NotificationScreen = () => {
   };
 
   const handleMarkAllAsRead = async () => {
-    const unreadCount = notifications.filter(n => !n.isRead).length;
+    const currentUnreadCount = notifications.filter(n => !n.isRead).length;
     
-    if (unreadCount === 0) {
+    if (currentUnreadCount === 0) {
       Alert.alert('No Unread Notifications', 'All notifications are already read.');
       return;
     }
 
     Alert.alert(
       'Mark All as Read',
-      `Are you sure you want to mark all ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''} as read?`,
+      `Are you sure you want to mark all ${currentUnreadCount} unread notification${currentUnreadCount > 1 ? 's' : ''} as read?`,
       [
         {
           text: 'Cancel',
@@ -97,6 +114,7 @@ const NotificationScreen = () => {
               setNotifications(prevNotifications =>
                 prevNotifications.map(n => ({ ...n, isRead: true }))
               );
+              setUnreadCount(0);
               Alert.alert('Success', 'All notifications marked as read.');
             } catch (error) {
               console.error('Error marking all as read:', error);
@@ -200,7 +218,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   list: {
-    padding: 16,
+    padding: 10,
   },
   notificationItem: {
     flexDirection: 'row',
@@ -208,14 +226,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: Colors.white,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
     alignItems: 'center',
     position: 'relative',
   },
   unreadNotification: {
-    backgroundColor: '#F0F9FF',
-    borderColor: Colors.primary + '20',
+    // backgroundColor: '#F0F9FF',
+    // borderColor: Colors.primary + '20',
   },
   iconContainer: {
     width: 40,
@@ -268,8 +286,8 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 8,
     backgroundColor: Colors.white,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    // borderTopWidth: 1,
+    // borderTopColor: '#E5E7EB',
   },
   markAllButton: {
     flexDirection: 'row',
