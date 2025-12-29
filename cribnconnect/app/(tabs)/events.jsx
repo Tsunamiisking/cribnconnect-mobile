@@ -40,30 +40,41 @@ export default function EventsScreen() {
     fetchEvents();
   }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (skipLoading = false) => {
     try {
-      setLoading(true);
+      if (!skipLoading) {
+        setLoading(true);
+      }
       const data = await getEvents();
-      console.log("Events from backend:", JSON.stringify(data, null, 2));
+      // console.log("Events from backend:", JSON.stringify(data, null, 2));
       // Backend returns { events: [], pagination: {} }
       setEvents(data.events || []);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
-      setLoading(false);
+      if (!skipLoading) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchEvents();
-    setRefreshing(false);
+    try {
+      await fetchEvents(true); // Skip loading indicator during refresh
+    } catch (error) {
+      console.error("Error refreshing events:", error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  // Filter events based on selected category
+  // Filter events based on selected category (case-insensitive)
   const filteredEvents = selectedCategory === "All" 
     ? events 
-    : events.filter(event => event.category === selectedCategory);
+    : events.filter(event => 
+        event.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
 
   const renderCategoryChip = ({ item: category }) => (
     <TouchableOpacity
@@ -86,7 +97,7 @@ export default function EventsScreen() {
     // Format the event data to match EventCard props
     const formattedEvent = {
       id: item._id || item.id,
-      imageUri: item.photo?.url || item.coverImage?.url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
+      imageUri: item.media?.[0]?.thumbnail_url || item.media?.[0]?.url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
       title: item.title,
       pricePerTicket: item.isFree ? "Free" : (item.ticketTypes?.[0]?.price ? `₦${item.ticketTypes[0].price}/ticket` : "Price TBA"),
       location: item.location?.address || item.location?.name || "Location TBA",
