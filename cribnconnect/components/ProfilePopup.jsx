@@ -266,14 +266,14 @@ const styles = StyleSheet.create({
   avatarText: {
     color: Colors.white,
     fontFamily: "Sora-Bold",
-    fontSize: 18,
+    fontSize: 16,
   },
   userInfo: {
     flex: 1,
   },
   userName: {
     fontFamily: "Sora-SemiBold",
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.gray900,
     marginBottom: 4,
   },
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontFamily: "Sora-Regular",
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.gray500,
     marginLeft: 6,
   },
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   },
   menuTitle: {
     fontFamily: "Sora-SemiBold",
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.gray900,
     marginBottom: 2,
   },
