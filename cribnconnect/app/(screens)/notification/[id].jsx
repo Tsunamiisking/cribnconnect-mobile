@@ -1,11 +1,11 @@
 import { approveJoinRequest, markAsRead, rejectJoinRequest } from '@/api/services/notificationServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { CheckCircle, Copy, ExternalLink, XCircle } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NotificationDetails() {

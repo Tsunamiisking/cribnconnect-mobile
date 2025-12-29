@@ -1,13 +1,14 @@
 import { Colors } from "@/constants/Colors";
 import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function JoinCodeModal({
@@ -17,6 +18,7 @@ export default function JoinCodeModal({
   onJoinCodeChange,
   joinError,
   onSubmit,
+  isLoading = false,
 }) {
   return (
     <Modal
@@ -62,23 +64,37 @@ export default function JoinCodeModal({
               />
 
               <View style={styles.modalButtons}>
-                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                <TouchableOpacity 
+                  style={styles.cancelButton} 
+                  onPress={onClose}
+                  disabled={isLoading}
+                >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.confirmButton}
+                  style={[
+                    styles.confirmButton,
+                    (joinCode.length !== 6 || isLoading) && styles.disabledButton
+                  ]}
                   onPress={onSubmit}
-                  disabled={joinCode.length !== 6}
+                  disabled={joinCode.length !== 6 || isLoading}
                 >
-                  <Text
-                    style={[
-                      styles.confirmButtonText,
-                      joinCode.length !== 6 && styles.disabledButtonText,
-                    ]}
-                  >
-                    Verify & Join
-                  </Text>
+                  {isLoading ? (
+                    <>
+                      <ActivityIndicator size="small" color={Colors.white} />
+                      <Text style={styles.confirmButtonText}>Joining...</Text>
+                    </>
+                  ) : (
+                    <Text
+                      style={[
+                        styles.confirmButtonText,
+                        joinCode.length !== 6 && styles.disabledButtonText,
+                      ]}
+                    >
+                      Verify & Join
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -153,6 +169,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   confirmButtonText: {
     color: Colors.white,

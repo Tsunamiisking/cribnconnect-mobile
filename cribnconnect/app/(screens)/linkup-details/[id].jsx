@@ -42,6 +42,7 @@ export default function LinkupDetailsScreen() {
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
+  const [isJoiningWithCode, setIsJoiningWithCode] = useState(false);
 
   useEffect(() => {
     const fetchLinkup = async () => {
@@ -257,6 +258,7 @@ export default function LinkupDetailsScreen() {
     }
 
     try {
+      setIsJoiningWithCode(true);
       const currentUser = auth?.currentUser;
       
       // Verify and use the one-time code
@@ -306,6 +308,12 @@ export default function LinkupDetailsScreen() {
       // Close modal and clear code
       setJoinCodeModalVisible(false);
       setJoinCode("");
+      
+      // Redirect to the linkup group chat
+      setTimeout(() => {
+        router.push(`/(screens)/chat/${linkup.id}?type=linkup`);
+      }, 500);
+      
     } catch (error) {
       console.error('Error joining with code:', error);
       setJoinError(error.response?.data?.message || 'Invalid or expired code');
@@ -313,6 +321,8 @@ export default function LinkupDetailsScreen() {
       setTimeout(() => {
         setJoinError("");
       }, 3000);
+    } finally {
+      setIsJoiningWithCode(false);
     }
   };
 
@@ -521,6 +531,7 @@ export default function LinkupDetailsScreen() {
         onJoinCodeChange={setJoinCode}
         joinError={joinError}
         onSubmit={handleJoinWithCode}
+        isLoading={isJoiningWithCode}
       />
 
       {/* Pending Requests Modal */}
