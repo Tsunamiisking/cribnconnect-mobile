@@ -6,6 +6,7 @@ import LinkupActionBar from "@/components/linkup/LinkupActionBar";
 import LinkupDetails from "@/components/linkup/LinkupDetails";
 import LinkupHeader from "@/components/linkup/LinkupHeader";
 import LinkupInfo from "@/components/linkup/LinkupInfo";
+import PendingRequestsModal from "@/components/linkup/PendingRequestsModal";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +41,7 @@ export default function LinkupDetailsScreen() {
   const [error, setError] = useState(null);
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [showRequestsModal, setShowRequestsModal] = useState(false);
 
   useEffect(() => {
     const fetchLinkup = async () => {
@@ -394,10 +396,8 @@ export default function LinkupDetailsScreen() {
   };
 
   const handleManageRequests = () => {
-    // TODO: Navigate to pending requests screen
-    console.log("Manage requests for linkup:", id);
-    // router.push(`/notification`)
-    // router.push(`/(screens)/linkup-requests/${id}`);
+    // Open the pending requests modal
+    setShowRequestsModal(true);
   };
 
   const handleCloseJoinModal = () => {
@@ -521,6 +521,13 @@ export default function LinkupDetailsScreen() {
         onJoinCodeChange={setJoinCode}
         joinError={joinError}
         onSubmit={handleJoinWithCode}
+      />
+
+      {/* Pending Requests Modal */}
+      <PendingRequestsModal
+        visible={showRequestsModal}
+        onClose={() => setShowRequestsModal(false)}
+        linkupId={linkup.id}
       />
     </SafeAreaView>
   );
