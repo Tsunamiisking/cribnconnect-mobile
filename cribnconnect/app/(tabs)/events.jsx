@@ -1,113 +1,69 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  FlatList,
-  Platform,
-} from "react-native";
-import { useState } from "react";
-import { router } from "expo-router";
+import { getEvents } from "@/api/services/eventServices";
 import EventCard from "@/components/EventCard";
-import { SafeAreaView } from "react-native-safe-area-context";
 import NormalHeader from "@/components/NormalHeader";
 import { Colors } from "@/constants/Colors";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-// Mock data - TODO: Replace with API integration
-const FEATURED_EVENTS = [
-  {
-    id: "1",
-    title: "Rooftop Networking Mixer",
-    pricePerTicket: "Free",
-    location: "Downtown Rooftop Bar, Lagos",
-    schedule: "Dec 15, 7:00 PM - 10:00 PM",
-    timeOfDay: "night",
-    imageUri: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
-    category: "Networking",
-    host: "Sarah Chen",
-  },
-  {
-    id: "2",
-    title: "Community Game Night",
-    pricePerTicket: "₦2,000/ticket",
-    location: "Community Center, Ikoyi",
-    schedule: "Dec 18, 6:30 PM - 9:30 PM",
-    timeOfDay: "night",
-    imageUri: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop",
-    category: "Social",
-    host: "Mike Johnson",
-  },
-  {
-    id: "3",
-    title: "Fitness Bootcamp",
-    pricePerTicket: "₦5,000/ticket",
-    location: "Central Park, Victoria Island",
-    schedule: "Dec 20, 8:00 AM - 9:00 AM",
-    timeOfDay: "day",
-    imageUri: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop",
-    category: "Fitness",
-    host: "Alex Rivera",
-  },
-  {
-    id: "4",
-    title: "Live Music Concert",
-    pricePerTicket: "₦15,000/ticket",
-    location: "Terra Kulture, VI",
-    schedule: "Dec 22, 8:00 PM - 11:00 PM",
-    timeOfDay: "night",
-    imageUri: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop",
-    category: "Entertainment",
-    host: "Music Collective",
-  },
-  {
-    id: "5",
-    title: "Wine Tasting Evening",
-    pricePerTicket: "₦12,000/ticket",
-    location: "Sky Restaurant, Ikoyi",
-    schedule: "Dec 24, 6:00 PM - 9:00 PM",
-    timeOfDay: "night",
-    imageUri: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=300&fit=crop",
-    category: "Food & Drink",
-    host: "Wine Society",
-  },
-  {
-    id: "6",
-    title: "Morning Yoga Session",
-    pricePerTicket: "₦3,000/ticket",
-    location: "Tafawa Balewa Square",
-    schedule: "Dec 25, 7:00 AM - 8:30 AM",
-    timeOfDay: "day",
-    imageUri: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop",
-    category: "Fitness",
-    host: "Wellness Hub",
-  },
-];
-
+// Match categories with backend event categories
 const EVENT_CATEGORIES = [
   "All",
-  "Networking", 
-  "Social", 
-  "Fitness", 
-  "Food & Drink", 
-  "Entertainment",
-  "Business",
+  "Entertainment & Nightlife",
+  "Education & Professional",
+  "Arts & Culture",
+  "Sports & Fitness",
+  "Food & Drink",
+  "Lifestyle & Celebrations",
+  "Faith & Community",
+  "Special Interests",
 ];
 
 export default function EventsScreen() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [refreshing, setRefreshing] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const onRefresh = () => {
+  // Fetch events from API
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const data = await getEvents();
+      console.log("Events from backend:", JSON.stringify(data, null, 2));
+      // Backend returns { events: [], pagination: {} }
+      setEvents(data.events || []);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
     setRefreshing(true);
-    // TODO: Refresh events data from API
-    setTimeout(() => setRefreshing(false), 1000);
+    await fetchEvents();
+    setRefreshing(false);
   };
 
   // Filter events based on selected category
   const filteredEvents = selectedCategory === "All" 
-    ? FEATURED_EVENTS 
-    : FEATURED_EVENTS.filter(event => event.category === selectedCategory);
+    ? events 
+    : events.filter(event => event.category === selectedCategory);
 
   const renderCategoryChip = ({ item: category }) => (
     <TouchableOpacity
@@ -126,28 +82,58 @@ export default function EventsScreen() {
     </TouchableOpacity>
   );
 
-  const renderEventCard = ({ item, index }) => (
-    <View style={[
-      styles.eventCardContainer,
-      index % 2 === 0 ? styles.leftCard : styles.rightCard
-    ]}>
-      <EventCard
-        imageUri={item.imageUri}
-        title={item.title}
-        pricePerTicket={item.pricePerTicket}
-        location={item.location}
-        schedule={item.schedule}
-        timeOfDay={item.timeOfDay}
-        liked={false}
-        onLikeToggle={(liked) => {
-          console.log("Event saved:", item.id, liked);
-        }}
-        onPress={() => {
-          router.push(`/(screens)/event-details/${item.id}`);
-        }}
-      />
-    </View>
-  );
+  const renderEventCard = ({ item, index }) => {
+    // Format the event data to match EventCard props
+    const formattedEvent = {
+      id: item._id || item.id,
+      imageUri: item.photo?.url || item.coverImage?.url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
+      title: item.title,
+      pricePerTicket: item.isFree ? "Free" : (item.ticketTypes?.[0]?.price ? `₦${item.ticketTypes[0].price}/ticket` : "Price TBA"),
+      location: item.location?.address || item.location?.name || "Location TBA",
+      schedule: formatSchedule(item.date, item.time, item.endTime),
+      timeOfDay: getTimeOfDay(item.time),
+      category: item.category,
+    };
+
+    return (
+      <View style={[
+        styles.eventCardContainer,
+        index % 2 === 0 ? styles.leftCard : styles.rightCard
+      ]}>
+        <EventCard
+          imageUri={formattedEvent.imageUri}
+          title={formattedEvent.title}
+          pricePerTicket={formattedEvent.pricePerTicket}
+          location={formattedEvent.location}
+          schedule={formattedEvent.schedule}
+          timeOfDay={formattedEvent.timeOfDay}
+          liked={false}
+          onLikeToggle={(liked) => {
+            console.log("Event saved:", formattedEvent.id, liked);
+          }}
+          onPress={() => {
+            router.push(`/(screens)/event-details/${formattedEvent.id}`);
+          }}
+        />
+      </View>
+    );
+  };
+
+  // Helper function to format schedule
+  const formatSchedule = (date, time, endTime) => {
+    if (!date) return "Date TBA";
+    const eventDate = new Date(date);
+    const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const timeStr = time ? `${time}${endTime ? ` - ${endTime}` : ''}` : '';
+    return `${dateStr}${timeStr ? `, ${timeStr}` : ''}`;
+  };
+
+  // Helper function to determine time of day
+  const getTimeOfDay = (time) => {
+    if (!time) return 'day';
+    const hour = parseInt(time.split(':')[0]);
+    return hour >= 18 || hour < 6 ? 'night' : 'day';
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -165,19 +151,36 @@ export default function EventsScreen() {
         />
       </View>
 
-      {/* Events Grid */}
-      <FlatList
-        data={filteredEvents}
-        renderItem={renderEventCard}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.mainContainer}
-        columnWrapperStyle={styles.row}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      />
+      {/* Loading State */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading events...</Text>
+        </View>
+      ) : filteredEvents.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No events found</Text>
+          <Text style={styles.emptySubtext}>
+            {selectedCategory === "All" 
+              ? "Check back later for new events" 
+              : `No events in ${selectedCategory}`}
+          </Text>
+        </View>
+      ) : (
+        /* Events Grid */
+        <FlatList
+          data={filteredEvents}
+          renderItem={renderEventCard}
+          keyExtractor={(item) => item._id || item.id}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.mainContainer}
+          columnWrapperStyle={styles.row}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -229,5 +232,36 @@ const styles = StyleSheet.create({
   },
   rightCard: {
     marginLeft: 4, // Reduce gap between cards
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 16,
+    color: Colors.gray500,
+    marginTop: 12,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 18,
+    color: Colors.gray700,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray500,
+    textAlign: 'center',
   },
 });

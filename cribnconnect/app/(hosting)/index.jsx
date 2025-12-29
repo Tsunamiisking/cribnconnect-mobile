@@ -237,14 +237,14 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontFamily: "Sora-SemiBold",
-    fontSize: 18,
+    fontSize: 16,
     color: Colors.primary,
     marginBottom: 6,
     letterSpacing: -0.2,
   },
   optionDesc: {
     fontFamily: "Sora-Regular",
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.gray600,
     lineHeight: 21,
     letterSpacing: -0.1,
