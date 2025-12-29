@@ -100,7 +100,7 @@ export default function EventsScreen() {
       imageUri: item.media?.[0]?.thumbnail_url || item.media?.[0]?.url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
       title: item.title,
       pricePerTicket: item.isFree ? "Free" : (item.ticketTypes?.[0]?.price ? `₦${item.ticketTypes[0].price}/ticket` : "Price TBA"),
-      location: item.location?.address || item.location?.name || "Location TBA",
+      location: item.location?.venue || item.location?.city || "Location TBA",
       schedule: formatSchedule(item.date, item.time, item.endTime),
       timeOfDay: getTimeOfDay(item.time),
       category: item.category,
