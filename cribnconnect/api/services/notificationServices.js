@@ -27,6 +27,32 @@ export const markAsRead = async (notificationId) => {
 };
 
 /**
+ * Get unread notifications count
+ */
+export const getUnreadCount = async () => {
+  try {
+    const response = await api.get('/notifications/unread-count');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching unread count:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark all notifications as read
+ */
+export const markAllAsRead = async () => {
+  try {
+    const response = await api.put('/notifications/mark-all-read');
+    return response.data;
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    throw error;
+  }
+};
+
+/**
  * Delete a notification
  */
 export const deleteNotification = async (notificationId) => {

@@ -3,19 +3,21 @@ import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
 import { Bell, CheckCircle, User, Users } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getNotifications } from '@/api/services/notificationServices';
+import { getNotifications, markAsRead, markAllAsRead } from '@/api/services/notificationServices';
 
 const NotificationScreen = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [markingAllRead, setMarkingAllRead] = useState(false);
 
   const fetchNotifications = async () => {
     try {
       const data = await getNotifications();
-      setNotifications(data);
+      if (data) console.log("Fetched notifications:", data);
+      setNotifications(data); 
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -46,11 +48,66 @@ const NotificationScreen = () => {
     }
   };
 
-  const handleNotificationPress = (notification) => {
+  const handleNotificationPress = async (notification) => {
+    // Mark as read if unread
+    if (!notification.isRead) {
+      try {
+        await markAsRead(notification._id);
+        // Update local state
+        setNotifications(prevNotifications =>
+          prevNotifications.map(n =>
+            n._id === notification._id ? { ...n, isRead: true } : n
+          )
+        );
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    }
+
+    // Navigate to notification details
     router.push({
       pathname: `/(screens)/notification/${notification._id}`,
       params: { notification: JSON.stringify(notification) }
     });
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+    
+    if (unreadCount === 0) {
+      Alert.alert('No Unread Notifications', 'All notifications are already read.');
+      return;
+    }
+
+    Alert.alert(
+      'Mark All as Read',
+      `Are you sure you want to mark all ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''} as read?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Mark All Read',
+          onPress: async () => {
+            try {
+              setMarkingAllRead(true);
+              await markAllAsRead();
+              // Update local state
+              setNotifications(prevNotifications =>
+                prevNotifications.map(n => ({ ...n, isRead: true }))
+              );
+              Alert.alert('Success', 'All notifications marked as read.');
+            } catch (error) {
+              console.error('Error marking all as read:', error);
+              Alert.alert('Error', 'Failed to mark all notifications as read.');
+            } finally {
+              setMarkingAllRead(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const renderNotification = ({ item }) => (
@@ -92,15 +149,41 @@ const NotificationScreen = () => {
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       ) : notifications.length > 0 ? (
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item._id}
-          renderItem={renderNotification}
-          contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
+        <>
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item._id}
+            renderItem={renderNotification}
+            contentContainerStyle={styles.list}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          />
+          {/* Mark All as Read Button */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[
+                styles.markAllButton,
+                markingAllRead && styles.markAllButtonDisabled
+              ]}
+              onPress={handleMarkAllAsRead}
+              disabled={markingAllRead}
+              activeOpacity={0.7}
+            >
+              {markingAllRead ? (
+                <>
+                  <ActivityIndicator size="small" color={Colors.white} />
+                  <Text style={styles.markAllButtonText}>Marking all as read...</Text>
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={20} color={Colors.white} />
+                  <Text style={styles.markAllButtonText}>Mark All as Read</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </>
       ) : (
         <View style={styles.emptyContainer}>
           <Bell size={48} color={Colors.gray400} />
@@ -180,6 +263,30 @@ const styles = StyleSheet.create({
     fontFamily: 'Sora-Regular',
     color: Colors.gray500,
     marginTop: 12,
+  },
+  footer: {
+    padding: 16,
+    paddingBottom: 8,
+    backgroundColor: Colors.white,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  markAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  markAllButtonDisabled: {
+    opacity: 0.6,
+  },
+  markAllButtonText: {
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.white,
   },
 });
 

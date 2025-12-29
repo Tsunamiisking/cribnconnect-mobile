@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logoutUser } from "@/services/authService";
 import { router } from "expo-router";
 import {
+  Bell,
   Home,
   LogIn,
   LogOut,
@@ -21,6 +22,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import NotificationBadge from "./NotificationBadge";
 
 const { width } = Dimensions.get("window");
 
@@ -74,8 +76,9 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
     //   title: "Notifications",
     //   subtitle: "Check All Notifications Alerts",
     //   icon: Bell,
-    //   route: "/(screens)/notifications",
+    //   route: "/(screens)/notification",
     //   showWhenLoggedIn: true,
+    //   showBadge: true,
     // },
     {
       id: "settings",
@@ -182,6 +185,9 @@ export default function ProfilePopup({ visible, onClose, user = null }) {
                 >
                   <View style={styles.menuIconContainer}>
                     <IconComponent size={20} color={Colors.primary} />
+                    {item.showBadge && (
+                      <NotificationBadge size="small" style={styles.menuBadge} />
+                    )}
                   </View>
                   <View style={styles.menuTextContainer}>
                     <Text style={styles.menuTitle}>{item.title}</Text>
@@ -310,6 +316,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 16,
+    position: "relative",
+  },
+  menuBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
   },
   menuTextContainer: {
     flex: 1,

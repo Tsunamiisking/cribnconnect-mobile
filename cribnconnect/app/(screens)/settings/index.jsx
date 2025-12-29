@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React from "react";
 import BackHeader from "@/components/BackHeader";
+import NotificationBadge from "@/components/NotificationBadge";
 import { ChevronRight } from "lucide-react-native";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
@@ -21,6 +22,7 @@ const options = [
     name: "Notifications",
     route: "/(screens)/notification",
     description: "Manage your notification preferences",
+    showBadge: true,
   },
   {
     name: "Verification",
@@ -52,7 +54,12 @@ const SettingsScreen = () => {
             activeOpacity={0.8}
           >
             <View style={styles.textContainer}>
-              <Text style={styles.optionText}>{option.name}</Text>
+              <View style={styles.titleRow}>
+                <Text style={styles.optionText}>{option.name}</Text>
+                {option.showBadge && (
+                  <NotificationBadge size="small" style={styles.notificationBadge} />
+                )}
+              </View>
               <Text style={styles.optionDescription}>{option.description}</Text>
             </View>
             <ChevronRight color={Colors.primary} />
@@ -85,6 +92,17 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     marginRight: 12,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "relative",
+    top: 0,
+    right: 0,
+    marginLeft: 8,
   },
   optionText: {
     fontSize: 16,
