@@ -4,7 +4,8 @@ import { Colors } from '@/constants/Colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import { CheckCircle, Copy, ExternalLink, XCircle } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Clipboard, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NotificationDetails() {
@@ -116,9 +117,12 @@ export default function NotificationDetails() {
   };
 
   const handleCopyCode = () => {
-    if (notification?.joinCode) {
-      Clipboard.setString(notification.joinCode);
-      Alert.alert('Copied', 'Join code copied to clipboard');
+    const code = notification?.joinCode || notification?.metadata?.joinCode;
+    if (code) {
+      Clipboard.setString(code);
+      Alert.alert('Copied!', 'Join code copied to clipboard');
+    } else {
+      Alert.alert('Error', 'No join code available to copy');
     }
   };
 
