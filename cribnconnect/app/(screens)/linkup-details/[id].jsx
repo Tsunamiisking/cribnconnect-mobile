@@ -145,7 +145,7 @@ export default function LinkupDetailsScreen() {
           // Fetch username from public profile
           let username = currentUser.displayName || 'Anonymous';
           try {
-            const profileResponse = await api.get('/public-profile/me');
+            const profileResponse = await api.get('/public-profiles/me');
             username = profileResponse.data?.username || username;
           } catch (profileError) {
             console.log('Could not fetch username, using displayName');
@@ -262,7 +262,7 @@ export default function LinkupDetailsScreen() {
           // Fetch username from public profile
           let username = currentUser.displayName || 'Anonymous';
           try {
-            const profileResponse = await api.get('/public-profile/me');
+            const profileResponse = await api.get('/public-profiles/me');
             username = profileResponse.data?.username || username;
           } catch (profileError) {
             console.log('Could not fetch username, using displayName');
