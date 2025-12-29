@@ -28,6 +28,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChatScreen() {
@@ -40,6 +41,7 @@ export default function ChatScreen() {
   const [error, setError] = useState(null);
   const [chatType, setChatType] = useState(type || null); // Use type from params
   const flatListRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
@@ -223,8 +225,16 @@ export default function ChatScreen() {
   
   // Function to view group information
   const handleViewGroupInfo = () => {
-    // In a real app, navigate to group info screen
-    console.log('View group info for:', chatData?.name);
+    if (!chatData?.id) return;
+    
+    // Navigate to appropriate details screen based on chat type
+    if (chatType === 'linkup') {
+      router.push(`/(screens)/linkup-details/${chatData.id}`);
+    } else if (chatType === 'event') {
+      router.push(`/(screens)/event-details/${chatData.id}`);
+    } else if (chatType === 'apartment') {
+      router.push(`/(screens)/apartment-details/${chatData.id}`);
+    }
   };
 
   const formatTime = (date) => {
