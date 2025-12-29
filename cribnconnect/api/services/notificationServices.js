@@ -32,9 +32,14 @@ export const markAsRead = async (notificationId) => {
 export const getUnreadCount = async () => {
   try {
     const response = await api.get('/notifications/unread-count');
+    console.log('getUnreadCount response:', response.data);
+    console.log('getUnreadCount - Full response object:', JSON.stringify(response.data));
+    
+    // Return the full response data
     return response.data;
   } catch (error) {
     console.error('Error fetching unread count:', error);
+    console.error('Error details:', error.response?.data);
     throw error;
   }
 };

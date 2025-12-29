@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React from "react";
+import React, { useState, useCallback } from "react";
 import BackHeader from "@/components/BackHeader";
 import NotificationBadge from "@/components/NotificationBadge";
 import { ChevronRight } from "lucide-react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Colors } from "@/constants/Colors";
 
 const options = [
@@ -42,6 +42,15 @@ const options = [
 ];
 
 const SettingsScreen = () => {
+  const [badgeRefresh, setBadgeRefresh] = useState(0);
+
+  // Refresh badge when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      setBadgeRefresh(prev => prev + 1);
+    }, [])
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <BackHeader title="Settings" showUser={false} />
@@ -57,7 +66,11 @@ const SettingsScreen = () => {
               <View style={styles.titleRow}>
                 <Text style={styles.optionText}>{option.name}</Text>
                 {option.showBadge && (
-                  <NotificationBadge size="small" style={styles.notificationBadge} />
+                  <NotificationBadge 
+                    size="small" 
+                    style={styles.notificationBadge}
+                    refresh={badgeRefresh}
+                  />
                 )}
               </View>
               <Text style={styles.optionDescription}>{option.description}</Text>

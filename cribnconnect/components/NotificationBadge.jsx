@@ -13,7 +13,8 @@ export default function NotificationBadge({
   show = true, 
   count = null,
   size = 'medium',
-  style 
+  style,
+  refresh = false
 }) {
   const [unreadCount, setUnreadCount] = useState(count);
   const [loading, setLoading] = useState(count === null);
@@ -30,13 +31,19 @@ export default function NotificationBadge({
     if (show) {
       fetchUnreadCount();
     }
-  }, [show, count]);
+  }, [show, count, refresh]);
 
   const fetchUnreadCount = async () => {
     try {
       setLoading(true);
       const response = await getUnreadCount();
-      setUnreadCount(response.count || 0);
+      console.log('NotificationBadge - Unread count response:', response);
+      
+      // Handle different response structures
+      const count = response?.count ?? response?.unreadCount ?? response ?? 0;
+      console.log('NotificationBadge - Parsed count:', count);
+      
+      setUnreadCount(count);
     } catch (error) {
       console.error('Error fetching unread count:', error);
       setUnreadCount(0);
@@ -45,8 +52,8 @@ export default function NotificationBadge({
     }
   };
 
-  // Don't show badge if no unread notifications or loading
-  if (!show || loading || !unreadCount || unreadCount === 0) {
+  // Don't show badge if no unread notifications
+  if (!show || !unreadCount || unreadCount === 0) {
     return null;
   }
 
