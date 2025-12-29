@@ -38,6 +38,8 @@ export default function LinkupDetailsScreen() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
     const fetchLinkup = async () => {
@@ -134,6 +136,7 @@ export default function LinkupDetailsScreen() {
   // Handle joining public group after confirmation
   const handleConfirmPublicJoin = async () => {
     try {
+      setIsJoining(true);
       const currentUser = auth?.currentUser;
       
       await api.post(`/linkups/${linkup.id}/join`);
@@ -202,12 +205,15 @@ export default function LinkupDetailsScreen() {
       setTimeout(() => {
         setJoinError("");
       }, 3000);
+    } finally {
+      setIsJoining(false);
     }
   };
 
   // Handle sending join request for private groups
   const handleSubmitRequest = async () => {
     try {
+      setIsJoining(true);
       // Send join request with notification to admin/creator
       await api.post(`/linkups/${linkup.id}/request`, {
         message: requestMessage,
@@ -235,6 +241,8 @@ export default function LinkupDetailsScreen() {
       setTimeout(() => {
         setJoinError("");
       }, 3000);
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -349,6 +357,8 @@ export default function LinkupDetailsScreen() {
 
   const handleLeaveGroup = async () => {
     try {
+      setIsLeaving(true);
+      
       if (isCreator) {
         setJoinError("Group creator cannot leave the group. Delete the group instead.");
         setTimeout(() => setJoinError(""), 3000);
@@ -378,6 +388,8 @@ export default function LinkupDetailsScreen() {
       setTimeout(() => {
         setJoinError("");
       }, 3000);
+    } finally {
+      setIsLeaving(false);
     }
   };
 
@@ -475,6 +487,8 @@ export default function LinkupDetailsScreen() {
         isAdmin={isAdmin}
         isCreator={isCreator}
         isPrivate={linkup?.privacy === "private" || linkup?.isPrivate}
+        isJoining={isJoining}
+        isLeaving={isLeaving}
         onJoin={handleJoinGroup}
         onLeave={handleLeaveGroup}
         onEdit={handleEditGroup}
@@ -492,6 +506,7 @@ export default function LinkupDetailsScreen() {
         onRequestMessageChange={setRequestMessage}
         requestSent={requestSent}
         joinError={joinError}
+        isJoining={isJoining}
         onSubmitRequest={handleSubmitRequest}
         onConfirmPublicJoin={handleConfirmPublicJoin}
         onEnterCode={handleEnterCode}

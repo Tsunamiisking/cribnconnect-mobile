@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { Share2 } from "lucide-react-native";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function LinkupActionBar({
   hasJoined,
@@ -8,6 +8,8 @@ export default function LinkupActionBar({
   isAdmin = false,
   isCreator = false,
   isPrivate = false,
+  isJoining = false,
+  isLeaving = false,
   onJoin,
   onLeave,
   onEdit,
@@ -34,23 +36,46 @@ export default function LinkupActionBar({
             style={[
               styles.joinButton,
               requestSent && styles.requestSentButton,
+              isJoining && styles.disabledButton,
             ]}
             onPress={onJoin}
-            disabled={requestSent}
+            disabled={requestSent || isJoining}
           >
-            <Text style={styles.joinButtonText}>
-              {requestSent ? "Request Sent ✓" : "Join Group"}
-            </Text>
+            {isJoining ? (
+              <>
+                <ActivityIndicator size="small" color={Colors.white} />
+                <Text style={[styles.joinButtonText, { marginLeft: 8 }]}>
+                  Joining...
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.joinButtonText}>
+                {requestSent ? "Request Sent ✓" : "Join Group"}
+              </Text>
+            )}
           </TouchableOpacity>
         )}
 
         {/* Leave Button - For members who are not creators */}
         {showLeaveButton && (
           <TouchableOpacity
-            style={styles.leaveButton}
+            style={[
+              styles.leaveButton,
+              isLeaving && styles.disabledButton,
+            ]}
             onPress={onLeave}
+            disabled={isLeaving}
           >
-            <Text style={styles.leaveButtonText}>Leave Group</Text>
+            {isLeaving ? (
+              <>
+                <ActivityIndicator size="small" color={Colors.white} />
+                <Text style={[styles.leaveButtonText, { marginLeft: 8 }]}>
+                  Leaving...
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.leaveButtonText}>Leave Group</Text>
+            )}
           </TouchableOpacity>
         )}
 
@@ -112,6 +137,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
   },
   joinedButton: {
     backgroundColor: Colors.emerald,
@@ -131,11 +157,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
   },
   leaveButtonText: {
     color: Colors.white,
     fontFamily: "Sora-Bold",
     fontSize: 16,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
   editButton: {
     flex: 1,

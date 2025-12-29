@@ -1,5 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -19,6 +20,7 @@ export default function JoinConfirmationModal({
   onRequestMessageChange,
   requestSent,
   joinError,
+  isJoining = false,
   onSubmitRequest,
   onConfirmPublicJoin,
   onEnterCode,
@@ -84,17 +86,31 @@ export default function JoinConfirmationModal({
                         <TouchableOpacity
                           style={styles.cancelButton}
                           onPress={onClose}
+                          disabled={isJoining}
                         >
                           <Text style={styles.cancelButtonText}>Cancel</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          style={styles.sendButton}
+                          style={[
+                            styles.sendButton,
+                            isJoining && styles.disabledButton,
+                          ]}
                           onPress={onSubmitRequest}
+                          disabled={isJoining}
                         >
-                          <Text style={styles.sendButtonText}>
-                            Send Request
-                          </Text>
+                          {isJoining ? (
+                            <>
+                              <ActivityIndicator size="small" color={Colors.white} />
+                              <Text style={[styles.sendButtonText, { marginLeft: 8 }]}>
+                                Sending...
+                              </Text>
+                            </>
+                          ) : (
+                            <Text style={styles.sendButtonText}>
+                              Send Request
+                            </Text>
+                          )}
                         </TouchableOpacity>
                       </View>
 
@@ -133,15 +149,29 @@ export default function JoinConfirmationModal({
                     <TouchableOpacity
                       style={styles.cancelButton}
                       onPress={onClose}
+                      disabled={isJoining}
                     >
                       <Text style={styles.cancelButtonText}>Cancel</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.confirmButton}
+                      style={[
+                        styles.confirmButton,
+                        isJoining && styles.disabledButton,
+                      ]}
                       onPress={onConfirmPublicJoin}
+                      disabled={isJoining}
                     >
-                      <Text style={styles.confirmButtonText}>Join Group</Text>
+                      {isJoining ? (
+                        <>
+                          <ActivityIndicator size="small" color={Colors.white} />
+                          <Text style={[styles.confirmButtonText, { marginLeft: 8 }]}>
+                            Joining...
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={styles.confirmButtonText}>Join Group</Text>
+                      )}
                     </TouchableOpacity>
                   </View>
                 </>
@@ -217,6 +247,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
   },
   confirmButtonText: {
     color: Colors.white,
@@ -229,11 +261,16 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
   },
   sendButtonText: {
     color: Colors.white,
     fontFamily: "Sora-SemiBold",
     fontSize: 15,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
   errorContainer: {
     backgroundColor: "#fee",
