@@ -200,15 +200,28 @@ export default function NotificationDetails() {
 
   const renderJoinCode = () => (
     <View style={styles.codeContainer}>
-      <Text style={styles.codeLabel}>Your Join Code</Text>
-      <View style={styles.codeBox}>
-        <Text style={styles.codeText}>{notification.joinCode}</Text>
-        <TouchableOpacity onPress={handleCopyCode} style={styles.copyButton}>
-          <Copy size={20} color={Colors.primary} />
-        </TouchableOpacity>
+      <View style={styles.codeHeader}>
+        <Text style={styles.codeLabel}>Your Join Code</Text>
+        <View style={styles.validityBadge}>
+          <Text style={styles.validityText}>Valid 24hrs</Text>
+        </View>
       </View>
+      
+      <TouchableOpacity 
+        style={styles.codeBox}
+        onPress={handleCopyCode}
+        activeOpacity={0.7}
+      >
+        <View style={styles.codeContent}>
+          <Text style={styles.codeText}>{notification.joinCode || notification.metadata?.joinCode || 'N/A'}</Text>
+          <View style={styles.copyIconContainer}>
+            <Copy size={20} color={Colors.primary} />
+          </View>
+        </View>
+      </TouchableOpacity>
+      
       <Text style={styles.codeInfo}>
-        This code is valid for 24 hours. Tap to copy and use it to join the linkup.
+        Tap the code box to copy. Share this code with the approved user to let them join the linkup.
       </Text>
     </View>
   );
@@ -357,43 +370,66 @@ const styles = StyleSheet.create({
   },
   codeContainer: {
     marginTop: 20,
-    alignItems: 'center',
+    backgroundColor: Colors.gray50,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
   },
-  codeLabel: {
-    fontFamily: 'Sora-SemiBold',
-    fontSize: 16,
-    color: Colors.gray700,
-    marginBottom: 12,
-  },
-  codeBox: {
+  codeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.gray50,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  codeLabel: {
+    fontFamily: 'Urbanist-Bold',
+    fontSize: 18,
+    color: Colors.gray900,
+  },
+  validityBadge: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  validityText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 12,
+    color: '#16a34a',
+  },
+  codeBox: {
+    backgroundColor: Colors.white,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.primary,
+    borderStyle: 'dashed',
+    padding: 20,
+    marginBottom: 12,
+  },
+  codeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   codeText: {
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: 'Urbanist-Bold',
+    fontSize: 36,
     color: Colors.primary,
-    letterSpacing: 4,
+    letterSpacing: 8,
   },
-  copyButton: {
+  copyIconContainer: {
     padding: 8,
+    backgroundColor: Colors.gray100,
+    borderRadius: 8,
   },
   codeInfo: {
     fontFamily: 'Sora-Regular',
-    fontSize: 14,
-    color: Colors.gray500,
+    fontSize: 13,
+    color: Colors.gray600,
     textAlign: 'center',
-    marginTop: 12,
-    paddingHorizontal: 20,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   viewLinkupButton: {
     flexDirection: 'row',

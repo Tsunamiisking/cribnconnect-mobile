@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState, useCallback } from "react";
 import BackHeader from "@/components/BackHeader";
 import NotificationBadge from "@/components/NotificationBadge";
-import { ChevronRight } from "lucide-react-native";
-import { router, useFocusEffect } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import { router, useFocusEffect } from "expo-router";
+import { ChevronRight } from "lucide-react-native";
+import React, { useCallback, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const options = [
   {
