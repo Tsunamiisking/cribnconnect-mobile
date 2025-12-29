@@ -80,14 +80,14 @@ export default function LinkupActionBar({
         )}
 
         {/* Edit Button - For admins and creator */}
-        {showEditButton && (
+        {/* {showEditButton && (
           <TouchableOpacity
             style={styles.editButton}
             onPress={onEdit}
           >
             <Text style={styles.editButtonText}>Edit Group</Text>
           </TouchableOpacity>
-        )}
+        )} */}
 
         {/* Manage Requests Button - For admins of private groups */}
         {showManageRequestsButton && (
@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   manageButton: {
+    flex: 1,
     backgroundColor: Colors.amber,
     paddingVertical: 14,
     paddingHorizontal: 16,

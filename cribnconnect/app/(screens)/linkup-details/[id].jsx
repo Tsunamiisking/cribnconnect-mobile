@@ -396,6 +396,7 @@ export default function LinkupDetailsScreen() {
   const handleManageRequests = () => {
     // TODO: Navigate to pending requests screen
     console.log("Manage requests for linkup:", id);
+    // router.push(`/notification`)
     // router.push(`/(screens)/linkup-requests/${id}`);
   };
 
