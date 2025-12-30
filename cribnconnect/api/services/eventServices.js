@@ -7,6 +7,20 @@ export const getEvents = async () => {
   return res.data;
 };
 
+// Get hot/trending events
+export const getHotEvents = async (params = {}) => {
+  const { limit = 10, category, city, state } = params;
+  
+  const queryParams = new URLSearchParams();
+  queryParams.append('limit', limit);
+  if (category) queryParams.append('category', category);
+  if (city) queryParams.append('city', city);
+  if (state) queryParams.append('state', state);
+  
+  const res = await api.get(`/events/hot?${queryParams.toString()}`);
+  return res.data;
+};
+
 export const createEvent = async (data) => {
   try {
     const formData = new FormData();
