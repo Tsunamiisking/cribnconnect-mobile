@@ -49,12 +49,12 @@ export default function EventsScreen() {
       
       // Fetch all events
       const eventsData = await getEvents();
-      console.log("All Events from backend:", eventsData);
+      // console.log("All Events from backend:", eventsData);
       setEvents(eventsData.events || []);
       
       // Fetch hot events (trending)
       const hotEventsData = await getHotEvents({ limit: 10 });
-      console.log("Hot Events from backend:", hotEventsData);
+      // console.log("Hot Events from backend:", hotEventsData);
       setHotEvents(hotEventsData.events || []);
       
     } catch (error) {
