@@ -51,7 +51,7 @@ export default function EventsScreen() {
       
       // Fetch all events
       const eventsData = await getEvents();
-      // console.log("All Events from backend:", eventsData);
+      // console.log("All Events from backend:", eventsD ata);
       setEvents(eventsData.events || []);
       
       // Fetch hot events (trending)
