@@ -134,7 +134,7 @@ export default function EventsScreen() {
     };
 
     return (
-      <View style={styles.carouselCard}>
+      <View style={styles.carouselCardContainer}>
         <EventCard
           imageUri={formattedEvent.imageUri}
           title={formattedEvent.title}
@@ -240,7 +240,7 @@ export default function EventsScreen() {
                     keyExtractor={(item) => item._id || item.id}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.carouselContent}
+                    contentContainerStyle={styles.carouselContainer}
                   />
                 </View>
               )}
@@ -260,7 +260,7 @@ export default function EventsScreen() {
                     keyExtractor={(item) => item._id || item.id}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.carouselContent}
+                    contentContainerStyle={styles.carouselContainer}
                   />
                 </View>
               )}
@@ -312,29 +312,30 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Match tab bar height
   },
   carouselSection: {
-    marginBottom: 24,
+    marginVertical: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontFamily: 'Sora-Bold',
-    fontSize: 18,
-    color: Colors.gray900,
+    fontSize: 16,
+    color: Colors.black,
   },
   seeAllText: {
     fontFamily: 'Sora-Medium',
     fontSize: 14,
     color: Colors.primary,
   },
-  carouselContent: {
-    paddingHorizontal: 16,
+  carouselContainer: {
+    paddingLeft: 16,
+    paddingRight: 8,
   },
-  carouselCard: {
+  carouselCardContainer: {
     width: 200,
     marginRight: 16,
   },
