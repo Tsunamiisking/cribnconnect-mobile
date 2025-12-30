@@ -1,6 +1,7 @@
 import { getEvents, getHotEvents } from "@/api/services/eventServices";
 import EventCard from "@/components/EventCard";
 import NormalHeader from "@/components/NormalHeader";
+import TextSearchInput from "@/components/TextSearchInput";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -35,6 +36,7 @@ export default function EventsScreen() {
   const [events, setEvents] = useState([]);
   const [hotEvents, setHotEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch events from API
   useEffect(() => {
@@ -92,12 +94,22 @@ export default function EventsScreen() {
     }
   };
 
-  // Filter events based on selected category (case-insensitive)
-  const filteredEvents = selectedCategory === "All" 
-    ? events 
-    : events.filter(event => 
-        event.category?.toLowerCase() === selectedCategory.toLowerCase()
-      );
+  // Filter events based on selected category and search query
+  const filteredEvents = events.filter(event => {
+    // Category filter
+    const matchesCategory = selectedCategory === "All" || 
+      event.category?.toLowerCase() === selectedCategory.toLowerCase();
+    
+    // Search filter (searches in title, location, category, description)
+    const matchesSearch = searchQuery === "" ||
+      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.location?.venue?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesCategory && matchesSearch;
+  });
 
   const renderCategoryChip = ({ item: category }) => (
     <TouchableOpacity
@@ -105,7 +117,13 @@ export default function EventsScreen() {
         styles.categoryChip,
         selectedCategory === category && styles.activeCategoryChip
       ]}
-      onPress={() => setSelectedCategory(category)}
+      onPress={() => {
+        setSelectedCategory(category);
+        // Clear search when category is selected to show category results
+        if (searchQuery) {
+          setSearchQuery("");
+        }
+      }}
     >
       <Text style={[
         styles.categoryText,
@@ -115,6 +133,18 @@ export default function EventsScreen() {
       </Text>
     </TouchableOpacity>
   );
+
+  const handleSearchChange = (text) => {
+    setSearchQuery(text);
+    // Reset category to "All" when searching
+    if (text && selectedCategory !== "All") {
+      setSelectedCategory("All");
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
 
   // Render carousel event card (horizontal)
   const renderCarouselEventCard = ({ item }) => {
@@ -265,17 +295,37 @@ export default function EventsScreen() {
                 </View>
               )}
 
+              {/* Search Bar - Positioned after carousels */}
+              <TextSearchInput
+                placeholder="Search events, locations..."
+                value={searchQuery}
+                onChangeText={handleSearchChange}
+                onClear={clearSearch}
+              />
+
               {/* Categories Filter */}
               <View style={styles.categoriesContainer}>
-                <Text style={styles.sectionTitle}>All Events</Text>
-                <FlatList
-                  data={EVENT_CATEGORIES}
-                  renderItem={renderCategoryChip}
-                  keyExtractor={(item) => item}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.categoriesContent}
-                />
+                <View style={styles.categoriesHeader}>
+                  <Text style={styles.categoriesTitle}>
+                    {searchQuery ? `Search results for "${searchQuery}"` : 'All Events'}
+                  </Text>
+                  {searchQuery && (
+                    <Text style={styles.resultsCount}>
+                      {filteredEvents.length} {filteredEvents.length === 1 ? 'result' : 'results'}
+                    </Text>
+                  )}
+                </View>
+                
+                {!searchQuery && (
+                  <FlatList
+                    data={EVENT_CATEGORIES}
+                    renderItem={renderCategoryChip}
+                    keyExtractor={(item) => item}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.categoriesContent}
+                  />
+                )}
               </View>
             </>
           }
@@ -293,9 +343,11 @@ export default function EventsScreen() {
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No events found</Text>
               <Text style={styles.emptySubtext}>
-                {selectedCategory === "All" 
-                  ? "Check back later for new events" 
-                  : `No events in ${selectedCategory}`}
+                {searchQuery 
+                  ? `No results for "${searchQuery}"` 
+                  : selectedCategory === "All" 
+                    ? "Check back later for new events" 
+                    : `No events in ${selectedCategory}`}
               </Text>
             </View>
           }
@@ -340,14 +392,31 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   categoriesContainer: {
-    paddingVertical: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
     backgroundColor: Colors.white,
     borderBottomWidth: 0.5,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
+  categoriesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  categoriesTitle: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 16,
+    color: Colors.black,
+  },
+  resultsCount: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray600,
+  },
   categoriesContent: {
     paddingHorizontal: 16,
-    marginTop: 12,
   },
   categoryChip: {
     paddingHorizontal: 16,
