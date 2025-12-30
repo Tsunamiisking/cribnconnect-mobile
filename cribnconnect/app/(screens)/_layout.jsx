@@ -120,6 +120,16 @@ export default function ScreensLayout() {
         name="public-profile/[id]"
         options={{ title: "Edit Profile", headerShown: false }}
       />
+
+      <Stack.Screen
+        name="ticket-purchase/[id]"
+        options={{ title: "Ticket Purchase", headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="my-tickets/[id]"
+        options={{ title: "My Tickets", headerShown: false }}
+      />
     </Stack>
   );
 }
