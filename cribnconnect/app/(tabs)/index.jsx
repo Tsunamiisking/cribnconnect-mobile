@@ -1,197 +1,415 @@
+import { getEvents, getHotEvents } from "@/api/services/eventServices";
+import EventCard from "@/components/EventCard";
+import NormalHeader from "@/components/NormalHeader";
+import { Colors } from "@/constants/Colors";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
+  ActivityIndicator,
   FlatList,
   Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useState } from "react";
-import { Link, router } from "expo-router";
-import ApartmentCard from "@/components/ApartmentCard";
 import { SafeAreaView } from "react-native-safe-area-context";
-import NormalHeader from "@/components/NormalHeader";
-import BackHeader from "@/components/BackHeader";
-import { Colors } from "@/constants/Colors";
-import SearchInput from "@/components/SearchInput";
 
-// Mock data - TODO: Replace with API integration
-const FEATURED_APARTMENTS = [
-  {
-    id: "1",
-    title: "Modern Studio Downtown",
-    pricePerNight: "$1,200/month",
-    location: "Downtown Manhattan, 5th Avenue",
-    type: "Studio",
-    apartmentType: "full", // full apartment, no roommates
-    amenities: ["Gym", "Rooftop", "Laundry"],
-    imageUri:
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-    rating: 4.8,
-    availability: "Available Now – Dec 31st",
-  },
-  {
-    id: "2",
-    title: "Luxury 2BR Apartment",
-    pricePerNight: "$2,500/month",
-    location: "Upper East Side, Park Avenue",
-    type: "2 Bedroom",
-    apartmentType: "service", // service apartment (hotel-style)
-    amenities: ["Doorman", "Pool", "Parking"],
-    imageUri:
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-    rating: 4.9,
-    availability: "Available Dec 1st – March 15th",
-  },
-  {
-    id: "3",
-    title: "Cozy 1BR with Balcony",
-    pricePerNight: "$1,800/month",
-    location: "Brooklyn Heights, Promenade Street",
-    type: "1 Bedroom",
-    apartmentType: "shared", // shared apartment with roommates
-    amenities: ["Balcony", "Pet Friendly", "Garden"],
-    imageUri:
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-    rating: 4.7,
-    availability: "Available Now – Feb 28th",
-  },
+// Match categories with backend event categories
+const EVENT_CATEGORIES = [
+  "All",
+  "Entertainment & Nightlife",
+  "Education & Professional",
+  "Arts & Culture",
+  "Sports & Fitness",
+  "Food & Drink",
+  "Lifestyle & Celebrations",
+  "Faith & Community",
+  "Special Interests",
 ];
 
-// Carousel sections data
-const CAROUSEL_SECTIONS = [
-  {
-    id: "hot",
-    title: "Hot apartments Near you! 🔥",
-    apartments: FEATURED_APARTMENTS,
-  },
-  {
-    id: "kuje",
-    title: "See more in Kuje, Abuja >",
-    apartments: FEATURED_APARTMENTS.slice(0, 2),
-  },
-  {
-    id: "central",
-    title: "Central Area Listings >",
-    apartments: FEATURED_APARTMENTS,
-  },
-  {
-    id: "luxury",
-    title: "Luxury Apartments >",
-    apartments: FEATURED_APARTMENTS.slice(1),
-  },
-];
-
-export default function ApartmentsScreen() {
+export default function EventsScreen() {
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [refreshing, setRefreshing] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [hotEvents, setHotEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    // TODO: Refresh apartments data from API
-    setTimeout(() => setRefreshing(false), 1000);
+  // Fetch events from API
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async (skipLoading = false) => {
+    try {
+      if (!skipLoading) {
+        setLoading(true);
+      }
+      
+      // Fetch all events
+      const eventsData = await getEvents();
+      console.log("All Events from backend:", eventsData);
+      setEvents(eventsData.events || []);
+      
+      // Fetch hot events (trending)
+      const hotEventsData = await getHotEvents({ limit: 10 });
+      console.log("Hot Events from backend:", hotEventsData);
+      setHotEvents(hotEventsData.events || []);
+      
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    } finally {
+      if (!skipLoading) {
+        setLoading(false);
+      }
+    }
   };
 
-  const renderCarouselCard = ({ item }) => (
-    <View style={styles.carouselCardContainer}>
-      <ApartmentCard
-        imageUri={item.imageUri}
-        title={item.title}
-        pricePerNight={item.pricePerNight}
-        location={item.location}
-        availability={item.availability}
-        apartmentType={item.apartmentType}
-        liked={false}
-        onLikeToggle={(liked) => {
-          console.log("Bookmark toggled:", item.id, liked);
-        }}
-        onPress={() => {
-          router.push(`/(screens)/apartment-details/${item.id}`);
-        }}
-      />
-    </View>
+  // Filter today's events
+  const getTodaysEvents = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return events.filter(event => {
+      if (!event.date) return false;
+      const eventDate = new Date(event.date);
+      eventDate.setHours(0, 0, 0, 0);
+      return eventDate.getTime() === today.getTime();
+    });
+  };
+
+  const todaysEvents = getTodaysEvents();
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchEvents(true); // Skip loading indicator during refresh
+    } catch (error) {
+      console.error("Error refreshing events:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Filter events based on selected category (case-insensitive)
+  const filteredEvents = selectedCategory === "All" 
+    ? events 
+    : events.filter(event => 
+        event.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+
+  const renderCategoryChip = ({ item: category }) => (
+    <TouchableOpacity
+      style={[
+        styles.categoryChip,
+        selectedCategory === category && styles.activeCategoryChip
+      ]}
+      onPress={() => setSelectedCategory(category)}
+    >
+      <Text style={[
+        styles.categoryText,
+        selectedCategory === category && styles.activeCategoryText
+      ]}>
+        {category}
+      </Text>
+    </TouchableOpacity>
   );
 
-  const renderCarouselSection = ({ item: section }) => (
-    <View style={styles.carouselSection}>
-      <TouchableOpacity style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{section.title}</Text>
-      </TouchableOpacity>
-      
-      <FlatList
-        data={section.apartments}
-        renderItem={renderCarouselCard}
-        keyExtractor={(item) => `${section.id}-${item.id}`}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carouselContainer}
-      />
-    </View>
-  );
+  // Render carousel event card (horizontal)
+  const renderCarouselEventCard = ({ item }) => {
+    const formattedEvent = {
+      id: item._id || item.id,
+      imageUri: item.media?.[0]?.thumbnail_url || item.media?.[0]?.url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
+      title: item.title,
+      pricePerTicket: item.isFree 
+        ? "Free" 
+        : item.ticketTypes?.[0]?.price 
+          ? `₦${item.ticketTypes[0].price.toLocaleString()}/ticket` 
+          : "Price TBA",
+      location: item.location?.venue || item.location?.city || "Location TBA",
+      schedule: formatSchedule(item.date, item.time, item.endTime),
+      timeOfDay: getTimeOfDay(item.time),
+      category: item.category,
+    };
+
+    return (
+      <View style={styles.carouselCard}>
+        <EventCard
+          imageUri={formattedEvent.imageUri}
+          title={formattedEvent.title}
+          pricePerTicket={formattedEvent.pricePerTicket}
+          location={formattedEvent.location}
+          schedule={formattedEvent.schedule}
+          timeOfDay={formattedEvent.timeOfDay}
+          liked={false}
+          onLikeToggle={(liked) => {
+            console.log("Event saved:", formattedEvent.id, liked);
+          }}
+          onPress={() => {
+            router.push(`/(screens)/event-details/${formattedEvent.id}`);
+          }}
+        />
+      </View>
+    );
+  };
+
+  const renderEventCard = ({ item, index }) => {
+    // Format the event data to match EventCard props
+    const formattedEvent = {
+      id: item._id || item.id,
+      imageUri: item.media?.[0]?.thumbnail_url || item.media?.[0]?.url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
+      title: item.title,
+      pricePerTicket: item.isFree 
+        ? "Free" 
+        : item.ticketTypes?.[0]?.price 
+          ? `₦${item.ticketTypes[0].price.toLocaleString()}/ticket` 
+          : "Price TBA",
+      location: item.location?.venue || item.location?.city || "Location TBA",
+      schedule: formatSchedule(item.date, item.time, item.endTime),
+      timeOfDay: getTimeOfDay(item.time),
+      category: item.category,
+    };
+
+    return (
+      <View style={[
+        styles.eventCardContainer,
+        index % 2 === 0 ? styles.leftCard : styles.rightCard
+      ]}>
+        <EventCard
+          imageUri={formattedEvent.imageUri}
+          title={formattedEvent.title}
+          pricePerTicket={formattedEvent.pricePerTicket}
+          location={formattedEvent.location}
+          schedule={formattedEvent.schedule}
+          timeOfDay={formattedEvent.timeOfDay}
+          liked={false}
+          onLikeToggle={(liked) => {
+            console.log("Event saved:", formattedEvent.id, liked);
+          }}
+          onPress={() => {
+            router.push(`/(screens)/event-details/${formattedEvent.id}`);
+          }}
+        />
+      </View>
+    );
+  };
+
+  // Helper function to format schedule
+  const formatSchedule = (date, time, endTime) => {
+    if (!date) return "Date TBA";
+    const eventDate = new Date(date);
+    const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const timeStr = time ? `${time}${endTime ? ` - ${endTime}` : ''}` : '';
+    return `${dateStr}${timeStr ? `, ${timeStr}` : ''}`;
+  };
+
+  // Helper function to determine time of day
+  const getTimeOfDay = (time) => {
+    if (!time) return 'day';
+    const hour = parseInt(time.split(':')[0]);
+    return hour >= 18 || hour < 6 ? 'night' : 'day';
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <NormalHeader title="Apartments" />
+      <NormalHeader title="Events" />
       
-      <View style={styles.searchContainer}>
-        <SearchInput 
-          placeholder="What are you looking for?"
-        />
-      </View>
+      {/* Loading State */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading events...</Text>
+        </View>
+      ) : (
+        <FlatList
+          ListHeaderComponent={
+            <>
+              {/* Hot Events Carousel */}
+              {hotEvents.length > 0 && (
+                <View style={styles.carouselSection}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>🔥 Hot Events</Text>
+                    <TouchableOpacity>
+                      <Text style={styles.seeAllText}>See All</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <FlatList
+                    data={hotEvents}
+                    renderItem={renderCarouselEventCard}
+                    keyExtractor={(item) => item._id || item.id}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.carouselContent}
+                  />
+                </View>
+              )}
 
-      <FlatList
-        data={CAROUSEL_SECTIONS}
-        renderItem={renderCarouselSection}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.mainContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      />
+              {/* Today's Events Carousel */}
+              {todaysEvents.length > 0 && (
+                <View style={styles.carouselSection}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>📅 Today's Events</Text>
+                    <TouchableOpacity>
+                      <Text style={styles.seeAllText}>See All</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <FlatList
+                    data={todaysEvents}
+                    renderItem={renderCarouselEventCard}
+                    keyExtractor={(item) => item._id || item.id}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.carouselContent}
+                  />
+                </View>
+              )}
+
+              {/* Categories Filter */}
+              <View style={styles.categoriesContainer}>
+                <Text style={styles.sectionTitle}>All Events</Text>
+                <FlatList
+                  data={EVENT_CATEGORIES}
+                  renderItem={renderCategoryChip}
+                  keyExtractor={(item) => item}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.categoriesContent}
+                />
+              </View>
+            </>
+          }
+          data={filteredEvents}
+          renderItem={renderEventCard}
+          keyExtractor={(item) => item._id || item.id}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.mainContainer}
+          columnWrapperStyle={styles.row}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No events found</Text>
+              <Text style={styles.emptySubtext}>
+                {selectedCategory === "All" 
+                  ? "Check back later for new events" 
+                  : `No events in ${selectedCategory}`}
+              </Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   mainContainer: {
+    paddingHorizontal: 10, 
+    paddingTop: 10,
     paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Match tab bar height
   },
-  searchContainer: {
+  carouselSection: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 18,
+    color: Colors.gray900,
+  },
+  seeAllText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 14,
+    color: Colors.primary,
+  },
+  carouselContent: {
+    paddingHorizontal: 16,
+  },
+  carouselCard: {
+    width: 200,
+    marginRight: 16,
+  },
+  categoriesContainer: {
     paddingVertical: 20,
-    backgroundColor: 'white',
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 4,
-    // },
-    // shadowOpacity: 0.08,
-    // shadowRadius: 6,
-    // elevation: 3,
-    // zIndex: 1,
+    backgroundColor: Colors.white,
     borderBottomWidth: 0.5,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  carouselSection: {
-    marginVertical: 4,
-  },
-  sectionHeader: {
+  categoriesContent: {
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginTop: 12,
   },
-  sectionTitle: {
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  activeCategoryChip: {
+    backgroundColor: Colors.primary,
+  },
+  categoryText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 14,
+    color: Colors.gray,
+  },
+  activeCategoryText: {
+    color: Colors.white,
+  },
+  row: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 4, // Reduce outer padding
+  },
+  eventCardContainer: {
+    // marginTop: 10,
+    flex: 0.50, 
+    marginVertical: 8, 
+  },
+  leftCard: {
+    marginRight: 4, // Reduce gap between cards
+  },
+  rightCard: {
+    marginLeft: 4, // Reduce gap between cards
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontFamily: 'Sora-Regular',
     fontSize: 16,
-    fontFamily: "Sora-Bold",
-    color: Colors.black,
+    color: Colors.gray500,
+    marginTop: 12,
   },
-  carouselContainer: {
-    paddingLeft: 16,
-    paddingRight: 8,
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
   },
-  carouselCardContainer: {
-    width: 200,
-    marginRight: 16,
+  emptyText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 18,
+    color: Colors.gray700,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray500,
+    textAlign: 'center',
   },
 });
