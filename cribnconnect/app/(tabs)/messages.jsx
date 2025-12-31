@@ -62,13 +62,13 @@ const APARTMENT_CONVERSATIONS = [
 // const LINKUP_CONVERSATIONS = [];
 
 const MESSAGE_TABS = [
-  { id: 'apartments', title: 'Apartments', icon: 'building' },
   { id: 'events', title: 'Events', icon: 'calendar' },
   { id: 'linkups', title: 'Linkups', icon: 'users' },
+  { id: 'apartments', title: 'Apartments', icon: 'building' },
 ];
 
 export default function MessagesScreen() {
-  const [selectedTab, setSelectedTab] = useState('apartments');
+  const [selectedTab, setSelectedTab] = useState('events');
   const [refreshing, setRefreshing] = useState(false);
   const [linkupChats, setLinkupChats] = useState([]);
   const [eventChats, setEventChats] = useState([]);
