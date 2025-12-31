@@ -24,6 +24,7 @@ const EventDetailsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [isAttending, setIsAttending] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // Fetch event data from API
   useEffect(() => {
@@ -34,7 +35,8 @@ const EventDetailsScreen = () => {
         
         // Check if current user is the host
         const auth = getAuth();
-        const currentUserId = auth?.currentUser?.uid;
+        const userId = auth?.currentUser?.uid;
+        setCurrentUserId(userId);
         
         // Handle host field - it can be:
         // 1. A populated user object with uid field (most common)
@@ -53,7 +55,18 @@ const EventDetailsScreen = () => {
           hostId = eventData.host;
         }
         
-        setIsHost(currentUserId === hostId);
+        setIsHost(userId === hostId);
+        
+        // Check if user is registered/attending
+        const registered = eventData.attendees?.some(
+          attendee => {
+            // Handle different attendee structure formats
+            const attendeeUserId = attendee.user?.uid || attendee.user?._id || attendee.user;
+            return attendeeUserId === userId;
+          }
+        );
+        setIsAttending(registered);
+        
         setEvent(eventData);
         setLoading(false);
       } catch (error) {
@@ -79,9 +92,12 @@ const EventDetailsScreen = () => {
     Alert.alert('Share', 'Share functionality will be implemented here');
   };
 
-  const handleRSVP = () => {
-    setIsAttending(!isAttending);
-    Alert.alert('RSVP', isAttending ? 'RSVP cancelled' : 'RSVP confirmed!');
+  const handleRSVP = async () => {
+    // This will be handled by EventBottomBar
+  };
+
+  const handleRegistrationUpdate = (newStatus) => {
+    setIsAttending(newStatus);
   };
 
   const handleContactOrganizer = () => {
@@ -174,7 +190,7 @@ const EventDetailsScreen = () => {
           event={event}
           isAttending={isAttending}
           formatPrice={formatPrice}
-          onRSVP={handleRSVP}
+          onRegistrationUpdate={handleRegistrationUpdate}
         />
       )}
     </SafeAreaView>

@@ -246,3 +246,25 @@ export const deleteEvent = async (eventId) => {
     throw error;
   }
 };
+
+// Register for FREE event
+export const registerForEvent = async (eventId) => {
+  try {
+    const res = await api.post(`/events/${eventId}/register`);
+    return res.data;
+  } catch (error) {
+    console.error('Error registering for event:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Unregister from FREE event
+export const unregisterFromEvent = async (eventId) => {
+  try {
+    const res = await api.delete(`/events/${eventId}/unregister`);
+    return res.data;
+  } catch (error) {
+    console.error('Error unregistering from event:', error.response?.data || error.message);
+    throw error;
+  }
+};
