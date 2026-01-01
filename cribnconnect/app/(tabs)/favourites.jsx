@@ -7,15 +7,15 @@ import {
   FlatList,
   Platform,
   ScrollView,
-} from 'react-native';
-import { useState } from 'react';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import NormalHeader from '@/components/NormalHeader';
-import ApartmentCard from '@/components/ApartmentCard';
-import EventCard from '@/components/EventCard';
-import { Colors } from '@/constants/Colors';
-import { Heart, Building, Calendar } from 'lucide-react-native';
+} from "react-native";
+import { useState } from "react";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import NormalHeader from "@/components/NormalHeader";
+import ApartmentCard from "@/components/ApartmentCard";
+import EventCard from "@/components/EventCard";
+import { Colors } from "@/constants/Colors";
+import { Heart, Building, Calendar } from "lucide-react-native";
 
 // Mock data - TODO: Replace with API integration for saved items
 const SAVED_APARTMENTS = [
@@ -27,7 +27,8 @@ const SAVED_APARTMENTS = [
     type: "Studio",
     apartmentType: "full", // full apartment
     amenities: ["Gym", "Rooftop", "Laundry"],
-    imageUri: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
+    imageUri:
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
     rating: 4.8,
     availability: "Available Now – Dec 31st",
     savedDate: "2 days ago",
@@ -40,7 +41,8 @@ const SAVED_APARTMENTS = [
     type: "2 Bedroom",
     apartmentType: "service", // service apartment
     amenities: ["Doorman", "Pool", "Parking"],
-    imageUri: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
+    imageUri:
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
     rating: 4.9,
     availability: "Available Dec 1st – March 15th",
     savedDate: "1 week ago",
@@ -53,7 +55,8 @@ const SAVED_APARTMENTS = [
     type: "1 Bedroom",
     apartmentType: "shared", // shared apartment - will show Users icon
     amenities: ["Balcony", "Pet Friendly", "Garden"],
-    imageUri: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
+    imageUri:
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
     rating: 4.7,
     availability: "Available Now – Feb 28th",
     savedDate: "3 days ago",
@@ -64,13 +67,15 @@ const SAVED_EVENTS = [
   {
     id: "1",
     title: "Rooftop Jazz Night",
-    description: "Live jazz music under the stars with cocktails and city views",
+    description:
+      "Live jazz music under the stars with cocktails and city views",
     location: "Sky Lounge, Victoria Island",
     date: "December 15, 2024",
     time: "8:00 PM",
     price: "₦15,000",
     category: "Music",
-    imageUri: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop",
+    imageUri:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop",
     attendees: "120+ attending",
     dayOrNight: "night",
     savedDate: "1 day ago",
@@ -78,13 +83,15 @@ const SAVED_EVENTS = [
   {
     id: "2",
     title: "Weekend Farmers Market",
-    description: "Fresh produce, artisanal foods, and local crafts from regional vendors",
+    description:
+      "Fresh produce, artisanal foods, and local crafts from regional vendors",
     location: "Central Park, Abuja",
     date: "December 14, 2024",
     time: "9:00 AM",
     price: "Free",
     category: "Community",
-    imageUri: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=300&fit=crop",
+    imageUri:
+      "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=300&fit=crop",
     attendees: "200+ attending",
     dayOrNight: "day",
     savedDate: "4 days ago",
@@ -92,13 +99,15 @@ const SAVED_EVENTS = [
   {
     id: "3",
     title: "Photography Workshop",
-    description: "Learn street photography techniques with professional photographers",
+    description:
+      "Learn street photography techniques with professional photographers",
     location: "Art District, Lagos",
     date: "December 20, 2024",
     time: "2:00 PM",
     price: "₦8,500",
     category: "Workshop",
-    imageUri: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&h=300&fit=crop",
+    imageUri:
+      "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&h=300&fit=crop",
     attendees: "45+ attending",
     dayOrNight: "day",
     savedDate: "1 week ago",
@@ -106,12 +115,12 @@ const SAVED_EVENTS = [
 ];
 
 const BOOKMARK_TABS = [
-  { id: 'apartments', title: 'Apartments', icon: Building },
-  { id: 'events', title: 'Events', icon: Calendar },
+  { id: "events", title: "Events", icon: Calendar },
+  { id: "apartments", title: "Apartments", icon: Building },
 ];
 
 export default function Bookmarkscreen() {
-  const [selectedTab, setSelectedTab] = useState('apartments');
+  const [selectedTab, setSelectedTab] = useState("events");
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = () => {
@@ -122,9 +131,12 @@ export default function Bookmarkscreen() {
 
   const getCurrentBookmarks = () => {
     switch (selectedTab) {
-      case 'apartments': return SAVED_APARTMENTS;
-      case 'events': return SAVED_EVENTS;
-      default: return [];
+      case "apartments":
+        return SAVED_APARTMENTS;
+      case "events":
+        return SAVED_EVENTS;
+      default:
+        return [];
     }
   };
 
@@ -133,14 +145,13 @@ export default function Bookmarkscreen() {
       key={tab.id}
       style={[
         styles.tabButton,
-        selectedTab === tab.id && styles.activeTabButton
+        selectedTab === tab.id && styles.activeTabButton,
       ]}
       onPress={() => setSelectedTab(tab.id)}
     >
-      <Text style={[
-        styles.tabText,
-        selectedTab === tab.id && styles.activeTabText
-      ]}>
+      <Text
+        style={[styles.tabText, selectedTab === tab.id && styles.activeTabText]}
+      >
         {tab.title}
       </Text>
     </TouchableOpacity>
@@ -194,8 +205,8 @@ export default function Bookmarkscreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <NormalHeader title="Bookmarks" />
-      
-      <ScrollView 
+
+      <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -211,13 +222,17 @@ export default function Bookmarkscreen() {
         {/* Tab Content */}
         <View style={styles.contentSection}>
           <Text style={styles.sectionTitle}>
-            {selectedTab === 'apartments' ? 'Saved Apartments' : 'Saved Events'}
+            {selectedTab === "apartments" ? "Saved Apartments" : "Saved Events"}
           </Text>
-          
+
           {getCurrentBookmarks().length > 0 ? (
             <FlatList
               data={getCurrentBookmarks()}
-              renderItem={selectedTab === 'apartments' ? renderApartmentCard : renderEventCard}
+              renderItem={
+                selectedTab === "apartments"
+                  ? renderApartmentCard
+                  : renderEventCard
+              }
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
@@ -228,23 +243,23 @@ export default function Bookmarkscreen() {
               <Heart size={48} color={Colors.gray400} />
               <Text style={styles.emptyTitle}>No saved {selectedTab} yet</Text>
               <Text style={styles.emptySubtitle}>
-                {selectedTab === 'apartments' 
+                {selectedTab === "apartments"
                   ? "Start saving apartments you're interested in to view them here!"
-                  : "Save events you want to attend to keep track of them here!"
-                }
+                  : "Save events you want to attend to keep track of them here!"}
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.exploreButton}
                 onPress={() => {
-                  if (selectedTab === 'apartments') {
-                    router.push('/(tabs)'); // Navigate to home/apartments tab
+                  if (selectedTab === "apartments") {
+                    router.push("/(tabs)"); // Navigate to home/apartments tab
                   } else {
-                    router.push('/(tabs)/events'); // Navigate to events tab
+                    router.push("/(tabs)/events"); // Navigate to events tab
                   }
                 }}
               >
                 <Text style={styles.exploreButtonText}>
-                  Explore {selectedTab === 'apartments' ? 'Apartments' : 'Events'}
+                  Explore{" "}
+                  {selectedTab === "apartments" ? "Apartments" : "Events"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -263,10 +278,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: Colors.white,
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   tabsContent: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
   },
   tabButton: {
@@ -276,13 +291,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightBackground,
     borderRadius: 20,
     marginHorizontal: 4,
-    alignItems: 'center',
+    alignItems: "center",
   },
   activeTabButton: {
     backgroundColor: Colors.primary,
   },
   tabText: {
-    fontFamily: 'Sora-Medium',
+    fontFamily: "Sora-Medium",
     fontSize: 14,
     color: Colors.gray500,
   },
@@ -294,7 +309,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   sectionTitle: {
-    fontFamily: 'Urbanist-Bold',
+    fontFamily: "Urbanist-Bold",
     fontSize: 20,
     color: Colors.gray900,
     marginBottom: 16,
@@ -308,20 +323,20 @@ const styles = StyleSheet.create({
   emptyState: {
     paddingVertical: 40,
     paddingHorizontal: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyTitle: {
-    fontFamily: 'Urbanist-Bold',
+    fontFamily: "Urbanist-Bold",
     fontSize: 18,
     color: Colors.gray900,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
-    fontFamily: 'Sora-Regular',
+    fontFamily: "Sora-Regular",
     fontSize: 16,
     color: Colors.gray500,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
     marginBottom: 24,
   },
@@ -332,11 +347,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   exploreButtonText: {
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: "Sora-SemiBold",
     fontSize: 16,
     color: Colors.white,
   },
   bottomSpacing: {
-    height: Platform.OS === 'ios' ? 85 : 60,
+    height: Platform.OS === "ios" ? 85 : 60,
   },
 });
