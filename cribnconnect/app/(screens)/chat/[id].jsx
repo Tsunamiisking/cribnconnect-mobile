@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -78,6 +79,7 @@ export default function ChatScreen() {
             type: 'group',
             name: linkupChatData.name,
             participants: linkupChatData.participantIds?.length || 0,
+            participantsList: linkupChatData.participants || [], // Store full participant objects
             online: 0,
             admin: linkupChatData.creatorId,
             photo: linkupChatData.photo,
@@ -98,7 +100,9 @@ export default function ChatScreen() {
           id: msg.id,
           text: msg.text,
           sender: msg.senderId === currentUser.uid ? 'me' : msg.senderId === 'system' ? 'system' : 'other',
+          senderId: msg.senderId,
           senderName: msg.senderName,
+          senderPhoto: msg.senderPhoto || null,
           timestamp: new Date(msg.timestamp),
           delivered: true,
           read: msg.isRead || false,
@@ -123,6 +127,7 @@ export default function ChatScreen() {
             type: 'group',
             name: eventChatData.name,
             participants: eventChatData.participantIds?.length || 0,
+            participantsList: eventChatData.participants || [], // Store full participant objects
             online: 0,
             admin: eventChatData.creatorId,
             photo: eventChatData.photo,
@@ -143,7 +148,9 @@ export default function ChatScreen() {
           id: msg.id,
           text: msg.text,
           sender: msg.senderId === currentUser.uid ? 'me' : msg.senderId === 'system' ? 'system' : 'other',
+          senderId: msg.senderId,
           senderName: msg.senderName,
+          senderPhoto: msg.senderPhoto || null,
           timestamp: new Date(msg.timestamp),
           delivered: true,
           read: msg.isRead || false,
@@ -266,9 +273,9 @@ export default function ChatScreen() {
       index === 0 ||
       formatDate(item.timestamp) !== formatDate(messages[index - 1]?.timestamp);
     
-    // For group chats, determine if we should show the sender name
+    // For group chats, determine if we should show the sender name and photo
     const isGroupChat = chatData?.type === "group";
-    const showSenderName = isGroupChat && !isMe && !isSystem && (
+    const showSenderInfo = isGroupChat && !isMe && !isSystem && (
       index === 0 || 
       messages[index - 1]?.sender !== item.sender ||
       showDate
@@ -315,48 +322,81 @@ export default function ChatScreen() {
           ]}
           className="px-4 py-2"
         >
-          {/* Show sender name for group chats (above the message bubble) */}
-          {showSenderName && (
-            <View style={styles.senderNameContainer}>
-              <Text style={styles.senderName}>
-                {item.senderName || 'Unknown'}
-              </Text>
-            </View>
-          )}
-          
-          <View
-            style={[
-              styles.messageBubble,
-              isMe ? styles.myMessage : styles.theirMessage,
-            ]}
-            className={`max-w-3/4 p-3 rounded-2xl ${isMe ? "bg-blue-600 self-end" : "bg-gray-200 self-start"}`}
-          >
-            <Text
-              style={[
-                styles.messageText,
-                isMe ? styles.myMessageText : styles.theirMessageText,
-              ]}
-              className={isMe ? "text-white" : "text-gray-900"}
-            >
-              {item.text}
-            </Text>
-          </View>
-
-          <View
-            style={styles.messageInfo}
-            className="flex-row items-center mt-1"
-          >
-            <Text style={styles.timestamp} className="text-gray-500 text-xs">
-              {formatTime(item.timestamp)}
-            </Text>
-            {isMe && (
-              <Text
-                style={styles.deliveryStatus}
-                className="text-gray-500 text-xs ml-1"
-              >
-                {item.read ? "✓✓" : item.delivered ? "✓" : "○"}
-              </Text>
+          {/* Message row with profile photo for group chats */}
+          <View style={[
+            styles.messageRow,
+            isMe ? styles.myMessageRow : styles.theirMessageRow
+          ]}>
+            {/* Profile photo (only for other users in group chats) */}
+            {isGroupChat && !isMe && (
+              <View style={styles.profilePhotoContainer}>
+                {showSenderInfo ? (
+                  item.senderPhoto ? (
+                    <Image
+                      source={{ uri: item.senderPhoto }}
+                      style={styles.profilePhoto}
+                    />
+                  ) : (
+                    <View style={styles.profilePhotoPlaceholder}>
+                      <Text style={styles.profilePhotoInitial}>
+                        {(item.senderName || 'U').charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )
+                ) : (
+                  <View style={styles.profilePhotoSpacer} />
+                )}
+              </View>
             )}
+
+            {/* Message content */}
+            <View style={styles.messageContent}>
+              {/* Show sender name for group chats (above the message bubble) */}
+              {showSenderInfo && (
+                <View style={styles.senderNameContainer}>
+                  <Text style={styles.senderName}>
+                    {item.senderName || 'Unknown'}
+                  </Text>
+                </View>
+              )}
+              
+              <View
+                style={[
+                  styles.messageBubble,
+                  isMe ? styles.myMessage : styles.theirMessage,
+                ]}
+                className={`max-w-3/4 p-3 rounded-2xl ${isMe ? "bg-blue-600 self-end" : "bg-gray-200 self-start"}`}
+              >
+                <Text
+                  style={[
+                    styles.messageText,
+                    isMe ? styles.myMessageText : styles.theirMessageText,
+                  ]}
+                  className={isMe ? "text-white" : "text-gray-900"}
+                >
+                  {item.text}
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.messageInfo,
+                  isMe ? styles.myMessageInfo : styles.theirMessageInfo
+                ]}
+              >
+                <Text style={[
+                  styles.timestamp,
+                  isMe && styles.myTimestamp
+                ]}>
+                  {formatTime(item.timestamp)}
+                </Text>
+                {isMe && (
+                  <Text style={styles.deliveryStatus}>
+                    {item.read ? "✓✓" : item.delivered ? "✓" : "○"}
+                  </Text>
+                )}
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -587,16 +627,28 @@ const styles = StyleSheet.create({
   messageInfo: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 2,
+    gap: 4,
+  },
+  myMessageInfo: {
+    justifyContent: 'flex-end',
+  },
+  theirMessageInfo: {
+    justifyContent: 'flex-start',
   },
   timestamp: {
-    color: "#6b7280",
-    fontSize: 12,
+    color: "#9ca3af",
+    fontSize: 11,
+    fontFamily: "Sora-Regular",
+  },
+  myTimestamp: {
+    color: "#9ca3af",
   },
   deliveryStatus: {
-    color: "#6b7280",
-    fontSize: 12,
-    marginLeft: 4,
+    color: "#9ca3af",
+    fontSize: 11,
+    fontFamily: "Sora-Regular",
+    lineHeight: 11,
   },
   inputContainer: {
     paddingHorizontal: 16,
@@ -722,5 +774,50 @@ const styles = StyleSheet.create({
     color: Colors.gray600,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  // Profile photo styles for group chats
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    width: '100%',
+  },
+  myMessageRow: {
+    justifyContent: 'flex-end',
+  },
+  theirMessageRow: {
+    justifyContent: 'flex-start',
+  },
+  profilePhotoContainer: {
+    width: 32,
+    height: 32,
+    marginRight: 8,
+    marginBottom: 20, // Align with timestamp area
+  },
+  profilePhoto: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.gray200,
+  },
+  profilePhotoPlaceholder: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profilePhotoInitial: {
+    fontSize: 14,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.white,
+  },
+  profilePhotoSpacer: {
+    width: 32,
+    height: 32,
+  },
+  messageContent: {
+    flex: 1,
+    maxWidth: '85%',
   },
 });
