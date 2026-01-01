@@ -64,6 +64,20 @@ export default function HostTypeScreen() {
           <Text style={styles.optionsTitle}>Start Hosting</Text>
           
           <TouchableOpacity
+            style={[styles.optionCard, styles.eventCard]}
+            activeOpacity={0.85}
+            onPress={handleNewEvent}
+          >
+            <View style={styles.optionIconContainer}>
+              <Tickets size={24} color={Colors.emerald} />
+            </View>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle}>Host an Event</Text>
+              <Text style={styles.optionDesc}>Create memorable experiences and bring people together</Text>
+            </View>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
             style={[styles.optionCard, styles.apartmentCard]}
             activeOpacity={0.85}
             onPress={handleNewApartment}
@@ -77,19 +91,6 @@ export default function HostTypeScreen() {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.optionCard, styles.eventCard]}
-            activeOpacity={0.85}
-            onPress={handleNewEvent}
-          >
-            <View style={styles.optionIconContainer}>
-              <Tickets size={24} color={Colors.emerald} />
-            </View>
-            <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>Host an Event</Text>
-              <Text style={styles.optionDesc}>Create memorable experiences and bring people together</Text>
-            </View>
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
