@@ -3,8 +3,23 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 const EventStatusBadges = ({ event }) => {
+  // Helper function to get status badge color
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+        return Colors.success;
+      case 'pending':
+        return Colors.warning || '#F59E0B';
+      case 'rejected':
+        return Colors.error;
+      default:
+        return Colors.gray500;
+    }
+  };
+
   return (
     <View style={styles.statusBadgeContainer}>
+      {/* Active/Inactive Badge */}
       <View
         style={[
           styles.statusBadge,
@@ -19,21 +34,22 @@ const EventStatusBadges = ({ event }) => {
         </Text>
       </View>
 
-      <View
-        style={[
-          styles.statusBadge,
-          {
-            backgroundColor: event.isPublished
-              ? Colors.success
-              : Colors.gray500,
-          },
-        ]}
-      >
-        <View style={[styles.statusDot, { backgroundColor: Colors.white }]} />
-        <Text style={styles.statusText}>
-          {event.isPublished ? 'Published' : 'Unpublished'}
-        </Text>
-      </View>
+      {/* Moderation Status Badge */}
+      {event.status && (
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor: getStatusColor(event.status),
+            },
+          ]}
+        >
+          <View style={[styles.statusDot, { backgroundColor: Colors.white }]} />
+          <Text style={styles.statusText}>
+            {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

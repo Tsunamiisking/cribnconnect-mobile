@@ -308,7 +308,8 @@ const EventTicketSection = ({ event, isHost, onTicketUpdate, formatPrice }) => {
           <Text style={styles.ticketPrice}>{event.capacity} people</Text>
         </View> */}
 
-        {isHost && (
+        {/* Only show edit button for hosts with paid events */}
+        {isHost && !event.isFree && (
           <TouchableOpacity
             style={styles.editTicketButton}
             onPress={handleOpenTicketModal}

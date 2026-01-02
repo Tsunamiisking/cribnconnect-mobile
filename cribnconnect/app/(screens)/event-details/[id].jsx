@@ -32,7 +32,7 @@ const EventDetailsScreen = () => {
       try {
         setLoading(true);
         const eventData = await getEventById(id);
-        
+        // console.log('Fetched event data:', eventData);
         // Check if current user is the host
         const auth = getAuth();
         const userId = auth?.currentUser?.uid;
