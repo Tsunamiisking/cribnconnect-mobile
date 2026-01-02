@@ -4,54 +4,59 @@ import { LoadingSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
-    Calendar,
-    Eye,
-    MapPin,
-    Plus,
-    TrendingUp,
-    Users,
+  Calendar,
+  Eye,
+  MapPin,
+  Plus,
+  TrendingUp,
+  Users,
 } from "lucide-react-native";
 import React from "react";
 import {
-    FlatList,
-    Image,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const EventCard = ({ event }) => {
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "upcoming":
-        return Colors.primary;
-      case "completed":
-        return Colors.success;
-      case "cancelled":
-        return Colors.error;
-      case "draft":
-        return Colors.warning;
-      default:
-        return Colors.gray500;
+  const getEventStatus = () => {
+    // Check if event is cancelled
+    if (event.status === "cancelled" || event.isCancelled) {
+      return { text: "Cancelled", color: Colors.error };
     }
+
+    // Check if event is inactive/unavailable
+    if (event.isActive === false) {
+      return { text: "Unavailable", color: Colors.warning };
+    }
+
+    // Check if event date has passed
+    const eventDate = new Date(event.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (eventDate < today) {
+      return { text: "Completed", color: Colors.success };
+    }
+
+    // Check moderation status
+    if (event.status === "pending") {
+      return { text: "Pending Review", color: Colors.warning };
+    }
+    
+    if (event.status === "rejected") {
+      return { text: "Rejected", color: Colors.error };
+    }
+
+    // Active and approved event
+    return { text: "Upcoming", color: Colors.primary };
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case "upcoming":
-        return "Upcoming";
-      case "completed":
-        return "Completed";
-      case "cancelled":
-        return "Cancelled";
-      case "draft":
-        return "Draft";
-      default:
-        return "Unknown";
-    }
-  };
+  const eventStatus = getEventStatus();
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -119,16 +124,16 @@ const EventCard = ({ event }) => {
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: getStatusColor(event.status) + "20" },
+                { backgroundColor: eventStatus.color + "20" },
               ]}
             >
               <Text
                 style={[
                   styles.statusText,
-                  { color: getStatusColor(event.status) },
+                  { color: eventStatus.color },
                 ]}
               >
-                {getStatusText(event.status)}
+                {eventStatus.text}
               </Text>
             </View>
           </View>
