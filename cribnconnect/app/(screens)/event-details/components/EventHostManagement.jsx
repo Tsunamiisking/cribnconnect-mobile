@@ -589,8 +589,16 @@ const EventHostManagement = ({
                 <TouchableOpacity
                   style={styles.hostMenuItem}
                   onPress={handleToggleAvailability}
+                  disabled={isSaving}
                 >
-                  {event.isActive ? (
+                  {isSaving ? (
+                    <>
+                      <ActivityIndicator size="small" color={Colors.primary} />
+                      <Text style={[styles.hostMenuItemText, { color: Colors.gray400 }]}>
+                        Updating...
+                      </Text>
+                    </>
+                  ) : event.isActive ? (
                     <>
                       <Lock size={20} color={Colors.warning} />
                       <Text style={[styles.hostMenuItemText, { color: Colors.warning }]}>
