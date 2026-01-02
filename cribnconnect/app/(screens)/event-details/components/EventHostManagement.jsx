@@ -192,6 +192,71 @@ const EventHostManagement = ({
     setShowEditSafetyModal(true);
   };
 
+  const handleToggleAvailability = async () => {
+    // Check if event is paid and has attendees with tickets
+    const attendeeCount = Array.isArray(event.attendees)
+      ? event.attendees.length
+      : event.attendees || 0;
+    const hasPaidTickets = !event.isFree && attendeeCount > 0;
+
+    if (hasPaidTickets) {
+      Alert.alert(
+        "Cannot Change Availability",
+        "This event cannot be marked as unavailable because attendees have purchased tickets. You can cancel the event instead.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    const newStatus = !event.isActive;
+    const actionText = newStatus ? "available" : "unavailable";
+
+    Alert.alert(
+      `Mark Event as ${newStatus ? "Available" : "Unavailable"}`,
+      `Are you sure you want to mark this event as ${actionText}? ${
+        !newStatus
+          ? "Attendees will see that this event is currently unavailable."
+          : "This event will be visible and available for registration."
+      }`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: `Mark as ${newStatus ? "Available" : "Unavailable"}`,
+          onPress: async () => {
+            try {
+              setShowHostMenu(false);
+              setIsSaving(true);
+              
+              const response = await updateEvent(event.id, {
+                isActive: newStatus,
+              });
+
+              if (response) {
+                Alert.alert(
+                  "Success",
+                  `Event marked as ${actionText} successfully`
+                );
+                onEventUpdate(response.event || response);
+              }
+            } catch (error) {
+              console.error("Error updating availability:", error);
+              Alert.alert(
+                "Error",
+                error.response?.data?.message ||
+                  "Failed to update event availability"
+              );
+            } finally {
+              setIsSaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const addSafetyTip = (tip) => {
     if (!tip.trim()) {
       Alert.alert('Error', 'Please enter a safety tip');
@@ -512,6 +577,37 @@ const EventHostManagement = ({
                 Edit Safety Guidelines
               </Text>
             </TouchableOpacity>
+
+            {/* Toggle Availability - Only for free events or paid events without tickets */}
+            {(() => {
+              const attendeeCount = Array.isArray(event.attendees)
+                ? event.attendees.length
+                : event.attendees || 0;
+              const hasPaidTickets = !event.isFree && attendeeCount > 0;
+              
+              return !hasPaidTickets && (
+                <TouchableOpacity
+                  style={styles.hostMenuItem}
+                  onPress={handleToggleAvailability}
+                >
+                  {event.isActive ? (
+                    <>
+                      <Lock size={20} color={Colors.warning} />
+                      <Text style={[styles.hostMenuItemText, { color: Colors.warning }]}>
+                        Mark as Unavailable
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} color={Colors.success} />
+                      <Text style={[styles.hostMenuItemText, { color: Colors.success }]}>
+                        Mark as Available
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              );
+            })()}
 
             <View style={styles.hostMenuDivider} />
 
