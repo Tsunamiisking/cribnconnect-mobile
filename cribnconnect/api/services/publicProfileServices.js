@@ -1,4 +1,5 @@
 import api from "../api";
+import { getUserById as fetchUserById } from "./userServices";
 
 // Get all public profiles
 export const getAllPublicProfiles = async () => {
@@ -33,17 +34,6 @@ export const getPublicProfileById = async (uid) => {
   }
 };
 
-// Get user data (fallback if no public profile)
-export const getUserById = async (uid) => {
-  try {
-    const response = await api.get(`/users/${uid}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching user by ID:", error);
-    throw error;
-  }
-};
-
 // Combined function to get user data (tries public profile first, then user data)
 export const getUserData = async (uid) => {
   try {
@@ -56,7 +46,7 @@ export const getUserData = async (uid) => {
   } catch (error) {
     // If public profile not found, try user endpoint
     try {
-      const userData = await getUserById(uid);
+      const userData = await fetchUserById(uid);
       return {
         source: 'user',
         data: userData

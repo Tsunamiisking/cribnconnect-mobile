@@ -1,4 +1,5 @@
 import BackHeader from "@/components/BackHeader";
+import UserProfileModal from "@/components/UserProfileModal";
 import { auth } from "@/config/firebase";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,11 +15,13 @@ import {
   subscribeLinkupChat,
   subscribeLinkupMessages
 } from "@/services/linkupChatService";
+import { getUserData } from "@/api/services/publicProfileServices";
 import { useLocalSearchParams } from "expo-router";
 import { Info, Paperclip, Send, Users } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -41,8 +44,34 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chatType, setChatType] = useState(type || null); // Use type from params
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [loadingUserData, setLoadingUserData] = useState(false);
   const flatListRef = useRef(null);
   const router = useRouter();
+
+  // Helper function to extract profile photo URL from various data structures
+  const getProfilePhotoUrl = (userData) => {
+    if (!userData) return null;
+    
+    // 1. Check for direct profilePicture or photoURL
+    if (userData.profilePicture) return userData.profilePicture;
+    if (userData.photoURL) return userData.photoURL;
+    
+    // 2. Check for images array (public profile structure)
+    if (userData.images && userData.images.length > 0) {
+      const primaryImage = userData.images.find(img => img.isPrimary);
+      const imageToUse = primaryImage || userData.images[0];
+      return imageToUse.url || imageToUse.thumbnail_url;
+    }
+    
+    // 3. Fallback to video thumbnail
+    if (userData.video && userData.video.thumbnail_url) {
+      return userData.video.thumbnail_url;
+    }
+    
+    return null;
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -193,6 +222,9 @@ export default function ChatScreen() {
                      currentUser.displayName || 
                      'Anonymous';
     
+    // Get profile photo using helper function
+    const senderPhoto = getProfilePhotoUrl(publicProfile) || currentUser.photoURL || null;
+    
     // Store message text and clear input immediately for better UX
     const messageText = inputText.trim();
     setInputText("");
@@ -202,7 +234,7 @@ export default function ChatScreen() {
         text: messageText,
         senderId: currentUser.uid,
         senderName: username,
-        senderPhoto: publicProfile?.profilePicture || currentUser.photoURL || null,
+        senderPhoto: senderPhoto,
         type: 'text',
       };
       
@@ -242,6 +274,48 @@ export default function ChatScreen() {
     } else if (chatType === 'apartment') {
       router.push(`/(screens)/apartment-details/${chatData.id}`);
     }
+  };
+
+  // Function to handle profile photo click
+  const handleProfilePhotoClick = async (senderId) => {
+    if (!senderId || senderId === 'system') return;
+    
+    setLoadingUserData(true);
+    setShowUserModal(true);
+    
+    try {
+      const result = await getUserData(senderId);
+      console.log('Fetched user data:', result.data);
+      setSelectedUser(result.data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Unable to load user profile');
+      setShowUserModal(false);
+    } finally {
+      setLoadingUserData(false);
+    }
+  };
+
+  // Function to handle sending private message
+  const handleSendPrivateMessage = () => {
+    if (!selectedUser) return;
+    
+    // Close modal
+    setShowUserModal(false);
+    
+    // TODO: Navigate to direct message chat with this user
+    // This will need a direct message chat implementation
+    Alert.alert(
+      'Coming Soon',
+      'Direct messaging feature will be available soon!',
+      [{ text: 'OK' }]
+    );
+  };
+
+  // Function to close user modal
+  const handleCloseUserModal = () => {
+    setShowUserModal(false);
+    setSelectedUser(null);
   };
 
   const formatTime = (date) => {
@@ -331,18 +405,23 @@ export default function ChatScreen() {
             {isGroupChat && !isMe && (
               <View style={styles.profilePhotoContainer}>
                 {showSenderInfo ? (
-                  item.senderPhoto ? (
-                    <Image
-                      source={{ uri: item.senderPhoto }}
-                      style={styles.profilePhoto}
-                    />
-                  ) : (
-                    <View style={styles.profilePhotoPlaceholder}>
-                      <Text style={styles.profilePhotoInitial}>
-                        {(item.senderName || 'U').charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                  )
+                  <TouchableOpacity
+                    onPress={() => handleProfilePhotoClick(item.senderId)}
+                    activeOpacity={0.7}
+                  >
+                    {item.senderPhoto ? (
+                      <Image
+                        source={{ uri: item.senderPhoto }}
+                        style={styles.profilePhoto}
+                      />
+                    ) : (
+                      <View style={styles.profilePhotoPlaceholder}>
+                        <Text style={styles.profilePhotoInitial}>
+                          {(item.senderName || 'U').charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
                 ) : (
                   <View style={styles.profilePhotoSpacer} />
                 )}
@@ -546,6 +625,15 @@ export default function ChatScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        visible={showUserModal}
+        onClose={handleCloseUserModal}
+        userData={selectedUser}
+        loading={loadingUserData}
+        onSendMessage={handleSendPrivateMessage}
+      />
     </SafeAreaView>
   );
 }
