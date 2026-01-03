@@ -296,22 +296,6 @@ export default function ChatScreen() {
     }
   };
 
-  // Function to handle sending private message
-  const handleSendPrivateMessage = () => {
-    if (!selectedUser) return;
-    
-    // Close modal
-    setShowUserModal(false);
-    
-    // TODO: Navigate to direct message chat with this user
-    // This will need a direct message chat implementation
-    Alert.alert(
-      'Coming Soon',
-      'Direct messaging feature will be available soon!',
-      [{ text: 'OK' }]
-    );
-  };
-
   // Function to close user modal
   const handleCloseUserModal = () => {
     setShowUserModal(false);
@@ -632,7 +616,6 @@ export default function ChatScreen() {
         onClose={handleCloseUserModal}
         userData={selectedUser}
         loading={loadingUserData}
-        onSendMessage={handleSendPrivateMessage}
       />
     </SafeAreaView>
   );

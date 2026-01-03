@@ -1,8 +1,9 @@
 import { Colors } from '@/constants/Colors';
 import { MessageCircle, X } from 'lucide-react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Modal,
   StyleSheet,
@@ -10,15 +11,113 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { checkExistingConversation, initiateChat } from '@/api/services/chatServices';
+import InitiateChatModal from './InitiateChatModal';
 
 export default function UserProfileModal({ 
   visible, 
   onClose, 
   userData, 
-  loading,
-  onSendMessage 
+  loading
 }) {
+  const router = useRouter();
+  const [checkingChat, setCheckingChat] = useState(false);
+  const [showInitiateChatModal, setShowInitiateChatModal] = useState(false);
+
   if (!visible) return null;
+
+  const handleSendMessage = async () => {
+    if (!userData?.uid) {
+      Alert.alert("Error", "User information not available");
+      return;
+    }
+
+    try {
+      setCheckingChat(true);
+      
+      // Check if conversation already exists
+      const conversation = await checkExistingConversation(userData.uid);
+      
+      if (conversation) {
+        // Conversation exists, handle based on status
+        if (conversation.status === "pending") {
+          if (conversation.isRecipient) {
+            // We received the request, navigate to chat to accept/ignore
+            onClose(); // Close modal first
+            router.push(`/(screens)/private-chat/${conversation.conversationId}`);
+          } else {
+            // We sent the request
+            const username = userData.username || userData.firstName || 'this user';
+            Alert.alert(
+              "Request Pending",
+              `Your chat request to ${username} is pending. ${conversation.canSendMessages ? "You can send one message." : "Waiting for them to accept."}`,
+              [
+                { text: "Cancel", style: "cancel" },
+                { 
+                  text: "View Chat", 
+                  onPress: () => {
+                    onClose();
+                    router.push(`/(screens)/private-chat/${conversation.conversationId}`);
+                  }
+                }
+              ]
+            );
+          }
+        } else if (conversation.status === "accepted") {
+          // Active conversation, go to chat
+          onClose(); // Close modal first
+          router.push(`/(screens)/private-chat/${conversation.conversationId}`);
+        } else if (conversation.status === "ignored") {
+          Alert.alert(
+            "Chat Unavailable",
+            "This conversation has been closed."
+          );
+        }
+      } else {
+        // No conversation exists, show initiate modal
+        setShowInitiateChatModal(true);
+      }
+    } catch (error) {
+      console.error("Error checking conversation:", error);
+      Alert.alert("Error", "Failed to check conversation status");
+    } finally {
+      setCheckingChat(false);
+    }
+  };
+
+  const handleInitiateChatClose = () => {
+    setShowInitiateChatModal(false);
+  };
+
+  const handleSendInitialMessage = async (message) => {
+    try {
+      const response = await initiateChat(userData.uid, message);
+      
+      const username = userData.username || userData.firstName || 'User';
+      
+      Alert.alert(
+        "Request Sent!",
+        `Your message has been sent to ${username}. They'll be notified and can accept your chat request.`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              setShowInitiateChatModal(false);
+              onClose(); // Close user modal
+              
+              // Navigate to the chat
+              if (response.conversationId) {
+                router.push(`/(screens)/private-chat/${response.conversationId}`);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      throw error; // Re-throw to be handled by the modal
+    }
+  };
 
   return (
     <Modal
@@ -112,12 +211,22 @@ export default function UserProfileModal({
 
               {/* Action Button */}
               <TouchableOpacity
-                style={styles.messageButton}
-                onPress={onSendMessage}
+                style={[
+                  styles.messageButton,
+                  checkingChat && styles.messageButtonDisabled
+                ]}
+                onPress={handleSendMessage}
                 activeOpacity={0.8}
+                disabled={checkingChat}
               >
-                <MessageCircle size={20} color={Colors.white} />
-                <Text style={styles.messageButtonText}>Send Message</Text>
+                {checkingChat ? (
+                  <ActivityIndicator size="small" color={Colors.white} />
+                ) : (
+                  <>
+                    <MessageCircle size={20} color={Colors.white} />
+                    <Text style={styles.messageButtonText}>Send Message</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </>
           ) : (
@@ -127,6 +236,17 @@ export default function UserProfileModal({
           )}
         </TouchableOpacity>
       </TouchableOpacity>
+
+      {/* Initiate Chat Modal */}
+      {userData && (
+        <InitiateChatModal
+          visible={showInitiateChatModal}
+          onClose={handleInitiateChatClose}
+          recipientId={userData.uid}
+          recipientName={userData.username || userData.firstName || 'User'}
+          onSendMessage={handleSendInitialMessage}
+        />
+      )}
     </Modal>
   );
 }
@@ -221,6 +341,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 12,
     gap: 8,
+  },
+  messageButtonDisabled: {
+    opacity: 0.6,
   },
   messageButtonText: {
     fontSize: 16,
