@@ -265,23 +265,27 @@ export default function PrivateChatScreen() {
         
         {!isMyMessage && !showSenderInfo && <View style={styles.messageSpacer} />}
         
-        <View
-          style={[
-            styles.messageBubble,
-            isMyMessage ? styles.myMessage : styles.theirMessage,
-          ]}
-        >
+        <View style={styles.messageContent}>
           {!isMyMessage && showSenderInfo && (
             <Text style={styles.senderName}>{item.senderName}</Text>
           )}
-          <Text
+          
+          <View
             style={[
-              styles.messageText,
-              isMyMessage ? styles.myMessageText : styles.theirMessageText,
+              styles.messageBubble,
+              isMyMessage ? styles.myMessage : styles.theirMessage,
             ]}
           >
-            {item.text}
-          </Text>
+            <Text
+              style={[
+                styles.messageText,
+                isMyMessage ? styles.myMessageText : styles.theirMessageText,
+              ]}
+            >
+              {item.text}
+            </Text>
+          </View>
+          
           <View style={[
             styles.messageInfo,
             isMyMessage ? styles.myMessageInfo : styles.theirMessageInfo
@@ -345,7 +349,18 @@ export default function PrivateChatScreen() {
               style={styles.profileButton}
               onPress={handleProfilePress}
             >
-              <User size={24} color={Colors.primary} />
+              {conversation?.otherUser?.photoURL ? (
+                <Image
+                  source={{ uri: conversation.otherUser.photoURL }}
+                  style={styles.headerProfilePhoto}
+                />
+              ) : (
+                <View style={[styles.headerProfilePhoto, styles.headerPhotoPlaceholder]}>
+                  <Text style={styles.headerPhotoPlaceholderText}>
+                    {conversation?.otherUser?.name?.[0]?.toUpperCase() || "?"}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           }
         />
@@ -472,7 +487,24 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.gray200,
   },
   profileButton: {
-    padding: 8,
+    padding: 4,
+  },
+  headerProfilePhoto: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  headerPhotoPlaceholder: {
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerPhotoPlaceholderText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.white,
   },
   loadingContainer: {
     flex: 1,
@@ -567,10 +599,11 @@ const styles = StyleSheet.create({
   messagesContainer: {
     padding: 16,
     paddingBottom: 20,
+    flexGrow: 1,
   },
   messageContainer: {
     flexDirection: "row",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   myMessageContainer: {
     justifyContent: "flex-end",
@@ -599,11 +632,14 @@ const styles = StyleSheet.create({
   messageSpacer: {
     width: 40,
   },
+  messageContent: {
+    maxWidth: "80%",
+  },
   messageBubble: {
-    maxWidth: "75%",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
+    alignSelf: "flex-start",
   },
   myMessage: {
     backgroundColor: Colors.primary,
@@ -642,17 +678,19 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   timestamp: {
-    fontSize: 11,
+    fontSize: 12,
+    fontFamily: "Sora-Regular",
   },
   myTimestamp: {
-    color: Colors.white + "CC",
+    color: Colors.gray500,
   },
   theirTimestamp: {
     color: Colors.gray500,
   },
   deliveryStatus: {
-    fontSize: 11,
-    color: Colors.white + "CC",
+    fontSize: 12,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray500,
   },
   inputContainer: {
     flexDirection: "row",
