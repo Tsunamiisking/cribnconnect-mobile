@@ -16,6 +16,7 @@ import {
   updateDoc,
   increment,
   arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 import { Check, Send, X, User } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
@@ -84,6 +85,11 @@ export default function PrivateChatScreen() {
         console.log('Found conversation:', conversationData.conversationId);
         setConversation(conversationData);
         setLoading(false);
+        
+        // Mark conversation as read for current user
+        if (conversationData.hasUnread) {
+          markConversationAsRead();
+        }
       } else {
         setError('Conversation not found');
         setLoading(false);
@@ -366,6 +372,33 @@ export default function PrivateChatScreen() {
         />
       </View>
 
+      {/* User Profile Info Bar */}
+      <TouchableOpacity 
+        style={styles.userInfoBar}
+        onPress={handleProfilePress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.userInfoLeft}>
+          {conversation?.otherUser?.photoURL ? (
+            <Image
+              source={{ uri: conversation.otherUser.photoURL }}
+              style={styles.userInfoPhoto}
+            />
+          ) : (
+            <View style={[styles.userInfoPhoto, styles.userInfoPhotoPlaceholder]}>
+              <Text style={styles.userInfoPhotoText}>
+                {conversation?.otherUser?.name?.[0]?.toUpperCase() || "?"}
+              </Text>
+            </View>
+          )}
+          <View style={styles.userInfoDetails}>
+            <Text style={styles.userInfoName}>{conversation?.otherUser?.name || 'User'}</Text>
+            <Text style={styles.userInfoAction}>Tap to view profile</Text>
+          </View>
+        </View>
+        <User size={20} color={Colors.gray400} />
+      </TouchableOpacity>
+
       {/* Pending Request Banner */}
       {showPendingBanner && isRecipient && (
         <View style={styles.requestBanner}>
@@ -506,6 +539,51 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.white,
   },
+  userInfoBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.gray50,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  userInfoLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  userInfoPhoto: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 12,
+  },
+  userInfoPhotoPlaceholder: {
+    backgroundColor: Colors.gray300,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userInfoPhotoText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.white,
+  },
+  userInfoDetails: {
+    flex: 1,
+  },
+  userInfoName: {
+    fontSize: 16,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.gray900,
+    marginBottom: 2,
+  },
+  userInfoAction: {
+    fontSize: 13,
+    fontFamily: "Sora-Regular",
+    color: Colors.gray500,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -644,16 +722,19 @@ const styles = StyleSheet.create({
   myMessage: {
     backgroundColor: Colors.primary,
     borderBottomRightRadius: 6,
+    alignSelf: "flex-end",
   },
   theirMessage: {
     backgroundColor: Colors.gray200,
     borderBottomLeftRadius: 6,
+    alignSelf: "flex-start",
   },
   senderName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Colors.gray700,
-    marginBottom: 2,
+    fontSize: 13,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.primary,
+    marginBottom: 4,
+    marginLeft: 4,
   },
   messageText: {
     fontSize: 16,
@@ -668,8 +749,9 @@ const styles = StyleSheet.create({
   messageInfo: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 6,
+    marginTop: 4,
     gap: 4,
+    paddingHorizontal: 4,
   },
   myMessageInfo: {
     justifyContent: "flex-end",
@@ -678,19 +760,19 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Sora-Regular",
   },
   myTimestamp: {
-    color: Colors.gray500,
+    color: Colors.gray400,
   },
   theirTimestamp: {
-    color: Colors.gray500,
+    color: Colors.gray400,
   },
   deliveryStatus: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Sora-Regular",
-    color: Colors.gray500,
+    color: Colors.gray400,
   },
   inputContainer: {
     flexDirection: "row",
