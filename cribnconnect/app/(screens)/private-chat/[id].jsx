@@ -465,7 +465,7 @@ export default function PrivateChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.white,
   },
   header: {
     borderBottomWidth: 1,
