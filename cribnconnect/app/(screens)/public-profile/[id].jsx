@@ -102,27 +102,29 @@ const PublicProfileID = () => {
       const conversation = await checkExistingConversation(id);
       
       if (conversation) {
-        // Conversation exists, navigate to it
-        if (conversation.status === "pending" && conversation.initiatorId !== id) {
-          // They sent us a request, we can accept/ignore from chat screen
-          router.push(`/(screens)/chat/${conversation.id}`);
-        } else if (conversation.status === "active") {
+        // Conversation exists, handle based on status
+        if (conversation.status === "pending") {
+          if (conversation.isRecipient) {
+            // We received the request, navigate to chat to accept/ignore
+            router.push(`/(screens)/private-chat/${conversation.conversationId}`);
+          } else {
+            // We sent the request
+            Alert.alert(
+              "Request Pending",
+              `Your chat request to ${profile.username} is pending. ${conversation.canSendMessages ? "You can send one message." : "Waiting for them to accept."}`,
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "View Chat", onPress: () => router.push(`/(screens)/private-chat/${conversation.conversationId}`) }
+              ]
+            );
+          }
+        } else if (conversation.status === "accepted") {
           // Active conversation, go to chat
-          router.push(`/(screens)/chat/${conversation.id}`);
+          router.push(`/(screens)/private-chat/${conversation.conversationId}`);
         } else if (conversation.status === "ignored") {
           Alert.alert(
             "Chat Unavailable",
             "This conversation has been closed."
-          );
-        } else {
-          // We sent them a pending request
-          Alert.alert(
-            "Request Pending",
-            `Your chat request to ${profile.username} is pending. You can send one message until they accept.`,
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "View Chat", onPress: () => router.push(`/(screens)/chat/${conversation.id}`) }
-            ]
           );
         }
       } else {
@@ -150,8 +152,10 @@ const PublicProfileID = () => {
             onPress: () => {
               // Update existing conversation state
               setExistingConversation(response.conversation);
-              // Optionally navigate to the chat
-              router.push(`/(screens)/chat/${response.conversation.id}`);
+              // Navigate to the chat
+              if (response.conversationId) {
+                router.push(`/(screens)/private-chat/${response.conversationId}`);
+              }
             }
           }
         ]
