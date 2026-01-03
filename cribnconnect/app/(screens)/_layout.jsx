@@ -91,6 +91,15 @@ export default function ScreensLayout() {
       />
 
       <Stack.Screen
+        name="notification/[id]"
+        options={{
+          title: "Notification Details",
+          // headerBackTitle: "Back",
+          headerShown: false,
+        }}
+      />
+      
+      <Stack.Screen
         name="notification/index"
         options={{
           title: "Notifications",
@@ -99,14 +108,6 @@ export default function ScreensLayout() {
         }}
       />
 
-      <Stack.Screen
-        name="notification/[id]"
-        options={{
-          title: "Notification Details",
-          // headerBackTitle: "Back",
-          headerShown: false,
-        }}
-      />
       <Stack.Screen
         name="create-profile/index"
         options={{ title: "Create Profile", headerShown: false }}
@@ -135,7 +136,7 @@ export default function ScreensLayout() {
         name="private-chat/[id]"
         options={{ title: "Private Chat", headerShown: false }}
       />
-      
+
     </Stack>
   );
 }
