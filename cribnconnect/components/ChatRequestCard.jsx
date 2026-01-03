@@ -20,21 +20,21 @@ const ChatRequestCard = ({ request, onAccept, onIgnore }) => {
   const handleAccept = async () => {
     try {
       setIsAccepting(true);
-      await acceptChatRequest(request.id);
+      await acceptChatRequest(request.conversationId);
       
       Alert.alert(
         "Chat Accepted!",
-        `You can now chat with ${request.initiator.username}`,
+        `You can now chat with ${request.otherUser?.name || 'this user'}`,
         [
           {
             text: "Open Chat",
-            onPress: () => router.push(`/(screens)/chat/${request.id}`),
+            onPress: () => router.push(`/(screens)/private-chat/${request.conversationId}`),
           },
           { text: "Later", style: "cancel" },
         ]
       );
       
-      if (onAccept) onAccept(request.id);
+      if (onAccept) onAccept(request.conversationId);
     } catch (error) {
       console.error("Error accepting chat:", error);
       Alert.alert("Error", "Failed to accept chat request");
@@ -46,7 +46,7 @@ const ChatRequestCard = ({ request, onAccept, onIgnore }) => {
   const handleIgnore = async () => {
     Alert.alert(
       "Ignore Request?",
-      `This will prevent ${request.initiator.username} from sending more messages. You can still view the conversation later.`,
+      `This will prevent ${request.otherUser?.name || 'this user'} from sending more messages. You can still view the conversation later.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -55,9 +55,9 @@ const ChatRequestCard = ({ request, onAccept, onIgnore }) => {
           onPress: async () => {
             try {
               setIsIgnoring(true);
-              await ignoreChatRequest(request.id);
+              await ignoreChatRequest(request.conversationId);
               
-              if (onIgnore) onIgnore(request.id);
+              if (onIgnore) onIgnore(request.conversationId);
             } catch (error) {
               console.error("Error ignoring chat:", error);
               Alert.alert("Error", "Failed to ignore chat request");
@@ -71,13 +71,11 @@ const ChatRequestCard = ({ request, onAccept, onIgnore }) => {
   };
 
   const getInitiatorPhoto = () => {
-    const initiator = request.initiator;
-    if (initiator.profilePicture) return initiator.profilePicture;
-    if (initiator.photoURL) return initiator.photoURL;
-    if (initiator.images?.length > 0) {
-      const primary = initiator.images.find(img => img.isPrimary);
-      return primary?.url || initiator.images[0]?.url;
-    }
+    const otherUser = request.otherUser;
+    if (!otherUser) return null;
+    
+    if (otherUser.photoURL) return otherUser.photoURL;
+    // Add more fallback logic if needed based on your user data structure
     return null;
   };
 
@@ -102,7 +100,7 @@ const ChatRequestCard = ({ request, onAccept, onIgnore }) => {
     <View style={styles.card}>
       <TouchableOpacity
         style={styles.cardContent}
-        onPress={() => router.push(`/(screens)/chat/${request.id}`)}
+        onPress={() => router.push(`/(screens)/private-chat/${request.conversationId}`)}
         activeOpacity={0.9}
       >
         {/* Profile Photo */}
@@ -112,7 +110,7 @@ const ChatRequestCard = ({ request, onAccept, onIgnore }) => {
           ) : (
             <View style={[styles.photo, styles.photoPlaceholder]}>
               <Text style={styles.photoPlaceholderText}>
-                {request.initiator.username?.[0]?.toUpperCase() || "?"}
+                {request.otherUser?.name?.[0]?.toUpperCase() || "?"}
               </Text>
             </View>
           )}
@@ -125,13 +123,13 @@ const ChatRequestCard = ({ request, onAccept, onIgnore }) => {
         <View style={styles.infoContainer}>
           <View style={styles.headerRow}>
             <Text style={styles.username} numberOfLines={1}>
-              {request.initiator.username}
+              {request.otherUser?.name || 'Unknown User'}
             </Text>
             <Text style={styles.time}>{getTimeAgo(request.createdAt)}</Text>
           </View>
           
           <Text style={styles.message} numberOfLines={2}>
-            {request.lastMessage}
+            {request.lastMessage?.text || request.firstMessage?.text || 'New message'}
           </Text>
 
           <View style={styles.actionRow}>

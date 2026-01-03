@@ -4,6 +4,7 @@ import { auth } from '@/config/firebase';
 import { Colors } from '@/constants/Colors';
 import { subscribeUserEventChats } from '@/services/eventChatService';
 import { subscribeUserLinkupChats } from '@/services/linkupChatService';
+import { subscribeUserPrivateChats } from '@/services/privateChatService';
 import { router } from 'expo-router';
 import { MessageCircle, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -62,6 +63,7 @@ const APARTMENT_CONVERSATIONS = [
 // const LINKUP_CONVERSATIONS = [];
 
 const MESSAGE_TABS = [
+  { id: 'private', title: 'Private', icon: 'message-circle' },
   { id: 'events', title: 'Events', icon: 'calendar' },
   { id: 'linkups', title: 'Linkups', icon: 'users' },
   { id: 'apartments', title: 'Apartments', icon: 'building' },

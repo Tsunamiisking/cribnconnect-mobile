@@ -27,7 +27,12 @@ const ChatRequestsScreen = () => {
     try {
       setLoading(true);
       const data = await getPendingChatRequests();
-      setRequests(data.requests || []);
+      // Backend returns { conversations: [], count: n }
+      // Filter to only show requests where we are the recipient
+      const pendingRequests = (data.conversations || []).filter(
+        conv => conv.status === 'pending' && conv.isRecipient
+      );
+      setRequests(pendingRequests);
     } catch (error) {
       console.error("Error loading requests:", error);
     } finally {
@@ -41,12 +46,12 @@ const ChatRequestsScreen = () => {
     setRefreshing(false);
   }, []);
 
-  const handleAccept = (requestId) => {
-    setRequests(prev => prev.filter(req => req.id !== requestId));
+  const handleAccept = (conversationId) => {
+    setRequests(prev => prev.filter(req => req.conversationId !== conversationId));
   };
 
-  const handleIgnore = (requestId) => {
-    setRequests(prev => prev.filter(req => req.id !== requestId));
+  const handleIgnore = (conversationId) => {
+    setRequests(prev => prev.filter(req => req.conversationId !== conversationId));
   };
 
   const renderRequest = ({ item }) => (
@@ -87,7 +92,7 @@ const ChatRequestsScreen = () => {
       <FlatList
         data={requests}
         renderItem={renderRequest}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.conversationId}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={renderEmpty}
         refreshControl={
