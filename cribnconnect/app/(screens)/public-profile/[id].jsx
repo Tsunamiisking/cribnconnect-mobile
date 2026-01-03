@@ -286,8 +286,10 @@ const PublicProfileID = () => {
             <>
               <MessageCircle size={20} color={Colors.white} />
               <Text style={styles.messageButtonText}>
-                {existingConversation?.status === "active" 
+                {existingConversation?.status === "accepted" 
                   ? "Send Message" 
+                  : existingConversation?.status === "pending" && existingConversation?.isRecipient
+                  ? "View Request"
                   : "Start Chat"}
               </Text>
             </>
