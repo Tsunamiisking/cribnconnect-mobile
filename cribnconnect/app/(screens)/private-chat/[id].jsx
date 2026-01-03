@@ -427,7 +427,7 @@ export default function PrivateChatScreen() {
       {/* Input */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        // keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
       >
         <View style={styles.inputContainer}>
           <TextInput
@@ -601,17 +601,17 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     maxWidth: "75%",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
   myMessage: {
     backgroundColor: Colors.primary,
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: 6,
   },
   theirMessage: {
     backgroundColor: Colors.gray200,
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: 6,
   },
   senderName: {
     fontSize: 12,
@@ -620,8 +620,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   messageText: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 22,
   },
   myMessageText: {
     color: Colors.white,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
   messageInfo: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 6,
     gap: 4,
   },
   myMessageInfo: {

@@ -44,7 +44,6 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-
       <Stack.Screen
         name="settings/index"
         options={{
@@ -53,7 +52,6 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-
       <Stack.Screen
         name="search/index"
         options={{
@@ -62,7 +60,6 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-
       <Stack.Screen
         name="create-linkup/index"
         options={{
@@ -71,7 +68,6 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-
       <Stack.Screen
         name="nearby-people/index"
         options={{
@@ -80,7 +76,6 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-
       <Stack.Screen
         name="edit-profile/index"
         options={{
@@ -89,16 +84,6 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-
-      <Stack.Screen
-        name="notification/[id]"
-        options={{
-          title: "Notification Details",
-          // headerBackTitle: "Back",
-          headerShown: false,
-        }}
-      />
-      
       <Stack.Screen
         name="notification/index"
         options={{
@@ -107,12 +92,18 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
-
+      <Stack.Screen
+        name="notification/[id]"
+        options={{
+          title: "Notification Details",
+          // headerBackTitle: "Back",
+          headerShown: false,
+        }}
+      />
       <Stack.Screen
         name="create-profile/index"
         options={{ title: "Create Profile", headerShown: false }}
       />
-
       <Stack.Screen
         name="public-profile/index"
         options={{ title: "Public Profile", headerShown: false }}
@@ -121,22 +112,18 @@ export default function ScreensLayout() {
         name="public-profile/[id]"
         options={{ title: "Edit Profile", headerShown: false }}
       />
-
       <Stack.Screen
         name="ticket-purchase/[id]"
         options={{ title: "Ticket Purchase", headerShown: false }}
       />
-
       <Stack.Screen
         name="my-tickets/[id]"
         options={{ title: "My Tickets", headerShown: false }}
       />
-
       <Stack.Screen
         name="private-chat/[id]"
         options={{ title: "Private Chat", headerShown: false }}
       />
-
     </Stack>
   );
 }
