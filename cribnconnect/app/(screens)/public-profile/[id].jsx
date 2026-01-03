@@ -270,32 +270,32 @@ const PublicProfileID = () => {
               </View>
             </View>
           )}
+
+          {/* Message Button */}
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={[styles.messageButton, checkingConversation && styles.messageButtonDisabled]}
+              onPress={handleMessagePress}
+              disabled={checkingConversation}
+            >
+              {checkingConversation ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <>
+                  <MessageCircle size={20} color={Colors.white} />
+                  <Text style={styles.messageButtonText}>
+                    {existingConversation?.status === "accepted" 
+                      ? "Send Message" 
+                      : existingConversation?.status === "pending" && existingConversation?.isRecipient
+                      ? "View Request"
+                      : "Start Chat"}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
-
-      {/* Message Button */}
-      <View style={styles.actionButtonContainer}>
-        <TouchableOpacity
-          style={[styles.messageButton, checkingConversation && styles.messageButtonDisabled]}
-          onPress={handleMessagePress}
-          disabled={checkingConversation}
-        >
-          {checkingConversation ? (
-            <ActivityIndicator size="small" color={Colors.white} />
-          ) : (
-            <>
-              <MessageCircle size={20} color={Colors.white} />
-              <Text style={styles.messageButtonText}>
-                {existingConversation?.status === "accepted" 
-                  ? "Send Message" 
-                  : existingConversation?.status === "pending" && existingConversation?.isRecipient
-                  ? "View Request"
-                  : "Start Chat"}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
 
       <MediaViewer
         visible={showMediaViewer}
@@ -413,21 +413,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Sora-Medium",
     color: Colors.gray700,
-  },
-  actionButtonContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    backgroundColor: Colors.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.gray200,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
   },
   messageButton: {
     backgroundColor: Colors.primary,

@@ -1,3 +1,5 @@
+import { checkExistingConversation, initiateChat } from "@/api/services/chatServices";
+import InitiateChatModal from "@/components/InitiateChatModal";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import {
@@ -5,7 +7,10 @@ import {
   MapPin,
   MessageCircle
 } from "lucide-react-native";
+import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   StyleSheet,
   Text,
@@ -14,6 +19,10 @@ import {
 } from "react-native";
 
 export default function PersonCard({ person, onPress }) {
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [sendingLike, setSendingLike] = useState(false);
+  const [checkingChat, setCheckingChat] = useState(false);
+  
   // We now have just one image per person
   const handleImagePress = () => {
     if (onPress) {
@@ -21,14 +30,107 @@ export default function PersonCard({ person, onPress }) {
     }
   };
 
-  const handleLike = () => {
-    console.log("Liked:", person.name);
-    // TODO: Add like functionality
+  const handleLike = async () => {
+    try {
+      setSendingLike(true);
+      
+      // Call the like API endpoint
+      const response = await api.post(`/public-profiles/${person.uid}/like`);
+      
+      Alert.alert(
+        "Like Sent! 💝",
+        `${person.username} will be notified that you liked their profile!`
+      );
+      
+      console.log("Profile liked:", person.username, response.data);
+    } catch (error) {
+      console.error("Error sending like:", error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        const message = error.response.data.message;
+        if (message.includes("already liked")) {
+          Alert.alert("Already Liked", "You've already liked this profile!");
+        } else if (message.includes("your own profile")) {
+          Alert.alert("Not Allowed", "You cannot like your own profile.");
+        } else {
+          Alert.alert("Error", message);
+        }
+      } else {
+        Alert.alert("Error", "Failed to send like. Please try again.");
+      }
+    } finally {
+      setSendingLike(false);
+    }
   };
 
-  const handleMessage = () => {
-    console.log("Message:", person.name);
-    router.push(`/(screens)/chat/${person.id}`);
+  const handleMessage = async () => {
+    try {
+      setCheckingChat(true);
+      
+      // Check if conversation already exists
+      const conversation = await checkExistingConversation(person.uid);
+      
+      if (conversation) {
+        // Conversation exists, handle based on status
+        if (conversation.status === "pending") {
+          if (conversation.isRecipient) {
+            // We received the request, navigate to chat to accept/ignore
+            router.push(`/(screens)/private-chat/${conversation.conversationId}`);
+          } else {
+            // We sent the request
+            Alert.alert(
+              "Request Pending",
+              `Your chat request to ${person.username} is pending. ${conversation.canSendMessages ? "You can send one message." : "Waiting for them to accept."}`,
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "View Chat", onPress: () => router.push(`/(screens)/private-chat/${conversation.conversationId}`) }
+              ]
+            );
+          }
+        } else if (conversation.status === "accepted") {
+          // Active conversation, go to chat
+          router.push(`/(screens)/private-chat/${conversation.conversationId}`);
+        } else if (conversation.status === "ignored") {
+          Alert.alert(
+            "Chat Unavailable",
+            "This conversation has been closed."
+          );
+        }
+      } else {
+        // No conversation exists, show initiate modal
+        setShowChatModal(true);
+      }
+    } catch (error) {
+      console.error("Error checking conversation:", error);
+      Alert.alert("Error", "Failed to check conversation status");
+    } finally {
+      setCheckingChat(false);
+    }
+  };
+
+  const handleSendInitialMessage = async (message) => {
+    try {
+      const response = await initiateChat(person.uid, message);
+      
+      Alert.alert(
+        "Request Sent!",
+        `Your message has been sent to ${person.username}. They'll be notified and can accept your chat request.`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Navigate to the chat
+              if (response.conversationId) {
+                router.push(`/(screens)/private-chat/${response.conversationId}`);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      throw error; // Re-throw to be handled by the modal
+    }
   };
 
   return (
@@ -72,14 +174,37 @@ export default function PersonCard({ person, onPress }) {
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.likeButton} onPress={handleLike}>
-            <Heart size={24} color={Colors.white} />
+          <TouchableOpacity 
+            style={[styles.likeButton, sendingLike && styles.buttonDisabled]} 
+            onPress={handleLike}
+            disabled={sendingLike}
+          >
+            {sendingLike ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <Heart size={24} color={Colors.white} />
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.messageButton} onPress={handleMessage}>
-            <MessageCircle size={24} color={Colors.white} />
+          <TouchableOpacity 
+            style={[styles.messageButton, checkingChat && styles.buttonDisabled]} 
+            onPress={handleMessage}
+            disabled={checkingChat}
+          >
+            {checkingChat ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <MessageCircle size={24} color={Colors.white} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
+
+      <InitiateChatModal
+        visible={showChatModal}
+        onClose={() => setShowChatModal(false)}
+        recipientName={person.username}
+        onSendMessage={handleSendInitialMessage}
+      />
     </TouchableOpacity>
   );
 }
@@ -214,5 +339,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.2,
     shadowRadius: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
