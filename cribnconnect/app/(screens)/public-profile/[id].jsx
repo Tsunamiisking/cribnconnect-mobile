@@ -1,12 +1,16 @@
 import api from "@/api/api";
+import { checkExistingConversation, initiateChat } from "@/api/services/chatServices";
 import BackHeader from "@/components/BackHeader";
+import InitiateChatModal from "@/components/InitiateChatModal";
 import MediaViewer from "@/components/MediaViewer";
 import { Colors } from "@/constants/Colors";
 import { useLocationString } from "@/hooks/useLocationString";
-import { useLocalSearchParams } from "expo-router";
-import { Play } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { MessageCircle, Play } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   ScrollView,
@@ -26,6 +30,9 @@ const PublicProfileID = () => {
   const { locationString } = useLocationString(profile?.location);
   const [showMediaViewer, setShowMediaViewer] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(null);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [checkingConversation, setCheckingConversation] = useState(false);
+  const [existingConversation, setExistingConversation] = useState(null);
 
   const allMedia = useMemo(() => {
     if (!profile) return [];
@@ -62,7 +69,17 @@ const PublicProfileID = () => {
 
   useEffect(() => {
     loadProfile();
+    checkForExistingConversation();
   }, [id]);
+
+  const checkForExistingConversation = async () => {
+    try {
+      const conversation = await checkExistingConversation(id);
+      setExistingConversation(conversation);
+    } catch (error) {
+      console.error("Error checking conversation:", error);
+    }
+  };
 
   const loadProfile = async () => {
     try {
@@ -74,6 +91,73 @@ const PublicProfileID = () => {
       console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMessagePress = async () => {
+    try {
+      setCheckingConversation(true);
+      
+      // Check if conversation already exists
+      const conversation = await checkExistingConversation(id);
+      
+      if (conversation) {
+        // Conversation exists, navigate to it
+        if (conversation.status === "pending" && conversation.initiatorId !== id) {
+          // They sent us a request, we can accept/ignore from chat screen
+          router.push(`/(screens)/chat/${conversation.id}`);
+        } else if (conversation.status === "active") {
+          // Active conversation, go to chat
+          router.push(`/(screens)/chat/${conversation.id}`);
+        } else if (conversation.status === "ignored") {
+          Alert.alert(
+            "Chat Unavailable",
+            "This conversation has been closed."
+          );
+        } else {
+          // We sent them a pending request
+          Alert.alert(
+            "Request Pending",
+            `Your chat request to ${profile.username} is pending. You can send one message until they accept.`,
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "View Chat", onPress: () => router.push(`/(screens)/chat/${conversation.id}`) }
+            ]
+          );
+        }
+      } else {
+        // No conversation exists, show initiate modal
+        setShowChatModal(true);
+      }
+    } catch (error) {
+      console.error("Error handling message press:", error);
+      Alert.alert("Error", "Failed to check conversation status");
+    } finally {
+      setCheckingConversation(false);
+    }
+  };
+
+  const handleSendInitialMessage = async (message) => {
+    try {
+      const response = await initiateChat(id, message);
+      
+      Alert.alert(
+        "Request Sent!",
+        `Your message has been sent to ${profile.username}. They'll be notified and can accept your chat request.`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Update existing conversation state
+              setExistingConversation(response.conversation);
+              // Optionally navigate to the chat
+              router.push(`/(screens)/chat/${response.conversation.id}`);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      throw error; // Re-throw to be handled by the modal
     }
   };
 
@@ -185,11 +269,40 @@ const PublicProfileID = () => {
         </View>
       </ScrollView>
 
+      {/* Message Button */}
+      <View style={styles.actionButtonContainer}>
+        <TouchableOpacity
+          style={[styles.messageButton, checkingConversation && styles.messageButtonDisabled]}
+          onPress={handleMessagePress}
+          disabled={checkingConversation}
+        >
+          {checkingConversation ? (
+            <ActivityIndicator size="small" color={Colors.white} />
+          ) : (
+            <>
+              <MessageCircle size={20} color={Colors.white} />
+              <Text style={styles.messageButtonText}>
+                {existingConversation?.status === "active" 
+                  ? "Send Message" 
+                  : "Start Chat"}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <MediaViewer
         visible={showMediaViewer}
         onClose={() => setShowMediaViewer(false)}
         media={allMedia}
         initialIndex={selectedMediaIndex || 0}
+      />
+
+      <InitiateChatModal
+        visible={showChatModal}
+        onClose={() => setShowChatModal(false)}
+        recipientName={profile.username}
+        onSendMessage={handleSendInitialMessage}
       />
     </SafeAreaView>
   );
@@ -294,6 +407,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Sora-Medium",
     color: Colors.gray700,
+  },
+  actionButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: Colors.white,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray200,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  messageButton: {
+    backgroundColor: Colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  messageButtonDisabled: {
+    opacity: 0.6,
+  },
+  messageButtonText: {
+    fontSize: 16,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.white,
   },
 });
 

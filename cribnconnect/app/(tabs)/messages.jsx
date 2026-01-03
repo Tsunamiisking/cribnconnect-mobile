@@ -131,6 +131,7 @@ export default function MessagesScreen() {
     const unsubscribe = subscribeUserEventChats(currentUser.uid, (chats) => {
       console.log('Received event chats:', chats.length);
       setEventChats(chats);
+      // console.log('Event chats updated:', chats);
       setLoadingEvents(false);
     });
 
