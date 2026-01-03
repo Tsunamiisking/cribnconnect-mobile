@@ -22,11 +22,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Mock data - TODO: Replace with API integration
+// Mock data for apartment chats - TODO: Replace with API integration
+// Apartment chats are direct user-to-host conversations
 const APARTMENT_CONVERSATIONS = [
   {
     id: '1',
     type: 'direct',
+    chatType: 'apartment',
     participant: {
       name: 'Sarah Chen',
       avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=400&h=400&fit=crop&crop=face',
@@ -37,11 +39,12 @@ const APARTMENT_CONVERSATIONS = [
       timestamp: '2 min ago',
       unread: true,
     },
-    context: 'Apartment Inquiry',
+    context: 'Apartment Chat',
   },
   {
     id: '4',
     type: 'direct',
+    chatType: 'apartment',
     participant: {
       name: 'Michael Lee',
       avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=400&fit=crop&crop=face',
@@ -51,7 +54,7 @@ const APARTMENT_CONVERSATIONS = [
       timestamp: '2 min ago',
       unread: true,
     },
-    context: 'Apartment Inquiry',
+    context: 'Apartment Chat',
   },
 ];
 
@@ -286,13 +289,21 @@ export default function MessagesScreen() {
   const getCurrentConversations = () => {
     switch (selectedTab) {
       case 'direct':
-        return formatPrivateChats();
+        // Combine private chats and apartment chats (both are direct user-to-user/user-to-host)
+        return [
+          ...formatPrivateChats(),
+          ...APARTMENT_CONVERSATIONS
+        ].sort((a, b) => {
+          // Sort by timestamp, most recent first
+          const timeA = a.lastMessage?.timestamp || '';
+          const timeB = b.lastMessage?.timestamp || '';
+          return timeB.localeCompare(timeA);
+        });
       case 'groups':
-        // Combine all group chats: events, linkups, and apartments
+        // Only events and linkups (group conversations)
         return [
           ...formatEventChats(),
           ...formatLinkupChats(),
-          ...APARTMENT_CONVERSATIONS.map(apt => ({ ...apt, chatType: 'apartment' }))
         ].sort((a, b) => {
           // Sort by timestamp, most recent first
           const timeA = a.lastMessage?.timestamp || '';
@@ -435,7 +446,7 @@ export default function MessagesScreen() {
 
         {/* Tab Content */}
         {selectedTab === 'direct' ? (
-          // Direct Messages Tab - Show private 1-on-1 chats
+          // Direct Messages Tab - Private 1-on-1 chats AND apartment host chats
           <View style={styles.conversationsSection}>
             <Text style={styles.sectionTitle}>Direct Messages</Text>
             
@@ -457,7 +468,7 @@ export default function MessagesScreen() {
                 <MessageCircle size={48} color={Colors.gray400} />
                 <Text style={styles.emptyTitle}>No direct messages yet</Text>
                 <Text style={styles.emptySubtitle}>
-                  Start a conversation from someone's profile to connect privately!
+                  Start a conversation from someone's profile or inquire about apartments!
                 </Text>
               </View>
             )}
