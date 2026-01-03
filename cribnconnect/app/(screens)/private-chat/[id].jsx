@@ -173,6 +173,24 @@ export default function PrivateChatScreen() {
     }
   };
 
+  const markConversationAsRead = async () => {
+    const currentUser = auth?.currentUser;
+    if (!currentUser) return;
+
+    try {
+      const conversationRef = doc(db, 'privateChats', id);
+      
+      // Remove current user from unreadBy array
+      await updateDoc(conversationRef, {
+        unreadBy: arrayRemove(currentUser.uid),
+      });
+      
+      console.log('Marked conversation as read');
+    } catch (error) {
+      console.error('Error marking conversation as read:', error);
+    }
+  };
+
   const sendMessage = async () => {
     if (inputText.trim() === "") return;
 
@@ -218,6 +236,8 @@ export default function PrivateChatScreen() {
       
       // Update conversation lastMessage and metadata
       const otherUserId = conversation.participants.find(uid => uid !== currentUser.uid);
+      
+      // Only add other user to unreadBy, not the sender
       await updateDoc(conversationRef, {
         lastMessage: {
           senderId: currentUser.uid,
@@ -227,7 +247,7 @@ export default function PrivateChatScreen() {
           type: 'text',
         },
         messageCount: increment(1),
-        unreadBy: arrayUnion(otherUserId),
+        unreadBy: [otherUserId], // Set unreadBy to only include the other user
         updatedAt: serverTimestamp(),
       });
       
@@ -392,7 +412,7 @@ export default function PrivateChatScreen() {
             </View>
           )}
           <View style={styles.userInfoDetails}>
-            <Text style={styles.userInfoName}>{conversation?.otherUser?.name || 'User'}</Text>
+            {/* <Text style={styles.userInfoName}>{conversation?.otherUser?.name || 'User'}</Text> */}
             <Text style={styles.userInfoAction}>Tap to view profile</Text>
           </View>
         </View>
