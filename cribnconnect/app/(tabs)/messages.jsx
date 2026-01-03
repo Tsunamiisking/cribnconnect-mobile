@@ -63,19 +63,19 @@ const APARTMENT_CONVERSATIONS = [
 // const LINKUP_CONVERSATIONS = [];
 
 const MESSAGE_TABS = [
-  { id: 'private', title: 'Private', icon: 'message-circle' },
-  { id: 'events', title: 'Events', icon: 'calendar' },
-  { id: 'linkups', title: 'Linkups', icon: 'users' },
-  { id: 'apartments', title: 'Apartments', icon: 'building' },
+  { id: 'direct', title: 'Direct', icon: 'message-circle' },
+  { id: 'groups', title: 'Groups', icon: 'users' },
 ];
 
 export default function MessagesScreen() {
-  const [selectedTab, setSelectedTab] = useState('events');
+  const [selectedTab, setSelectedTab] = useState('direct');
   const [refreshing, setRefreshing] = useState(false);
   const [linkupChats, setLinkupChats] = useState([]);
   const [eventChats, setEventChats] = useState([]);
+  const [privateChats, setPrivateChats] = useState([]);
   const [loadingLinkups, setLoadingLinkups] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingPrivateChats, setLoadingPrivateChats] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check authentication status
@@ -86,8 +86,10 @@ export default function MessagesScreen() {
         console.log('User not authenticated, clearing chats');
         setLinkupChats([]);
         setEventChats([]);
+        setPrivateChats([]);
         setLoadingLinkups(false);
         setLoadingEvents(false);
+        setLoadingPrivateChats(false);
       }
     });
 
@@ -143,9 +145,33 @@ export default function MessagesScreen() {
     };
   }, [isAuthenticated]);
 
+  // Subscribe to user's private chats (Firestore real-time)
+  useEffect(() => {
+    const currentUser = auth?.currentUser;
+    
+    if (!currentUser || !isAuthenticated) {
+      console.log('No authenticated user for private chats');
+      setLoadingPrivateChats(false);
+      return;
+    }
+
+    console.log('Subscribing to private chats for user:', currentUser.uid);
+    
+    const unsubscribe = subscribeUserPrivateChats(currentUser.uid, (chats) => {
+      console.log('Received private chats:', chats.length);
+      setPrivateChats(chats);
+      setLoadingPrivateChats(false);
+    });
+
+    return () => {
+      console.log('Unsubscribing from private chats');
+      unsubscribe();
+    };
+  }, [isAuthenticated]);
+
   const onRefresh = () => {
     setRefreshing(true);
-    // The real-time listener will automatically update the data
+    // The real-time listeners will automatically update the data
     // Just simulate a refresh delay for UX
     setTimeout(() => setRefreshing(false), 1000);
   };
@@ -175,6 +201,7 @@ export default function MessagesScreen() {
     return linkupChats.map(chat => ({
       id: chat.id, // This is the linkup ID
       type: 'group',
+      chatType: 'linkup',
       name: chat.name,
       avatar: chat.photo || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
       participants: chat.participantIds?.length || 0,
@@ -200,6 +227,7 @@ export default function MessagesScreen() {
     return eventChats.map(chat => ({
       id: chat.id, // This is the event ID
       type: 'group',
+      chatType: 'event',
       name: chat.name,
       avatar: chat.photo || 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=300&fit=crop',
       participants: chat.participantIds?.length || 0,
@@ -218,6 +246,34 @@ export default function MessagesScreen() {
     }));
   };
 
+  // Format private chats to match the conversation card format
+  const formatPrivateChats = () => {
+    const currentUserId = auth?.currentUser?.uid;
+    
+    return privateChats.map(chat => ({
+      id: chat.conversationId,
+      type: 'direct',
+      chatType: 'private',
+      participant: {
+        name: chat.otherUser?.name || 'Unknown User',
+        avatar: chat.otherUser?.photoURL || null,
+        status: 'offline', // We don't have real-time status yet
+      },
+      lastMessage: {
+        text: chat.lastMessage?.text || chat.firstMessage?.text || 'No messages yet',
+        timestamp: formatTimestamp(chat.lastMessage?.timestamp || chat.createdAt),
+        unread: chat.hasUnread,
+      },
+      context: chat.status === 'pending' 
+        ? (chat.isRecipient ? '📬 New Request' : '⏳ Pending') 
+        : chat.status === 'ignored'
+        ? '🚫 Ignored'
+        : 'Direct Message',
+      status: chat.status,
+      canSendMessages: chat.canSendMessages,
+    }));
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'online': return Colors.emerald;
@@ -229,10 +285,22 @@ export default function MessagesScreen() {
 
   const getCurrentConversations = () => {
     switch (selectedTab) {
-      case 'apartments': return APARTMENT_CONVERSATIONS;
-      case 'events': return formatEventChats();
-      case 'linkups': return formatLinkupChats();
-      default: return [];
+      case 'direct':
+        return formatPrivateChats();
+      case 'groups':
+        // Combine all group chats: events, linkups, and apartments
+        return [
+          ...formatEventChats(),
+          ...formatLinkupChats(),
+          ...APARTMENT_CONVERSATIONS.map(apt => ({ ...apt, chatType: 'apartment' }))
+        ].sort((a, b) => {
+          // Sort by timestamp, most recent first
+          const timeA = a.lastMessage?.timestamp || '';
+          const timeB = b.lastMessage?.timestamp || '';
+          return timeB.localeCompare(timeA);
+        });
+      default:
+        return [];
     }
   };
 
@@ -258,15 +326,14 @@ export default function MessagesScreen() {
     <TouchableOpacity 
       style={styles.conversationCard}
       onPress={() => {
-        // Navigate to chat screen with the conversation ID and type
-        if (selectedTab === 'linkups') {
-          // For linkup chats, pass the linkup ID and type
+        // Navigate to appropriate chat screen based on chatType
+        if (item.chatType === 'private') {
+          router.push(`/(screens)/private-chat/${item.id}`);
+        } else if (item.chatType === 'linkup') {
           router.push(`/(screens)/chat/${item.id}?type=linkup`);
-        } else if (selectedTab === 'events') {
-          // For event chats, pass the event ID and type
+        } else if (item.chatType === 'event') {
           router.push(`/(screens)/chat/${item.id}?type=event`);
-        } else {
-          // For apartment chats, pass the apartment ID and type
+        } else if (item.chatType === 'apartment') {
           router.push(`/(screens)/chat/${item.id}?type=apartment`);
         }
       }}
@@ -359,48 +426,12 @@ export default function MessagesScreen() {
         </View>
 
         {/* Tab Content */}
-        {selectedTab === 'linkups' ? (
-          // Special content for Linkups tab - show created linkups at the top
-          <View>
-            <UserLinkupsCarousel />
-            
-            {/* Linkup Conversations - Groups that the user has joined */}
-            <View style={styles.conversationsSection}>
-              <Text style={styles.sectionTitle}>Linkup Conversations</Text>
-              
-              {loadingLinkups ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={Colors.primary} />
-                  <Text style={styles.loadingText}>Loading conversations...</Text>
-                </View>
-              ) : getCurrentConversations().length > 0 ? (
-                <FlatList
-                  data={getCurrentConversations()}
-                  renderItem={renderConversationCard}
-                  keyExtractor={(item) => item.id}
-                  scrollEnabled={false}
-                  showsVerticalScrollIndicator={false}
-                />
-              ) : (
-                <View style={styles.emptyState}>
-                  <MessageCircle size={48} color={Colors.gray400} />
-                  <Text style={styles.emptyTitle}>No linkup conversations yet</Text>
-                  <Text style={styles.emptySubtitle}>
-                    Join linkups to start chatting with other members!
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        ) : (
-          // Regular conversations for Apartments and Events tabs
+        {selectedTab === 'direct' ? (
+          // Direct Messages Tab - Show private 1-on-1 chats
           <View style={styles.conversationsSection}>
-            <Text style={styles.sectionTitle}>
-              {selectedTab === 'apartments' ? 'Apartment Conversations' : 'Event Conversations'}
-            </Text>
+            <Text style={styles.sectionTitle}>Direct Messages</Text>
             
-            {/* Show loading state for events tab */}
-            {selectedTab === 'events' && loadingEvents ? (
+            {loadingPrivateChats ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={Colors.primary} />
                 <Text style={styles.loadingText}>Loading conversations...</Text>
@@ -416,15 +447,44 @@ export default function MessagesScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <MessageCircle size={48} color={Colors.gray400} />
-                <Text style={styles.emptyTitle}>No conversations yet</Text>
+                <Text style={styles.emptyTitle}>No direct messages yet</Text>
                 <Text style={styles.emptySubtitle}>
-                  {selectedTab === 'apartments' 
-                    ? "Start connecting with apartment hunters and landlords!"
-                    : "Join events to start conversations with other attendees!"
-                  }
+                  Start a conversation from someone's profile to connect privately!
                 </Text>
               </View>
             )}
+          </View>
+        ) : (
+          // Groups Tab - Show all group chats (events, linkups, apartments)
+          <View>
+            <UserLinkupsCarousel />
+            
+            <View style={styles.conversationsSection}>
+              <Text style={styles.sectionTitle}>Group Conversations</Text>
+              
+              {(loadingLinkups || loadingEvents) ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={Colors.primary} />
+                  <Text style={styles.loadingText}>Loading conversations...</Text>
+                </View>
+              ) : getCurrentConversations().length > 0 ? (
+                <FlatList
+                  data={getCurrentConversations()}
+                  renderItem={renderConversationCard}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  showsVerticalScrollIndicator={false}
+                />
+              ) : (
+                <View style={styles.emptyState}>
+                  <Users size={48} color={Colors.gray400} />
+                  <Text style={styles.emptyTitle}>No group conversations yet</Text>
+                  <Text style={styles.emptySubtitle}>
+                    Join events, linkups, or apartment groups to start chatting!
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
 

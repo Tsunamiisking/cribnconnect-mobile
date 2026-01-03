@@ -130,6 +130,12 @@ export default function ScreensLayout() {
         name="my-tickets/[id]"
         options={{ title: "My Tickets", headerShown: false }}
       />
+
+      <Stack.Screen
+        name="private-chat/[id]"
+        options={{ title: "Private Chat", headerShown: false }}
+      />
+      
     </Stack>
   );
 }
