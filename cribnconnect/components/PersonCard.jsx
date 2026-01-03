@@ -1,3 +1,4 @@
+import api from "@/api/api";
 import { checkExistingConversation, initiateChat } from "@/api/services/chatServices";
 import InitiateChatModal from "@/components/InitiateChatModal";
 import { Colors } from "@/constants/Colors";
