@@ -6,7 +6,7 @@ import { subscribeUserEventChats } from '@/services/eventChatService';
 import { subscribeUserLinkupChats } from '@/services/linkupChatService';
 import { subscribeUserPrivateChats } from '@/services/privateChatService';
 import { router } from 'expo-router';
-import { MessageCircle, Users } from 'lucide-react-native';
+import { Calendar, MessageCircle, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -358,8 +358,16 @@ export default function MessagesScreen() {
               style={styles.groupAvatar}
               resizeMode="cover"
             />
-            <View style={styles.groupIndicator}>
-              <Users size={12} color={Colors.white} />
+            <View style={[
+              styles.groupIndicator,
+              item.chatType === 'event' && styles.eventIndicator,
+              item.chatType === 'linkup' && styles.linkupIndicator,
+            ]}>
+              {item.chatType === 'event' ? (
+                <Calendar size={12} color={Colors.white} />
+              ) : (
+                <Users size={12} color={Colors.white} />
+              )}
             </View>
           </View>
         )}
@@ -593,6 +601,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  eventIndicator: {
+    backgroundColor: Colors.success, // Green for events
+  },
+  linkupIndicator: {
+    backgroundColor: Colors.primary, // Primary blue for linkups
   },
   conversationContent: {
     flex: 1,
