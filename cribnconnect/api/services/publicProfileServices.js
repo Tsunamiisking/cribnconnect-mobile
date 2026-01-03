@@ -81,3 +81,25 @@ export const editPublicProfile = async (uid, profileData) => {
     throw error;
   }
 };
+
+// Like a profile
+export const likeProfile = async (uid) => {
+  try {
+    const response = await api.post(`/public-profiles/${uid}/like`);
+    return response.data;
+  } catch (error) {
+    console.error("Error liking profile:", error);
+    throw error;
+  }
+};
+
+// Unlike a profile
+export const unlikeProfile = async (uid) => {
+  try {
+    const response = await api.delete(`/public-profiles/${uid}/like`);
+    return response.data;
+  } catch (error) {
+    console.error("Error unliking profile:", error);
+    throw error;
+  }
+};
