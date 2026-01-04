@@ -1,5 +1,6 @@
 import { getEvents, getHotEvents } from "@/api/services/eventServices";
 import EventCard from "@/components/EventCard";
+import EventsModal from "@/components/EventsModal";
 import NormalHeader from "@/components/NormalHeader";
 import TextSearchInput from "@/components/TextSearchInput";
 import { Colors } from "@/constants/Colors";
@@ -37,6 +38,8 @@ export default function EventsScreen() {
   const [hotEvents, setHotEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showHotEventsModal, setShowHotEventsModal] = useState(false);
+  const [showTodaysEventsModal, setShowTodaysEventsModal] = useState(false);
 
   // Fetch events from API
   useEffect(() => {
@@ -241,6 +244,32 @@ export default function EventsScreen() {
     return hour >= 18 || hour < 6 ? 'night' : 'day';
   };
 
+  // Format events for modal display
+  const formatEventsForModal = (eventsList) => {
+    return eventsList.map(item => ({
+      id: item._id || item.id,
+      imageUri: item.media?.[0]?.thumbnail_url || item.media?.[0]?.url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop",
+      title: item.title,
+      pricePerTicket: item.isFree 
+        ? "Free" 
+        : item.ticketTypes?.[0]?.price 
+          ? `₦${item.ticketTypes[0].price.toLocaleString()}/ticket` 
+          : "Price TBA",
+      location: item.location?.venue || item.location?.city || "Location TBA",
+      schedule: formatSchedule(item.date, item.time, item.endTime),
+      timeOfDay: getTimeOfDay(item.time),
+      category: item.category,
+    }));
+  };
+
+  const handleEventPress = (eventId) => {
+    // Close any open modal
+    setShowHotEventsModal(false);
+    setShowTodaysEventsModal(false);
+    // Navigate to event details
+    router.push(`/(screens)/event-details/${eventId}`);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <NormalHeader title="Events" />
@@ -260,7 +289,7 @@ export default function EventsScreen() {
                 <View style={styles.carouselSection}>
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>🔥 Hot Events</Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => setShowHotEventsModal(true)}>
                       <Text style={styles.seeAllText}>See All</Text>
                     </TouchableOpacity>
                   </View>
@@ -280,7 +309,7 @@ export default function EventsScreen() {
                 <View style={styles.carouselSection}>
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>📅 Today's Events</Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => setShowTodaysEventsModal(true)}>
                       <Text style={styles.seeAllText}>See All</Text>
                     </TouchableOpacity>
                   </View>
@@ -353,6 +382,24 @@ export default function EventsScreen() {
           }
         />
       )}
+
+      {/* Hot Events Modal */}
+      <EventsModal
+        visible={showHotEventsModal}
+        onClose={() => setShowHotEventsModal(false)}
+        title="🔥 Hot Events"
+        events={formatEventsForModal(hotEvents)}
+        onEventPress={handleEventPress}
+      />
+
+      {/* Today's Events Modal */}
+      <EventsModal
+        visible={showTodaysEventsModal}
+        onClose={() => setShowTodaysEventsModal(false)}
+        title="📅 Today's Events"
+        events={formatEventsForModal(todaysEvents)}
+        onEventPress={handleEventPress}
+      />
     </SafeAreaView>
   );
 }
