@@ -83,7 +83,10 @@ const NotificationScreen = () => {
     }
 
     // Navigate to notification details
-    router.push(`/notification/${notification._id}`);
+    router.push({
+      pathname: `/notification/${notification._id}`,
+      params: { notification: JSON.stringify(notification) }
+    });
   };
 
   const handleMarkAllAsRead = async () => {

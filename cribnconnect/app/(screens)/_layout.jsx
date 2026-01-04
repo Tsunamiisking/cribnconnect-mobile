@@ -85,6 +85,14 @@ export default function ScreensLayout() {
         }}
       />
       <Stack.Screen
+      name ="notification/[id]"
+        options={{
+          title: "Notification Details",
+          // headerBackTitle: "Back",
+          headerShown: false,
+        }}
+       />
+      <Stack.Screen
         name="notification/index"
         options={{
           title: "Notifications",
