@@ -22,6 +22,7 @@ const NotificationScreen = () => {
         // console.log("Fetched notifications:", JSON.stringify(data));
         // Handle the response structure with notifications array
         if (data.notifications) {
+          // console.log("Fetched notifications:", JSON.stringify(data.notifications));
           setNotifications(data.notifications);
           setUnreadCount(data.unreadCount || 0);
           setPagination(data.pagination || null);
