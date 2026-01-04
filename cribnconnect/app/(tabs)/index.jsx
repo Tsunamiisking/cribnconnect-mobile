@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   carouselContainer: {
-    paddingLeft: 16,
+    paddingLeft: 8,
     paddingRight: 8,
   },
   carouselCardContainer: {
