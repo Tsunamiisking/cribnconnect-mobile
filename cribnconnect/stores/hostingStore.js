@@ -836,13 +836,23 @@ const useHostingStore = create(
           
           console.log(`${type} uploaded successfully:`, response);
           
-          // Extract real ID from response
+          // Extract real ID and status from response
           const realId = response?.data?.apartment?._id || response?.data?.event?._id || response?.data?._id;
+          const eventData = response?.data?.event || response?.data;
+          const isDraft = eventData?.status === 'draft' || !eventData?.isActive;
           
-          // Mark as completed
-          useProcessingStore.getState().completeProcessingItem(tempId, realId, {
-            status: 'active',
-          });
+          // If event was saved as draft due to incomplete KYC, mark as failed with KYC message
+          if (type === 'event' && isDraft) {
+            useProcessingStore.getState().failProcessingItem(tempId, 
+              "Complete KYC verification to publish this event. Your event has been saved as a draft.",
+              { requiresKYC: true, eventId: realId }
+            );
+          } else {
+            // Mark as completed
+            useProcessingStore.getState().completeProcessingItem(tempId, realId, {
+              status: 'active',
+            });
+          }
           
         } catch (error) {
           console.error('Background upload failed:', error);

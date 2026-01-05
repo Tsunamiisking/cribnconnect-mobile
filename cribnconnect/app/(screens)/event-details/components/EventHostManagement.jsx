@@ -1,5 +1,5 @@
 import api from "@/api/api";
-import { updateEvent, updateEventPerks, publishEvent } from "@/api/services/eventServices";
+import { publishEvent, updateEvent, updateEventPerks } from "@/api/services/eventServices";
 import { Colors } from "@/constants/Colors";
 import {
   AlertTriangle,
