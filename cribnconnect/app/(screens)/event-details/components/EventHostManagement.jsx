@@ -1,5 +1,5 @@
 import api from "@/api/api";
-import { updateEvent, updateEventPerks, publishEvent, draftEvent } from "@/api/services/eventServices";
+import { updateEvent, updateEventPerks, publishEvent } from "@/api/services/eventServices";
 import { Colors } from "@/constants/Colors";
 import {
   AlertTriangle,
@@ -573,45 +573,6 @@ const EventHostManagement = ({
     );
   };
 
-  const handleDraftEvent = () => {
-    Alert.alert(
-      "Save as Draft",
-      "This will unpublish your event and save it as a draft. Users will no longer be able to see or register for it.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Save as Draft",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setIsSaving(true);
-              setShowHostMenu(false);
-              const response = await draftEvent(event.id || event._id);
-              if (response.event) {
-                Alert.alert(
-                  "Saved as Draft",
-                  "Your event has been unpublished and saved as a draft."
-                );
-                onEventUpdate(response.event);
-              }
-            } catch (error) {
-              console.error("Error saving event as draft:", error);
-              Alert.alert(
-                "Error",
-                error.response?.data?.message || "Failed to save event as draft"
-              );
-            } finally {
-              setIsSaving(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const renderModals = () => (
     <>
       {/* Host Menu Modal */}
@@ -693,6 +654,31 @@ const EventHostManagement = ({
                 </TouchableOpacity>
               );
             })()}
+
+            {/* Publish Event - Show only for draft events */}
+            {event.status === 'draft' && (
+              <TouchableOpacity
+                style={styles.hostMenuItem}
+                onPress={handlePublishEvent}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <ActivityIndicator size="small" color={Colors.primary} />
+                    <Text style={[styles.hostMenuItemText, { color: Colors.gray400 }]}>
+                      Publishing...
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} color={Colors.success} />
+                    <Text style={[styles.hostMenuItemText, { color: Colors.success }]}>
+                      Publish Event
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
 
             <View style={styles.hostMenuDivider} />
 
