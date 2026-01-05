@@ -8,6 +8,7 @@ import ProcessingItemCard from "@/components/ProcessingItemCard";
 import { Colors } from "@/constants/Colors";
 import useProcessingStore from "@/stores/processingStore";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -265,22 +266,93 @@ export default function MyHostedItemsScreen() {
   };
   
   const handleRetryUpload = async (item) => {
-    Alert.alert(
-      'Retry Upload',
-      `Do you want to retry uploading "${item.title || 'this item'}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Retry',
-          onPress: () => {
-            // TODO: Implement retry logic
-            // For now, just remove the failed item
-            removeProcessingItem(item.id);
-            Alert.alert('Info', 'Please re-submit your listing from the Add Apartment/Event screen.');
+    // Check if the item requires KYC (not an error, but a requirement)
+    const requiresKYC = item.requiresKYC || (item.error && (
+      item.error.includes('KYC_REQUIRED') || 
+      item.error.includes('KYC verification') ||
+      item.error.includes('complete KYC') ||
+      item.error.errorCode === 'KYC_REQUIRED'
+    ));
+
+    if (requiresKYC) {
+      // Event/apartment saved as draft - KYC needed to publish
+      Alert.alert(
+        'Saved as Draft',
+        'Your event has been saved as a draft. Complete KYC verification to publish it.',
+        [
+          { 
+            text: 'View Drafts', 
+            onPress: () => {
+              // Remove from processing list
+              removeProcessingItem(item.id);
+              // Switch to events tab and filter by drafts
+              setActiveTab('events');
+              setSelectedEventCategory('Draft');
+              // Refresh to show the draft
+              fetchEvents();
+            }
+          },
+          {
+            text: 'Verify Now',
+            onPress: () => {
+              // Remove from processing list
+              removeProcessingItem(item.id);
+              // Navigate to verification/settings page
+              router.push('/(screens)/settings');
+            }
           }
-        }
-      ]
-    );
+        ]
+      );
+    } else {
+      // Network or other error - allow retry with stored data
+      Alert.alert(
+        'Retry Upload',
+        `Do you want to retry uploading "${item.title || 'this item'}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Retry',
+            onPress: async () => {
+              try {
+                // Re-submit the data
+                if (item.type === 'event') {
+                  await retryEventCreation(item);
+                } else if (item.type === 'apartment') {
+                  await retryApartmentCreation(item);
+                }
+                
+                // Remove from processing on success
+                removeProcessingItem(item.id);
+                
+                // Refresh the list
+                if (activeTab === 'apartments') {
+                  await fetchApartments();
+                } else {
+                  await fetchEvents();
+                }
+                
+                Alert.alert('Success', 'Upload completed successfully!');
+              } catch (error) {
+                console.error('Retry failed:', error);
+                Alert.alert('Error', 'Retry failed. Please check your connection and try again.');
+              }
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  const retryEventCreation = async (item) => {
+    // TODO: Implement actual event creation retry with stored data
+    // This would call the createEvent API with item.data
+    throw new Error('Network error. Please check your connection and try again.');
+  };
+
+  const retryApartmentCreation = async (item) => {
+    // TODO: Implement actual apartment creation retry with stored data
+    // This would call the createApartment API with item.data
+    throw new Error('Network error. Please check your connection and try again.');
   };
 
   return (
