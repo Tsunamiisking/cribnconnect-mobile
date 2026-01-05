@@ -1,5 +1,5 @@
 import api from "@/api/api";
-import { updateEvent, updateEventPerks } from "@/api/services/eventServices";
+import { updateEvent, updateEventPerks, publishEvent, draftEvent } from "@/api/services/eventServices";
 import { Colors } from "@/constants/Colors";
 import {
   AlertTriangle,
@@ -525,6 +525,83 @@ const EventHostManagement = ({
               Alert.alert(
                 "Error",
                 error.response?.data?.message || "Failed to cancel event"
+              );
+            } finally {
+              setIsSaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handlePublishEvent = () => {
+    Alert.alert(
+      "Publish Event",
+      "Publishing this event will make it visible to all users. Make sure all details are correct.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Publish",
+          onPress: async () => {
+            try {
+              setIsSaving(true);
+              setShowHostMenu(false);
+              const response = await publishEvent(event.id || event._id);
+              if (response.event) {
+                Alert.alert(
+                  "Event Published",
+                  "Your event is now live and visible to all users!"
+                );
+                onEventUpdate(response.event);
+              }
+            } catch (error) {
+              console.error("Error publishing event:", error);
+              Alert.alert(
+                "Error",
+                error.response?.data?.message || "Failed to publish event. Please ensure you have completed KYC verification for paid events."
+              );
+            } finally {
+              setIsSaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDraftEvent = () => {
+    Alert.alert(
+      "Save as Draft",
+      "This will unpublish your event and save it as a draft. Users will no longer be able to see or register for it.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Save as Draft",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setIsSaving(true);
+              setShowHostMenu(false);
+              const response = await draftEvent(event.id || event._id);
+              if (response.event) {
+                Alert.alert(
+                  "Saved as Draft",
+                  "Your event has been unpublished and saved as a draft."
+                );
+                onEventUpdate(response.event);
+              }
+            } catch (error) {
+              console.error("Error saving event as draft:", error);
+              Alert.alert(
+                "Error",
+                error.response?.data?.message || "Failed to save event as draft"
               );
             } finally {
               setIsSaving(false);

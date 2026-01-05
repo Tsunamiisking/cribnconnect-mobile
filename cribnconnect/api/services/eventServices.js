@@ -268,3 +268,25 @@ export const unregisterFromEvent = async (eventId) => {
     throw error;
   }
 };
+
+// Publish event (KYC verified users can publish drafts)
+export const publishEvent = async (eventId) => {
+  try {
+    const res = await api.put(`/events/${eventId}/publish`);
+    return res.data;
+  } catch (error) {
+    console.error('Error publishing event:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Save event as draft (unpublish)
+export const draftEvent = async (eventId) => {
+  try {
+    const res = await api.put(`/events/${eventId}/draft`);
+    return res.data;
+  } catch (error) {
+    console.error('Error saving event as draft:', error.response?.data || error.message);
+    throw error;
+  }
+};
