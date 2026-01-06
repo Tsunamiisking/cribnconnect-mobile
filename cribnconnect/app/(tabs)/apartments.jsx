@@ -1,24 +1,23 @@
+import { getHotApartments, getNearbyApartments } from "@/api/services/apartmentServices";
+import ApartmentCard from "@/components/ApartmentCard";
+import NormalHeader from "@/components/NormalHeader";
+import SearchInput from "@/components/SearchInput";
+import { Colors } from "@/constants/Colors";
+import * as Location from 'expo-location';
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
+  ActivityIndicator,
   FlatList,
   Platform,
-  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useState, useEffect } from "react";
-import { Link, router } from "expo-router";
-import ApartmentCard from "@/components/ApartmentCard";
 import { SafeAreaView } from "react-native-safe-area-context";
-import NormalHeader from "@/components/NormalHeader";
-import BackHeader from "@/components/BackHeader";
-import { Colors } from "@/constants/Colors";
-import SearchInput from "@/components/SearchInput";
-import { getHotApartments, getNearbyApartments } from "@/api/services/apartmentServices";
-import * as Location from 'expo-location';
 
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -80,12 +79,6 @@ export default function ApartmentsScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchApartmentsData();
-    setRefreshing(false);
   };
 
   const onRefresh = async () => {
@@ -229,28 +222,22 @@ export default function ApartmentsScreen() {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Match tab bar height
+    paddingBottom: Platform.OS === 'ios' ? 85 : 60,
   },
   searchContainer: {
     paddingHorizontal: 16,
     paddingVertical: 20,
     backgroundColor: 'white',
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 4,
-    // },
-    // shadowOpacity: 0.08,
-    // shadowRadius: 6,
-    // elevation: 3,
-    // zIndex: 1,
     borderBottomWidth: 0.5,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   carouselSection: {
-    marginVertical: 4,
+    marginVertical: 8,
   },
   sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     marginBottom: 16,
   },
@@ -259,6 +246,11 @@ const styles = StyleSheet.create({
     fontFamily: "Sora-Bold",
     color: Colors.black,
   },
+  seeAllText: {
+    fontSize: 14,
+    fontFamily: "Sora-Medium",
+    color: Colors.primary,
+  },
   carouselContainer: {
     paddingLeft: 16,
     paddingRight: 8,
@@ -266,5 +258,33 @@ const styles = StyleSheet.create({
   carouselCardContainer: {
     width: 200,
     marginRight: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray600,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: 'Sora-SemiBold',
+    color: Colors.gray700,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    fontFamily: 'Sora-Regular',
+    color: Colors.gray500,
   },
 });
