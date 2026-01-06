@@ -7,8 +7,9 @@ import {
   RefreshControl,
   FlatList,
   Platform,
+  ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, router } from "expo-router";
 import ApartmentCard from "@/components/ApartmentCard";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,119 +17,184 @@ import NormalHeader from "@/components/NormalHeader";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import SearchInput from "@/components/SearchInput";
-
-// Mock data - TODO: Replace with API integration
-const FEATURED_APARTMENTS = [
-  {
-    id: "1",
-    title: "Modern Studio Downtown",
-    pricePerNight: "$1,200/month",
-    location: "Downtown Manhattan, 5th Avenue",
-    type: "Studio",
-    apartmentType: "full", // full apartment, no roommates
-    amenities: ["Gym", "Rooftop", "Laundry"],
-    imageUri:
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-    rating: 4.8,
-    availability: "Available Now – Dec 31st",
-  },
-  {
-    id: "2",
-    title: "Luxury 2BR Apartment",
-    pricePerNight: "$2,500/month",
-    location: "Upper East Side, Park Avenue",
-    type: "2 Bedroom",
-    apartmentType: "service", // service apartment (hotel-style)
-    amenities: ["Doorman", "Pool", "Parking"],
-    imageUri:
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-    rating: 4.9,
-    availability: "Available Dec 1st – March 15th",
-  },
-  {
-    id: "3",
-    title: "Cozy 1BR with Balcony",
-    pricePerNight: "$1,800/month",
-    location: "Brooklyn Heights, Promenade Street",
-    type: "1 Bedroom",
-    apartmentType: "shared", // shared apartment with roommates
-    amenities: ["Balcony", "Pet Friendly", "Garden"],
-    imageUri:
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-    rating: 4.7,
-    availability: "Available Now – Feb 28th",
-  },
-];
-
-// Carousel sections data
-const CAROUSEL_SECTIONS = [
-  {
-    id: "hot",
-    title: "Hot apartments Near you! 🔥",
-    apartments: FEATURED_APARTMENTS,
-  },
-  {
-    id: "kuje",
-    title: "See more in Kuje, Abuja >",
-    apartments: FEATURED_APARTMENTS.slice(0, 2),
-  },
-  {
-    id: "central",
-    title: "Central Area Listings >",
-    apartments: FEATURED_APARTMENTS,
-  },
-  {
-    id: "luxury",
-    title: "Luxury Apartments >",
-    apartments: FEATURED_APARTMENTS.slice(1),
-  },
-];
+import { getHotApartments, getNearbyApartments } from "@/api/services/apartmentServices";
+import * as Location from 'expo-location';
 
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hotApartments, setHotApartments] = useState([]);
+  const [nearbyApartments, setNearbyApartments] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationPermission, setLocationPermission] = useState(null);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    // TODO: Refresh apartments data from API
-    setTimeout(() => setRefreshing(false), 1000);
+  // Get user's location
+  useEffect(() => {
+    getUserLocation();
+  }, []);
+
+  // Fetch apartments data
+  useEffect(() => {
+    fetchApartmentsData();
+  }, [userLocation]);
+
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
+      
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      setLocationPermission(false);
+    }
   };
 
-  const renderCarouselCard = ({ item }) => (
-    <View style={styles.carouselCardContainer}>
-      <ApartmentCard
-        imageUri={item.imageUri}
-        title={item.title}
-        pricePerNight={item.pricePerNight}
-        location={item.location}
-        availability={item.availability}
-        apartmentType={item.apartmentType}
-        liked={false}
-        onLikeToggle={(liked) => {
-          console.log("Bookmark toggled:", item.id, liked);
-        }}
-        onPress={() => {
-          router.push(`/(screens)/apartment-details/${item.id}`);
-        }}
-      />
-    </View>
-  );
+  const fetchApartmentsData = async () => {
+    try {
+      setLoading(true);
 
-  const renderCarouselSection = ({ item: section }) => (
-    <View style={styles.carouselSection}>
-      <TouchableOpacity style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{section.title}</Text>
-      </TouchableOpacity>
-      
-      <FlatList
-        data={section.apartments}
-        renderItem={renderCarouselCard}
-        keyExtractor={(item) => `${section.id}-${item.id}`}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carouselContainer}
-      />
-    </View>
-  );
+      // Fetch hot apartments
+      const hotResponse = await getHotApartments({ limit: 10 });
+      setHotApartments(hotResponse.apartments || []);
+
+      // Fetch nearby apartments if location is available
+      if (userLocation) {
+        const nearbyResponse = await getNearbyApartments({
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          radius: 10, // 10km radius
+          limit: 10,
+        });
+        setNearbyApartments(nearbyResponse.apartments || []);
+      }
+
+    } catch (error) {
+      console.error('Error fetching apartments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchApartmentsData();
+    setRefreshing(false);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchApartmentsData();
+    setRefreshing(false);
+  };
+
+  const formatApartmentData = (apartment) => {
+    const firstImage = apartment.media?.[0]?.url || null;
+    const locationText = `${apartment.address?.city || ''}, ${apartment.address?.state || ''}`.trim();
+    
+    return {
+      id: apartment._id,
+      title: apartment.title,
+      pricePerNight: `₦${apartment.pricePerNight?.toLocaleString()}/night`,
+      location: locationText,
+      availability: apartment.isAvailable ? "Available Now" : "Not Available",
+      apartmentType: apartment.apartmentCategory,
+      rating: apartment.rating || 0,
+      imageUri: firstImage,
+      liked: false, // TODO: Check if user has bookmarked
+    };
+  };
+
+  const renderCarouselCard = ({ item }) => {
+    const formattedItem = formatApartmentData(item);
+    
+    return (
+      <View style={styles.carouselCardContainer}>
+        <ApartmentCard
+          imageUri={formattedItem.imageUri}
+          title={formattedItem.title}
+          pricePerNight={formattedItem.pricePerNight}
+          location={formattedItem.location}
+          availability={formattedItem.availability}
+          apartmentType={formattedItem.apartmentType}
+          liked={formattedItem.liked}
+          onLikeToggle={(liked) => {
+            console.log("Bookmark toggled:", item._id, liked);
+          }}
+          onPress={() => {
+            router.push(`/(screens)/apartment-details/${item._id}`);
+          }}
+        />
+      </View>
+    );
+  };
+
+  const renderNearbySection = () => {
+    if (!userLocation || nearbyApartments.length === 0) return null;
+
+    return (
+      <View style={styles.carouselSection}>
+        <TouchableOpacity style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🏘️ Apartments Near You</Text>
+        </TouchableOpacity>
+        
+        <FlatList
+          data={nearbyApartments}
+          renderItem={renderCarouselCard}
+          keyExtractor={(item) => `nearby-${item._id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContainer}
+        />
+      </View>
+    );
+  };
+
+  const renderHotSection = () => {
+    if (hotApartments.length === 0) return null;
+
+    return (
+      <View style={styles.carouselSection}>
+        <TouchableOpacity 
+          style={styles.sectionHeader}
+          onPress={() => {
+            // TODO: Navigate to all hot apartments
+            console.log('View all hot apartments');
+          }}
+        >
+          <Text style={styles.sectionTitle}>🔥 Hot Apartments</Text>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+        
+        <FlatList
+          data={hotApartments}
+          renderItem={renderCarouselCard}
+          keyExtractor={(item) => `hot-${item._id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContainer}
+        />
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <NormalHeader title="Apartments" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading apartments...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -136,20 +202,27 @@ export default function ApartmentsScreen() {
       
       <View style={styles.searchContainer}>
         <SearchInput 
-          placeholder="What are you looking for?"
+          placeholder="Search apartments..."
         />
       </View>
 
-      <FlatList
-        data={CAROUSEL_SECTIONS}
-        renderItem={renderCarouselSection}
-        keyExtractor={(item) => item.id}
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mainContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-      />
+      >
+        {renderNearbySection()}
+        {renderHotSection()}
+
+        {nearbyApartments.length === 0 && hotApartments.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No apartments available at the moment</Text>
+            <Text style={styles.emptySubtext}>Pull to refresh</Text>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
