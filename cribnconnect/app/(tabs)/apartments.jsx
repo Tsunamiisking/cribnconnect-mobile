@@ -22,23 +22,24 @@ import { reverseGeocode } from '@/utils/geocodingUtils';
 
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [hotApartments, setHotApartments] = useState([]);
   const [nearbyApartments, setNearbyApartments] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [userCity, setUserCity] = useState(null);
+  const [locationChecked, setLocationChecked] = useState(false);
 
   // Get user's location on mount
   useEffect(() => {
     getUserLocation();
   }, []);
 
-  // Fetch apartments data
+  // Fetch apartments data after location is checked
   useEffect(() => {
-    if (!loading || userCity) {
+    if (locationChecked) {
       fetchApartmentsData();
     }
-  }, [userCity]);
+  }, [locationChecked]);
 
   const getUserLocation = async () => {
     try {
@@ -73,20 +74,12 @@ export default function ApartmentsScreen() {
     } catch (error) {
       console.error('Error getting location:', error);
     } finally {
-      // Always fetch data even if location fails
-      if (!userCity) {
-        fetchApartmentsData();
-      }
+      setLocationChecked(true);
     }
   };
 
   const fetchApartmentsData = async () => {
     try {
-      // Only show loading spinner on initial load, not on refresh
-      if (!refreshing) {
-        setLoading(true);
-      }
-
       // Fetch hot apartments and nearby apartments in parallel
       const promises = [
         getHotApartments({ limit: 10 })
@@ -108,14 +101,17 @@ export default function ApartmentsScreen() {
     } catch (error) {
       console.error('Error fetching apartments:', error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchApartmentsData();
-    setRefreshing(false);
+    try {
+      await fetchApartmentsData();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const formatApartmentData = (apartment) => {
@@ -219,18 +215,13 @@ export default function ApartmentsScreen() {
     );
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <NormalHeader title="Apartments" />
-        <View style={styles.searchContainer}>
-          <SearchInput 
-            placeholder="Search apartments..."
-          />
-        </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading apartments...</Text>
+          <Text style={styles.loadingText}>Finding apartments near you...</Text>
         </View>
       </SafeAreaView>
     );
@@ -240,24 +231,25 @@ export default function ApartmentsScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <NormalHeader title="Apartments" />
       
-      <View style={styles.searchContainer}>
-        <SearchInput 
-          placeholder="Search apartments..."
-        />
-      </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.mainContainer}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
             tintColor={Colors.primary}
             colors={[Colors.primary]}
+            progressBackgroundColor="#ffffff"
           />
         }
       >
+        <View style={styles.searchContainer}>
+          <SearchInput 
+            placeholder="Search apartments..."
+          />
+        </View>
+
         {renderNearbySection()}
         {renderHotSection()}
 
@@ -273,7 +265,8 @@ export default function ApartmentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  scrollContent: {
+    flexGrow: 1,
     paddingBottom: Platform.OS === 'ios' ? 85 : 60,
   },
   searchContainer: {
@@ -315,28 +308,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    fontFamily: 'Sora-Regular',
-    color: Colors.gray600,
+    marginTop: 16,
+    fontSize: 15,
+    fontFamily: 'Sora-Medium',
+    color: Colors.gray700,
+    textAlign: 'center',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
+    paddingHorizontal: 20,
   },
   emptyText: {
     fontSize: 16,
     fontFamily: 'Sora-SemiBold',
     color: Colors.gray700,
     marginBottom: 8,
+    textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
     fontFamily: 'Sora-Regular',
     color: Colors.gray500,
+    textAlign: 'center',
   },
 });
