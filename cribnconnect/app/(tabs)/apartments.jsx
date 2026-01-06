@@ -1,9 +1,8 @@
-import { getHotApartments, getNearbyApartments } from "@/api/services/apartmentServices";
+import { getApartments, getHotApartments } from "@/api/services/apartmentServices";
 import ApartmentCard from "@/components/ApartmentCard";
 import NormalHeader from "@/components/NormalHeader";
 import SearchInput from "@/components/SearchInput";
 import { Colors } from "@/constants/Colors";
-import * as Location from 'expo-location';
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -18,6 +17,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as Location from 'expo-location';
+import { reverseGeocode } from '@/utils/geocodingUtils';
 
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -25,54 +26,84 @@ export default function ApartmentsScreen() {
   const [hotApartments, setHotApartments] = useState([]);
   const [nearbyApartments, setNearbyApartments] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [locationPermission, setLocationPermission] = useState(null);
+  const [userCity, setUserCity] = useState(null);
 
-  // Get user's location
+  // Get user's location on mount
   useEffect(() => {
     getUserLocation();
   }, []);
 
   // Fetch apartments data
   useEffect(() => {
-    fetchApartmentsData();
-  }, [userLocation]);
+    if (!loading || userCity) {
+      fetchApartmentsData();
+    }
+  }, [userCity]);
 
   const getUserLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status === 'granted');
       
       if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({});
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        
         setUserLocation({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+
+        // Get city name from coordinates
+        try {
+          const address = await reverseGeocode([
+            location.coords.longitude,
+            location.coords.latitude
+          ]);
+          
+          // Extract city from address string (format: "City, State, Country")
+          const cityMatch = address.match(/^([^,]+)/);
+          if (cityMatch) {
+            setUserCity(cityMatch[1].trim());
+          }
+        } catch (error) {
+          console.error('Error getting city name:', error);
+        }
       }
     } catch (error) {
       console.error('Error getting location:', error);
-      setLocationPermission(false);
+    } finally {
+      // Always fetch data even if location fails
+      if (!userCity) {
+        fetchApartmentsData();
+      }
     }
   };
 
   const fetchApartmentsData = async () => {
     try {
-      setLoading(true);
-
-      // Fetch hot apartments
-      const hotResponse = await getHotApartments({ limit: 10 });
-      setHotApartments(hotResponse.apartments || []);
-
-      // Fetch nearby apartments if location is available
-      if (userLocation) {
-        const nearbyResponse = await getNearbyApartments({
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-          radius: 10, // 10km radius
-          limit: 10,
-        });
-        setNearbyApartments(nearbyResponse.apartments || []);
+      // Only show loading spinner on initial load, not on refresh
+      if (!refreshing) {
+        setLoading(true);
       }
+
+      // Fetch hot apartments and nearby apartments in parallel
+      const promises = [
+        getHotApartments({ limit: 10 })
+      ];
+
+      // If we have user's city, fetch apartments in that city
+      if (userCity) {
+        promises.push(getApartments({ city: userCity, limit: 10 }));
+      } else {
+        // Otherwise just fetch all apartments
+        promises.push(getApartments({ limit: 10 }));
+      }
+
+      const [hotResponse, nearbyResponse] = await Promise.all(promises);
+
+      setHotApartments(hotResponse.apartments || []);
+      setNearbyApartments(nearbyResponse.apartments || []);
 
     } catch (error) {
       console.error('Error fetching apartments:', error);
@@ -129,12 +160,23 @@ export default function ApartmentsScreen() {
   };
 
   const renderNearbySection = () => {
-    if (!userLocation || nearbyApartments.length === 0) return null;
+    if (nearbyApartments.length === 0) return null;
+
+    const sectionTitle = userCity 
+      ? `🏘️ Apartments in ${userCity}` 
+      : '🏘️ Available Apartments';
 
     return (
       <View style={styles.carouselSection}>
-        <TouchableOpacity style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>🏘️ Apartments Near You</Text>
+        <TouchableOpacity 
+          style={styles.sectionHeader}
+          onPress={() => {
+            // TODO: Navigate to all apartments in city
+            console.log('View all apartments in', userCity);
+          }}
+        >
+          <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+          <Text style={styles.seeAllText}>See All</Text>
         </TouchableOpacity>
         
         <FlatList
@@ -181,6 +223,11 @@ export default function ApartmentsScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <NormalHeader title="Apartments" />
+        <View style={styles.searchContainer}>
+          <SearchInput 
+            placeholder="Search apartments..."
+          />
+        </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
           <Text style={styles.loadingText}>Loading apartments...</Text>
@@ -203,7 +250,12 @@ export default function ApartmentsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mainContainer}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
         }
       >
         {renderNearbySection()}
@@ -212,7 +264,7 @@ export default function ApartmentsScreen() {
         {nearbyApartments.length === 0 && hotApartments.length === 0 && (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No apartments available at the moment</Text>
-            <Text style={styles.emptySubtext}>Pull to refresh</Text>
+            <Text style={styles.emptySubtext}>Pull down to refresh</Text>
           </View>
         )}
       </ScrollView>

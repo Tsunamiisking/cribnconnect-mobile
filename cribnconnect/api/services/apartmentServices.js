@@ -1,8 +1,23 @@
 import api from "../api";
 
-export const getApartments = async () => {
-  const res = await api.get("/apartments");
-  return res.data;
+export const getApartments = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add query parameters
+    if (params.page) queryParams.append('page', params.page);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.city) queryParams.append('city', params.city);
+    if (params.state) queryParams.append('state', params.state);
+    if (params.apartmentCategory) queryParams.append('apartmentCategory', params.apartmentCategory);
+    
+    const queryString = queryParams.toString();
+    const res = await api.get(`/apartments${queryString ? `?${queryString}` : ''}`);
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching apartments:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export const createApartment = async (data) => {
@@ -139,26 +154,6 @@ export const getHotApartments = async (params = {}) => {
     return res.data;
   } catch (error) {
     console.error('Error fetching hot apartments:', error.response?.data || error.message);
-    throw error;
-  }
-};
-
-export const getNearbyApartments = async (params = {}) => {
-  try {
-    const queryParams = new URLSearchParams();
-    
-    // Add query parameters for location-based search
-    if (params.latitude) queryParams.append('latitude', params.latitude);
-    if (params.longitude) queryParams.append('longitude', params.longitude);
-    if (params.radius) queryParams.append('radius', params.radius); // in kilometers
-    if (params.city) queryParams.append('city', params.city);
-    if (params.state) queryParams.append('state', params.state);
-    if (params.limit) queryParams.append('limit', params.limit);
-    
-    const res = await api.get(`/apartments/nearby?${queryParams.toString()}`);
-    return res.data;
-  } catch (error) {
-    console.error('Error fetching nearby apartments:', error.response?.data || error.message);
     throw error;
   }
 };
