@@ -289,7 +289,7 @@ export default function EventsScreen() {
                   data={[1, 2]}
                   renderItem={() => (
                     <View style={styles.carouselCardContainer}>
-                      <EventCardSkeleton />
+                      <EventCardSkeleton style={{ width: '100%' }} />
                     </View>
                   )}
                   keyExtractor={(item) => `skeleton-hot-${item}`}
@@ -309,7 +309,7 @@ export default function EventsScreen() {
                   data={[1, 2]}
                   renderItem={() => (
                     <View style={styles.carouselCardContainer}>
-                      <EventCardSkeleton />
+                      <EventCardSkeleton style={{ width: '100%' }} />
                     </View>
                   )}
                   keyExtractor={(item) => `skeleton-today-${item}`}
@@ -329,7 +329,7 @@ export default function EventsScreen() {
                 <View style={styles.categoriesHeader}>
                   <View style={styles.skeletonCategoryTitle} />
                 </View>
-                <View style={styles.categoriesContent}>
+                <View style={[styles.categoriesContent, { flexDirection: 'row' }]}>
                   {[1, 2, 3, 4].map((item) => (
                     <View key={item} style={styles.skeletonChip} />
                   ))}
@@ -343,7 +343,7 @@ export default function EventsScreen() {
               styles.eventCardContainer,
               index % 2 === 0 ? styles.leftCard : styles.rightCard
             ]}>
-              <EventCardSkeleton />
+              <EventCardSkeleton style={{ flex: 1 }} />
             </View>
           )}
           keyExtractor={(item) => `skeleton-grid-${item}`}
@@ -478,7 +478,7 @@ export default function EventsScreen() {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    paddingHorizontal: 10, 
+    // paddingHorizontal: 10, 
     paddingTop: 10,
     paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Match tab bar height
   },
