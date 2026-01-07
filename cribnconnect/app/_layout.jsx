@@ -5,6 +5,7 @@ import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import Toast from "react-native-toast-message";
+import { PaystackProvider } from "react-native-paystack-webview";
 import { Colors } from "../constants/Colors";
 import { AuthProvider } from "../contexts/AuthContext";
 import "../global.css";
@@ -63,27 +64,29 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <Stack>
-          {/* Auth Flow - Welcome, Login, Register */}
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <PaystackProvider paystackKey={process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY}>
+        <AuthProvider>
+          <Stack>
+            {/* Auth Flow - Welcome, Login, Register */}
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
 
-          {/* Main App - Tab Navigator */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            {/* Main App - Tab Navigator */}
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-          {/* Detail Screens */}
-          <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+            {/* Detail Screens */}
+            <Stack.Screen name="(screens)" options={{ headerShown: false }} />
 
-          {/* Hosting Flows */}
-          <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
+            {/* Hosting Flows */}
+            <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
 
-          {/* 404 Screen */}
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar barStyle="dark-content" backgroundColor="white" />
-        <Toast />
-      </AuthProvider>
+            {/* 404 Screen */}
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar barStyle="dark-content" backgroundColor="white" />
+          <Toast />
+        </AuthProvider>
+      </PaystackProvider>
     </GestureHandlerRootView>
   );
 }

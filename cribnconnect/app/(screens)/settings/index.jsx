@@ -24,6 +24,12 @@ const options = [
     description: "Manage your notification preferences",
     showBadge: true,
   },
+    {
+    name: "My Tickets",
+    route: "/(screens)/my-tickets",
+    description: "Manage your tickets",
+    showBadge: true,
+  },
   {
     name: "Verification",
     route: "/(verification)/index",
