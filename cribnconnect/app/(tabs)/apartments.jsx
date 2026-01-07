@@ -23,8 +23,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [hotApartments, setHotApartments] = useState([]);
   const [nearbyApartments, setNearbyApartments] = useState([]);
+  const [partyApartments, setPartyApartments] = useState([]);
+  const [hotApartments, setHotApartments] = useState([]);
+  const [sharedRoomApartments, setSharedRoomApartments] = useState([]);
+  const [wholeSpaceApartments, setWholeSpaceApartments] = useState([]);
+  const [complexApartments, setComplexApartments] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [userCity, setUserCity] = useState(null);
   const [locationChecked, setLocationChecked] = useState(false);
@@ -80,23 +84,46 @@ export default function ApartmentsScreen() {
 
   const fetchApartmentsData = async () => {
     try {
-      // Fetch hot apartments and nearby apartments in parallel
-      const promises = [
-        getHotApartments({ limit: 10 })
-      ];
+      // Fetch all apartment types in parallel
+      const promises = [];
 
-      // If we have user's city, fetch apartments in that city
+      // 1. Nearby apartments (by city if available)
       if (userCity) {
         promises.push(getApartments({ city: userCity, limit: 10 }));
       } else {
-        // Otherwise just fetch all apartments
         promises.push(getApartments({ limit: 10 }));
       }
 
-      const [hotResponse, nearbyResponse] = await Promise.all(promises);
+      // 2. Get all apartments to filter locally for party, complex, and categories
+      promises.push(getApartments({ limit: 100 })); // Fetch more for filtering
+      
+      // 3. Hot apartments
+      promises.push(getHotApartments({ limit: 10 }));
 
-      setHotApartments(hotResponse.apartments || []);
+      const [nearbyResponse, allApartmentsResponse, hotResponse] = await Promise.all(promises);
+
+      // Set nearby and hot apartments
       setNearbyApartments(nearbyResponse.apartments || []);
+      setHotApartments(hotResponse.apartments || []);
+
+      // Filter from all apartments
+      const allApartments = allApartmentsResponse.apartments || [];
+      
+      // Filter apartments that allow parties
+      const partyApts = allApartments.filter(apt => apt.partiesAllowed === true).slice(0, 10);
+      setPartyApartments(partyApts);
+
+      // Filter by apartment category - Shared Room
+      const sharedRoomApts = allApartments.filter(apt => apt.apartmentCategory === "Shared Room").slice(0, 10);
+      setSharedRoomApartments(sharedRoomApts);
+
+      // Filter by apartment category - Whole Space
+      const wholeSpaceApts = allApartments.filter(apt => apt.apartmentCategory === "Whole Space " || apt.apartmentCategory === "Whole Space").slice(0, 10);
+      setWholeSpaceApartments(wholeSpaceApts);
+
+      // Filter apartments in complexes
+      const complexApts = allApartments.filter(apt => apt.complex && apt.complex.name && apt.complex.name.trim() !== "").slice(0, 10);
+      setComplexApartments(complexApts);
 
     } catch (error) {
       console.error('Error fetching apartments:', error);
@@ -159,15 +186,14 @@ export default function ApartmentsScreen() {
     if (nearbyApartments.length === 0) return null;
 
     const sectionTitle = userCity 
-      ? `🏘️ Apartments in ${userCity}` 
-      : '🏘️ Available Apartments';
+      ? `🏘️ Apartments near you in ${userCity}` 
+      : '🏘️ Apartments near you';
 
     return (
       <View style={styles.carouselSection}>
         <TouchableOpacity 
           style={styles.sectionHeader}
           onPress={() => {
-            // TODO: Navigate to all apartments in city
             console.log('View all apartments in', userCity);
           }}
         >
@@ -187,6 +213,33 @@ export default function ApartmentsScreen() {
     );
   };
 
+  const renderPartySection = () => {
+    if (partyApartments.length === 0) return null;
+
+    return (
+      <View style={styles.carouselSection}>
+        <TouchableOpacity 
+          style={styles.sectionHeader}
+          onPress={() => {
+            console.log('View all party apartments');
+          }}
+        >
+          <Text style={styles.sectionTitle}>🎉 Apartments that allow parties</Text>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+        
+        <FlatList
+          data={partyApartments}
+          renderItem={renderCarouselCard}
+          keyExtractor={(item) => `party-${item._id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContainer}
+        />
+      </View>
+    );
+  };
+
   const renderHotSection = () => {
     if (hotApartments.length === 0) return null;
 
@@ -195,7 +248,6 @@ export default function ApartmentsScreen() {
         <TouchableOpacity 
           style={styles.sectionHeader}
           onPress={() => {
-            // TODO: Navigate to all hot apartments
             console.log('View all hot apartments');
           }}
         >
@@ -207,6 +259,87 @@ export default function ApartmentsScreen() {
           data={hotApartments}
           renderItem={renderCarouselCard}
           keyExtractor={(item) => `hot-${item._id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContainer}
+        />
+      </View>
+    );
+  };
+
+  const renderSharedRoomSection = () => {
+    if (sharedRoomApartments.length === 0) return null;
+
+    return (
+      <View style={styles.carouselSection}>
+        <TouchableOpacity 
+          style={styles.sectionHeader}
+          onPress={() => {
+            console.log('View all shared room apartments');
+          }}
+        >
+          <Text style={styles.sectionTitle}>🛏️ Shared Room Apartments</Text>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+        
+        <FlatList
+          data={sharedRoomApartments}
+          renderItem={renderCarouselCard}
+          keyExtractor={(item) => `shared-${item._id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContainer}
+        />
+      </View>
+    );
+  };
+
+  const renderWholeSpaceSection = () => {
+    if (wholeSpaceApartments.length === 0) return null;
+
+    return (
+      <View style={styles.carouselSection}>
+        <TouchableOpacity 
+          style={styles.sectionHeader}
+          onPress={() => {
+            console.log('View all whole space apartments');
+          }}
+        >
+          <Text style={styles.sectionTitle}>🏠 Whole Space Apartments</Text>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+        
+        <FlatList
+          data={wholeSpaceApartments}
+          renderItem={renderCarouselCard}
+          keyExtractor={(item) => `whole-${item._id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContainer}
+        />
+      </View>
+    );
+  };
+
+  const renderComplexSection = () => {
+    if (complexApartments.length === 0) return null;
+
+    return (
+      <View style={styles.carouselSection}>
+        <TouchableOpacity 
+          style={styles.sectionHeader}
+          onPress={() => {
+            console.log('View all complex apartments');
+          }}
+        >
+          <Text style={styles.sectionTitle}>🏢 Apartments in Complexes</Text>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+        
+        <FlatList
+          data={complexApartments}
+          renderItem={renderCarouselCard}
+          keyExtractor={(item) => `complex-${item._id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carouselContainer}
@@ -251,6 +384,26 @@ export default function ApartmentsScreen() {
             />
           </View>
 
+          {/* Party Apartments Skeleton */}
+          <View style={styles.carouselSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonSeeAll} />
+            </View>
+            <FlatList
+              data={[1, 2]}
+              renderItem={() => (
+                <View style={styles.carouselCardContainer}>
+                  <ApartmentCardSkeleton style={{ width: '100%' }} />
+                </View>
+              )}
+              keyExtractor={(item) => `skeleton-party-${item}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            />
+          </View>
+
           {/* Hot Apartments Skeleton */}
           <View style={styles.carouselSection}>
             <View style={styles.sectionHeader}>
@@ -265,6 +418,66 @@ export default function ApartmentsScreen() {
                 </View>
               )}
               keyExtractor={(item) => `skeleton-hot-${item}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            />
+          </View>
+
+          {/* Shared Room Apartments Skeleton */}
+          <View style={styles.carouselSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonSeeAll} />
+            </View>
+            <FlatList
+              data={[1, 2]}
+              renderItem={() => (
+                <View style={styles.carouselCardContainer}>
+                  <ApartmentCardSkeleton style={{ width: '100%' }} />
+                </View>
+              )}
+              keyExtractor={(item) => `skeleton-shared-${item}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            />
+          </View>
+
+          {/* Whole Space Apartments Skeleton */}
+          <View style={styles.carouselSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonSeeAll} />
+            </View>
+            <FlatList
+              data={[1, 2]}
+              renderItem={() => (
+                <View style={styles.carouselCardContainer}>
+                  <ApartmentCardSkeleton style={{ width: '100%' }} />
+                </View>
+              )}
+              keyExtractor={(item) => `skeleton-whole-${item}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            />
+          </View>
+
+          {/* Complex Apartments Skeleton */}
+          <View style={styles.carouselSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonSeeAll} />
+            </View>
+            <FlatList
+              data={[1, 2]}
+              renderItem={() => (
+                <View style={styles.carouselCardContainer}>
+                  <ApartmentCardSkeleton style={{ width: '100%' }} />
+                </View>
+              )}
+              keyExtractor={(item) => `skeleton-complex-${item}`}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.carouselContainer}
@@ -299,9 +512,18 @@ export default function ApartmentsScreen() {
         </View>
 
         {renderNearbySection()}
+        {renderPartySection()}
         {renderHotSection()}
+        {renderSharedRoomSection()}
+        {renderWholeSpaceSection()}
+        {renderComplexSection()}
 
-        {nearbyApartments.length === 0 && hotApartments.length === 0 && (
+        {nearbyApartments.length === 0 && 
+         partyApartments.length === 0 && 
+         hotApartments.length === 0 && 
+         sharedRoomApartments.length === 0 && 
+         wholeSpaceApartments.length === 0 && 
+         complexApartments.length === 0 && (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No apartments available at the moment</Text>
             <Text style={styles.emptySubtext}>Pull down to refresh</Text>
