@@ -41,28 +41,27 @@ const SkeletonLoader = ({ width, height, borderRadius = 8, style }) => {
 export const ApartmentCardSkeleton = () => {
   return (
     <View style={styles.apartmentCard}>
-      <SkeletonLoader width="100%" height={200} borderRadius={12} />
+      {/* Image skeleton - 160px height to match actual card */}
+      <SkeletonLoader width="100%" height={160} borderRadius={12} style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} />
+      
+      {/* Content below image */}
       <View style={styles.apartmentContent}>
-        <View style={styles.apartmentHeader}>
-          <View style={styles.apartmentTitleRow}>
-            <SkeletonLoader width="60%" height={20} />
-            <SkeletonLoader width={80} height={24} borderRadius={6} />
-          </View>
-          <SkeletonLoader width="50%" height={16} style={{ marginTop: 8 }} />
+        {/* Title */}
+        <SkeletonLoader width="70%" height={14} style={{ marginBottom: 4 }} />
+        
+        {/* Price */}
+        <SkeletonLoader width="45%" height={14} style={{ marginBottom: 8 }} />
+        
+        {/* Location row with icon space */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <SkeletonLoader width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+          <SkeletonLoader width="65%" height={12} />
         </View>
-
-        <View style={styles.apartmentStats}>
-          <SkeletonLoader width={80} height={16} />
-          <SkeletonLoader width={100} height={16} />
-          <SkeletonLoader width={90} height={16} />
-        </View>
-
-        <View style={styles.apartmentFooter}>
-          <View style={styles.footerLeftSection}>
-            <SkeletonLoader width={120} height={16} style={{ marginBottom: 4 }} />
-            <SkeletonLoader width={100} height={14} />
-          </View>
-          <SkeletonLoader width={60} height={32} borderRadius={8} />
+        
+        {/* Availability row with icon space */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <SkeletonLoader width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+          <SkeletonLoader width="80%" height={12} />
         </View>
       </View>
     </View>
@@ -72,28 +71,27 @@ export const ApartmentCardSkeleton = () => {
 export const EventCardSkeleton = () => {
   return (
     <View style={styles.eventCard}>
-      <SkeletonLoader width="100%" height={200} borderRadius={12} />
+      {/* Image skeleton - 160px height to match actual card */}
+      <SkeletonLoader width="100%" height={160} borderRadius={12} style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} />
+      
+      {/* Content below image */}
       <View style={styles.eventContent}>
-        <View style={styles.eventHeader}>
-          <View style={styles.eventTitleRow}>
-            <SkeletonLoader width="65%" height={20} />
-            <SkeletonLoader width={70} height={24} borderRadius={6} />
-          </View>
-          <SkeletonLoader width="45%" height={16} style={{ marginTop: 8 }} />
+        {/* Title */}
+        <SkeletonLoader width="75%" height={14} style={{ marginBottom: 4 }} />
+        
+        {/* Price */}
+        <SkeletonLoader width="50%" height={14} style={{ marginBottom: 8 }} />
+        
+        {/* Location row with icon space */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <SkeletonLoader width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+          <SkeletonLoader width="70%" height={12} />
         </View>
-
-        <View style={styles.eventStats}>
-          <SkeletonLoader width={90} height={16} />
-          <SkeletonLoader width={110} height={16} />
-          <SkeletonLoader width={100} height={16} />
-        </View>
-
-        <View style={styles.eventFooter}>
-          <View style={styles.footerLeftSection}>
-            <SkeletonLoader width={130} height={16} style={{ marginBottom: 4 }} />
-            <SkeletonLoader width={110} height={14} />
-          </View>
-          <SkeletonLoader width={60} height={32} borderRadius={8} />
+        
+        {/* Schedule row with icon space */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <SkeletonLoader width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+          <SkeletonLoader width="75%" height={12} />
         </View>
       </View>
     </View>
@@ -127,77 +125,22 @@ const styles = StyleSheet.create({
   apartmentCard: {
     backgroundColor: Colors.white,
     borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.borderColor,
+    borderColor: '#e4e4e7', // zinc-200
   },
   eventCard: {
     backgroundColor: Colors.white,
     borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.borderColor,
+    borderColor: '#e4e4e7', // zinc-200
   },
   apartmentContent: {
-    padding: 16,
+    padding: 12,
   },
   eventContent: {
-    padding: 16,
-  },
-  apartmentHeader: {
-    marginBottom: 12,
-  },
-  eventHeader: {
-    marginBottom: 12,
-  },
-  apartmentTitleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  eventTitleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  apartmentStats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.gray200,
-  },
-  eventStats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.gray200,
-  },
-  apartmentFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  eventFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  footerLeftSection: {
-    flex: 1,
+    padding: 12,
   },
 });
 
