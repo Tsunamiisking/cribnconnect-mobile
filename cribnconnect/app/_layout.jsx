@@ -11,6 +11,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import "../global.css";
 import useHostingStore from "../stores/hostingStore";
 import { useHeartbeat } from "../hooks/useHeartbeat";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   // Start heartbeat service for active status tracking
@@ -46,9 +47,8 @@ export default function RootLayout() {
       // Check location permission when app starts
       const checkPermissions = async () => {
         try {
-          const { checkLocationPermission } = await import(
-            "@/utils/userLocation"
-          );
+          const { checkLocationPermission } =
+            await import("@/utils/userLocation");
           await checkLocationPermission();
         } catch (error) {
           console.error("Error checking location permissions:", error);
@@ -64,29 +64,42 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaystackProvider paystackKey={process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY}>
-        <AuthProvider>
-          <Stack>
-            {/* Auth Flow - Welcome, Login, Register */}
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <SafeAreaProvider>
+        <PaystackProvider
+          debug
+          publicKey={process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY}
+          channels={[
+            "card",
+            "bank",
+            "ussd",
+            "qr",
+            "mobile_money",
+            "bank_transfer",
+          ]}
+        >
+          <AuthProvider>
+            <Stack>
+              {/* Auth Flow - Welcome, Login, Register */}
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
 
-            {/* Main App - Tab Navigator */}
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              {/* Main App - Tab Navigator */}
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-            {/* Detail Screens */}
-            <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+              {/* Detail Screens */}
+              <Stack.Screen name="(screens)" options={{ headerShown: false }} />
 
-            {/* Hosting Flows */}
-            <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
+              {/* Hosting Flows */}
+              <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
 
-            {/* 404 Screen */}
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar barStyle="dark-content" backgroundColor="white" />
-          <Toast />
-        </AuthProvider>
-      </PaystackProvider>
+              {/* 404 Screen */}
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar barStyle="dark-content" backgroundColor="white" />
+            <Toast />
+          </AuthProvider>
+        </PaystackProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

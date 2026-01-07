@@ -3,9 +3,10 @@ import { purchaseTickets, verifyPayment } from "@/api/services/ticketServices";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePaystack } from "@/hooks/usePaystack";
 import { router, useLocalSearchParams } from "expo-router";
 import { Clock, Minus, Plus, Ticket as TicketIcon } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,23 +17,29 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Paystack, PaystackProps} from "react-native-paystack-webview";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TicketPurchaseScreen = () => {
   const { id } = useLocalSearchParams(); // Event ID
   const { publicProfile } = useAuth();
-  const paystackWebViewRef = useRef(PaystackProps.PayStackRef);
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [purchasing, setPurchasing] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState(null);
+  const { popup } = usePaystack();
 
   useEffect(() => {
     fetchEventDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (paymentConfig) {
+      console.log("Payment config set, triggering payment:", paymentConfig);
+      makePayment();
+    }
+  }, [paymentConfig]);
 
   const fetchEventDetails = async () => {
     try {
@@ -81,6 +88,29 @@ const TicketPurchaseScreen = () => {
     return feePerTicket * quantity;
   };
 
+  
+  const makePayment = () => {
+    popup.newTransaction({
+      reference: paymentConfig.reference,
+      amount: paymentConfig.amount,
+      email: paymentConfig.email,
+      onSuccess: handlePaymentSuccess,
+      onCancel: () => {
+        setPurchasing(false);
+        setPaymentConfig(null);
+      },
+      onLoad: (res) => {
+        console.log("Payment loading:", res);
+      },
+      onError: (e) => {
+        console.error("Payment error:", e);
+        Alert.alert("Payment Error", "An error occurred during payment.");
+        setPurchasing(false);
+        setPaymentConfig(null);
+      },
+    })
+  };
+
   const handlePurchase = async () => {
     if (!selectedTicket) {
       Alert.alert("Error", "Please select a ticket type");
@@ -102,17 +132,14 @@ const TicketPurchaseScreen = () => {
         quantity
       );
 
-      // Set payment config and trigger Paystack WebView
+      console.log("Purchase response:", response);
+
+      // Set payment config - this will trigger Paystack to auto-start
       setPaymentConfig({
         reference: response.payment.reference,
-        amount: response.payment.amount / 100, // Convert kobo to naira for display
+        amount: response.payment.amount,
         email: publicProfile.email,
       });
-
-      // Trigger the payment WebView
-      setTimeout(() => {
-        paystackWebViewRef.current.startTransaction();
-      }, 100);
     } catch (error) {
       console.error("Purchase error:", error);
       const message =
@@ -419,30 +446,6 @@ const TicketPurchaseScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      )}
-
-      {/* Paystack Payment WebView */}
-      {paymentConfig && (
-        <Paystack
-          paystackKey={process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY}
-          amount={paymentConfig.amount.toString()}
-          billingEmail={paymentConfig.email}
-          billingMobile={publicProfile?.phone || ""}
-          billingName={`${publicProfile?.firstName || ""} ${publicProfile?.lastName || ""}`.trim()}
-          reference={paymentConfig.reference}
-          channels={[
-            "card",
-            "bank",
-            "ussd",
-            "qr",
-            "mobile_money",
-            "bank_transfer",
-          ]}
-          onSuccess={handlePaymentSuccess}
-          onCancel={handlePaymentCancel}
-          ref={paystackWebViewRef}
-          activityIndicatorColor={Colors.primary}
-        />
       )}
     </SafeAreaView>
   );
