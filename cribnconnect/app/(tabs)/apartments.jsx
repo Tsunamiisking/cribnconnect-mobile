@@ -2,6 +2,7 @@ import { getApartments, getHotApartments } from "@/api/services/apartmentService
 import ApartmentCard from "@/components/ApartmentCard";
 import NormalHeader from "@/components/NormalHeader";
 import SearchInput from "@/components/SearchInput";
+import { ApartmentCardSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -219,10 +220,58 @@ export default function ApartmentsScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <NormalHeader title="Apartments" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Finding apartments near you...</Text>
-        </View>
+        
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.searchContainer}>
+            <SearchInput 
+              placeholder="Search apartments..."
+              editable={false}
+            />
+          </View>
+
+          {/* Nearby Apartments Skeleton */}
+          <View style={styles.carouselSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonSeeAll} />
+            </View>
+            <FlatList
+              data={[1, 2]}
+              renderItem={() => (
+                <View style={styles.carouselCardContainer}>
+                  <ApartmentCardSkeleton />
+                </View>
+              )}
+              keyExtractor={(item) => `skeleton-nearby-${item}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            />
+          </View>
+
+          {/* Hot Apartments Skeleton */}
+          <View style={styles.carouselSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonSeeAll} />
+            </View>
+            <FlatList
+              data={[1, 2]}
+              renderItem={() => (
+                <View style={styles.carouselCardContainer}>
+                  <ApartmentCardSkeleton />
+                </View>
+              )}
+              keyExtractor={(item) => `skeleton-hot-${item}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -303,6 +352,18 @@ const styles = StyleSheet.create({
   carouselCardContainer: {
     width: 200,
     marginRight: 16,
+  },
+  skeletonTitle: {
+    width: 120,
+    height: 20,
+    backgroundColor: Colors.gray200,
+    borderRadius: 4,
+  },
+  skeletonSeeAll: {
+    width: 60,
+    height: 16,
+    backgroundColor: Colors.gray200,
+    borderRadius: 4,
   },
   loadingContainer: {
     flex: 1,

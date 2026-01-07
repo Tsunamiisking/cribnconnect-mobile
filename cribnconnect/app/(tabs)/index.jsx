@@ -3,6 +3,7 @@ import EventCard from "@/components/EventCard";
 import EventsModal from "@/components/EventsModal";
 import NormalHeader from "@/components/NormalHeader";
 import TextSearchInput from "@/components/TextSearchInput";
+import { EventCardSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -274,12 +275,84 @@ export default function EventsScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <NormalHeader title="Events" />
       
-      {/* Loading State */}
+      {/* Loading State with Skeleton */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading events...</Text>
-        </View>
+        <FlatList
+          ListHeaderComponent={
+            <>
+              {/* Hot Events Skeleton */}
+              <View style={styles.carouselSection}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.skeletonTitle} />
+                  <View style={styles.skeletonSeeAll} />
+                </View>
+                <FlatList
+                  data={[1, 2]}
+                  renderItem={() => (
+                    <View style={styles.carouselCardContainer}>
+                      <EventCardSkeleton />
+                    </View>
+                  )}
+                  keyExtractor={(item) => `skeleton-hot-${item}`}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.carouselContainer}
+                />
+              </View>
+
+              {/* Today's Events Skeleton */}
+              <View style={styles.carouselSection}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.skeletonTitle} />
+                  <View style={styles.skeletonSeeAll} />
+                </View>
+                <FlatList
+                  data={[1, 2]}
+                  renderItem={() => (
+                    <View style={styles.carouselCardContainer}>
+                      <EventCardSkeleton />
+                    </View>
+                  )}
+                  keyExtractor={(item) => `skeleton-today-${item}`}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.carouselContainer}
+                />
+              </View>
+
+              {/* Search Skeleton */}
+              <View style={styles.searchSkeletonContainer}>
+                <View style={styles.searchSkeleton} />
+              </View>
+
+              {/* Categories Skeleton */}
+              <View style={styles.categoriesContainer}>
+                <View style={styles.categoriesHeader}>
+                  <View style={styles.skeletonCategoryTitle} />
+                </View>
+                <View style={styles.categoriesContent}>
+                  {[1, 2, 3, 4].map((item) => (
+                    <View key={item} style={styles.skeletonChip} />
+                  ))}
+                </View>
+              </View>
+            </>
+          }
+          data={[1, 2, 3, 4, 5, 6]}
+          renderItem={({ index }) => (
+            <View style={[
+              styles.eventCardContainer,
+              index % 2 === 0 ? styles.leftCard : styles.rightCard
+            ]}>
+              <EventCardSkeleton />
+            </View>
+          )}
+          keyExtractor={(item) => `skeleton-grid-${item}`}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.mainContainer}
+          showsVerticalScrollIndicator={false}
+        />
       ) : (
         <FlatList
           ListHeaderComponent={
@@ -528,5 +601,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.gray500,
     textAlign: 'center',
+  },
+  // Skeleton Styles
+  skeletonTitle: {
+    width: 120,
+    height: 20,
+    backgroundColor: Colors.gray200,
+    borderRadius: 4,
+  },
+  skeletonSeeAll: {
+    width: 60,
+    height: 16,
+    backgroundColor: Colors.gray200,
+    borderRadius: 4,
+  },
+  searchSkeletonContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  searchSkeleton: {
+    width: '100%',
+    height: 48,
+    backgroundColor: Colors.gray200,
+    borderRadius: 24,
+  },
+  skeletonCategoryTitle: {
+    width: 100,
+    height: 20,
+    backgroundColor: Colors.gray200,
+    borderRadius: 4,
+  },
+  skeletonChip: {
+    width: 80,
+    height: 36,
+    backgroundColor: Colors.gray200,
+    borderRadius: 18,
+    marginRight: 12,
   },
 });
