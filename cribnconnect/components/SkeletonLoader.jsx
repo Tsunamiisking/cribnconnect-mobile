@@ -38,9 +38,9 @@ const SkeletonLoader = ({ width, height, borderRadius = 8, style }) => {
   );
 };
 
-export const ApartmentCardSkeleton = () => {
+export const ApartmentCardSkeleton = ({ style }) => {
   return (
-    <View style={styles.apartmentCard}>
+    <View style={[styles.apartmentCard, style]}>
       {/* Image skeleton - 160px height to match actual card */}
       <SkeletonLoader width="100%" height={160} borderRadius={12} style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} />
       
@@ -68,9 +68,9 @@ export const ApartmentCardSkeleton = () => {
   );
 };
 
-export const EventCardSkeleton = () => {
+export const EventCardSkeleton = ({ style }) => {
   return (
-    <View style={styles.eventCard}>
+    <View style={[styles.eventCard, style]}>
       {/* Image skeleton - 160px height to match actual card */}
       <SkeletonLoader width="100%" height={160} borderRadius={12} style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }} />
       

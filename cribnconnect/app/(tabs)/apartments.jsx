@@ -241,7 +241,7 @@ export default function ApartmentsScreen() {
               data={[1, 2]}
               renderItem={() => (
                 <View style={styles.carouselCardContainer}>
-                  <ApartmentCardSkeleton />
+                  <ApartmentCardSkeleton style={{ width: '100%' }} />
                 </View>
               )}
               keyExtractor={(item) => `skeleton-nearby-${item}`}
@@ -261,7 +261,7 @@ export default function ApartmentsScreen() {
               data={[1, 2]}
               renderItem={() => (
                 <View style={styles.carouselCardContainer}>
-                  <ApartmentCardSkeleton />
+                  <ApartmentCardSkeleton style={{ width: '100%' }} />
                 </View>
               )}
               keyExtractor={(item) => `skeleton-hot-${item}`}
