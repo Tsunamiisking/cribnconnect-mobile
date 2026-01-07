@@ -2,20 +2,19 @@ import { getEvents, getHotEvents } from "@/api/services/eventServices";
 import EventCard from "@/components/EventCard";
 import EventsModal from "@/components/EventsModal";
 import NormalHeader from "@/components/NormalHeader";
-import TextSearchInput from "@/components/TextSearchInput";
 import { EventCardSkeleton } from "@/components/SkeletonLoader";
+import TextSearchInput from "@/components/TextSearchInput";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Platform,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    FlatList,
+    Platform,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

@@ -4,10 +4,11 @@ import NormalHeader from "@/components/NormalHeader";
 import SearchInput from "@/components/SearchInput";
 import { ApartmentCardSkeleton } from "@/components/SkeletonLoader";
 import { Colors } from "@/constants/Colors";
+import { reverseGeocode } from '@/utils/geocodingUtils';
+import * as Location from 'expo-location';
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Platform,
   RefreshControl,
@@ -15,11 +16,9 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from 'expo-location';
-import { reverseGeocode } from '@/utils/geocodingUtils';
 
 export default function ApartmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
