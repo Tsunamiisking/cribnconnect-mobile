@@ -3,7 +3,7 @@ import { purchaseTickets, verifyPayment } from "@/api/services/ticketServices";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePaystack } from "@/hooks/usePaystack";
+import { usePaystack } from "react-native-paystack-webview";
 import { router, useLocalSearchParams } from "expo-router";
 import { Clock, Minus, Plus, Ticket as TicketIcon } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const TicketPurchaseScreen = () => {
   const { id } = useLocalSearchParams(); // Event ID
-  const { publicProfile } = useAuth();
+  const { publicProfile, user } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -33,13 +33,6 @@ const TicketPurchaseScreen = () => {
   useEffect(() => {
     fetchEventDetails();
   }, [id]);
-
-  useEffect(() => {
-    if (paymentConfig) {
-      console.log("Payment config set, triggering payment:", paymentConfig);
-      makePayment();
-    }
-  }, [paymentConfig]);
 
   const fetchEventDetails = async () => {
     try {
@@ -88,41 +81,22 @@ const TicketPurchaseScreen = () => {
     return feePerTicket * quantity;
   };
 
-  
-  const makePayment = () => {
+  const makePayment = (config) => {
     popup.newTransaction({
-      reference: paymentConfig.reference,
-      amount: paymentConfig.amount,
-      email: paymentConfig.email,
+      reference: config.reference,
+      amount: config.amount,
+      email: user?.email,
       onSuccess: handlePaymentSuccess,
-      onCancel: () => {
-        setPurchasing(false);
-        setPaymentConfig(null);
-      },
-      onLoad: (res) => {
-        console.log("Payment loading:", res);
-      },
+      onCancel: handlePaymentCancel,
       onError: (e) => {
         console.error("Payment error:", e);
-        Alert.alert("Payment Error", "An error occurred during payment.");
         setPurchasing(false);
         setPaymentConfig(null);
       },
-    })
+    });
   };
 
   const handlePurchase = async () => {
-    if (!selectedTicket) {
-      Alert.alert("Error", "Please select a ticket type");
-      return;
-    }
-
-    const available = getAvailableTickets(selectedTicket);
-    if (quantity > available) {
-      Alert.alert("Error", `Only ${available} tickets available`);
-      return;
-    }
-
     try {
       setPurchasing(true);
 
@@ -134,55 +108,35 @@ const TicketPurchaseScreen = () => {
 
       console.log("Purchase response:", response);
 
-      // Set payment config - this will trigger Paystack to auto-start
-      setPaymentConfig({
+      const config = {
         reference: response.payment.reference,
         amount: response.payment.amount,
         email: publicProfile.email,
-      });
+      };
+
+      setPaymentConfig(config); // optional (for later verification)
+      makePayment(config); // ✅ USE IT DIRECTLY
     } catch (error) {
       console.error("Purchase error:", error);
-      const message =
-        error.response?.data?.message || "Failed to initialize payment";
-      Alert.alert("Purchase Failed", message);
       setPurchasing(false);
     }
   };
 
   const handlePaymentSuccess = async (response) => {
     console.log("Payment successful:", response);
+
     setPurchasing(false);
-    setPaymentConfig(null);
 
     try {
-      // Verify payment with backend
-      const verificationResult = await verifyPayment(paymentConfig.reference);
+      await verifyPayment(response.reference); // ✅ ALWAYS USE THIS
 
-      Alert.alert(
-        "Success! 🎉",
-        `Your ticket purchase was successful!\n\nTickets: ${quantity}x ${selectedTicket.name}`,
-        [
-          {
-            text: "View My Tickets",
-            onPress: () => {
-              router.replace("/(tabs)/bookmarks");
-            },
-          },
-          {
-            text: "OK",
-            onPress: () => {
-              router.back();
-            },
-          },
-        ]
-      );
+      Alert.alert("Success 🎉", `Your ticket purchase was successful!`, [
+        { text: "OK", onPress: () => router.back() },
+      ]);
     } catch (error) {
       console.error("Verification error:", error);
-      Alert.alert(
-        "Payment Received",
-        "Your payment is being processed. Check your tickets section shortly.",
-        [{ text: "OK", onPress: () => router.back() }]
-      );
+    } finally {
+      setPaymentConfig(null);
     }
   };
 
