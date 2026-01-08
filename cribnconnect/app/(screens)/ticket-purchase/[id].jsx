@@ -3,10 +3,9 @@ import { purchaseTickets, verifyPayment } from "@/api/services/ticketServices";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePaystack } from "react-native-paystack-webview";
 import { router, useLocalSearchParams } from "expo-router";
 import { Clock, Minus, Plus, Ticket as TicketIcon } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { usePaystack } from "react-native-paystack-webview";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TicketPurchaseScreen = () => {
@@ -27,7 +27,7 @@ const TicketPurchaseScreen = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [purchasing, setPurchasing] = useState(false);
-  const [paymentConfig, setPaymentConfig] = useState(null);
+  const lastReferenceRef = useRef(null); // Track last used reference
   const { popup } = usePaystack();
 
   useEffect(() => {
@@ -82,16 +82,44 @@ const TicketPurchaseScreen = () => {
   };
 
   const makePayment = (config) => {
+    // Prevent duplicate transactions
+    if (lastReferenceRef.current === config.reference) {
+      console.log("⚠️ Duplicate reference detected, skipping:", config.reference);
+      return;
+    }
+
+    lastReferenceRef.current = config.reference;
+    console.log("✅ Starting payment with reference:", config.reference);
+
     popup.newTransaction({
       reference: config.reference,
       amount: config.amount,
-      email: user?.email,
+      email: config.email,
+
       onSuccess: handlePaymentSuccess,
-      onCancel: handlePaymentCancel,
-      onError: (e) => {
-        console.error("Payment error:", e);
+
+      onCancel: () => {
+        console.log("Payment cancelled");
         setPurchasing(false);
-        setPaymentConfig(null);
+        lastReferenceRef.current = null; // Clear reference for retry
+        
+        Alert.alert(
+          "Payment Cancelled",
+          "Your reservation is still active for 10 minutes. Click 'Continue to Payment' to try again.",
+          [{ text: "OK" }]
+        );
+      },
+
+      onError: (error) => {
+        console.log("Payment error:", error);
+        setPurchasing(false);
+        lastReferenceRef.current = null; // Clear reference for retry
+        
+        Alert.alert(
+          "Payment Error",
+          error?.message || "An error occurred during payment. Please try again.",
+          [{ text: "OK" }]
+        );
       },
     });
   };
@@ -100,6 +128,7 @@ const TicketPurchaseScreen = () => {
     try {
       setPurchasing(true);
 
+      // Always create a NEW reservation (with new reference)
       const response = await purchaseTickets(
         event._id,
         selectedTicket.name,
@@ -111,45 +140,41 @@ const TicketPurchaseScreen = () => {
       const config = {
         reference: response.payment.reference,
         amount: response.payment.amount,
-        email: publicProfile.email,
+        email: user?.email,
       };
 
-      setPaymentConfig(config); // optional (for later verification)
-      makePayment(config); // ✅ USE IT DIRECTLY
+      makePayment(config);
     } catch (error) {
       console.error("Purchase error:", error);
       setPurchasing(false);
+      Alert.alert(
+        "Purchase Failed",
+        error.message || "Failed to initiate payment. Please try again.",
+        [{ text: "OK" }]
+      );
     }
   };
 
   const handlePaymentSuccess = async (response) => {
     console.log("Payment successful:", response);
 
+    lastReferenceRef.current = null; // Clear reference
     setPurchasing(false);
 
     try {
-      await verifyPayment(response.reference); // ✅ ALWAYS USE THIS
+      await verifyPayment(response.reference); 
 
       Alert.alert("Success 🎉", `Your ticket purchase was successful!`, [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error) {
       console.error("Verification error:", error);
-    } finally {
-      setPaymentConfig(null);
+      Alert.alert(
+        "Verification Failed",
+        "Payment successful but verification failed. Please contact support.",
+        [{ text: "OK" }]
+      );
     }
-  };
-
-  const handlePaymentCancel = (e) => {
-    console.log("Payment cancelled:", e);
-    setPurchasing(false);
-    setPaymentConfig(null);
-
-    Alert.alert(
-      "Payment Cancelled",
-      "You cancelled the payment. Your reservation will expire in 10 minutes.",
-      [{ text: "OK" }]
-    );
   };
 
   if (loading) {
