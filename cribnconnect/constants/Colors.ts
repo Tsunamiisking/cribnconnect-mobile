@@ -21,6 +21,26 @@ export const Colors = {
   amber: "#f59e0b", // Used for day time indicator
   indigo: "#6366f1", // Used for night time indicator
   
+  // Red scale variations
+  red50: "#fee2e2",
+  red100: "#fecaca",
+  red500: "#ef4444",
+  
+  // Green scale variations
+  green50: "#dcfce7",
+  green100: "#d1fae5",
+  green600: "#16a34a",
+  
+  // Blue scale variations
+  blue500: "#3b82f6",
+  
+  // Amber scale variations
+  amber50: "#fef3c7",
+  amber500: "#f59e0b",
+  
+  // Purple scale variations
+  purple50: "#ede9fe",
+  
   // Gray scale variations
   gray50: "#f9fafb",
   gray100: "#f3f4f6", 

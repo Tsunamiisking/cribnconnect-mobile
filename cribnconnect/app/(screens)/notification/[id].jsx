@@ -363,14 +363,14 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   rejectButton: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: Colors.red50,
     borderWidth: 1,
-    borderColor: '#fecaca',
+    borderColor: Colors.red100,
   },
   rejectButtonText: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 16,
-    color: '#ef4444',
+    color: Colors.error,
   },
   codeContainer: {
     marginTop: 20,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     color: Colors.gray900,
   },
   validityBadge: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: Colors.green50,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   validityText: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 12,
-    color: '#16a34a',
+    color: Colors.green600,
   },
   codeBox: {
     backgroundColor: Colors.white,
@@ -472,39 +472,39 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   join_approvedBadge: {
-    backgroundColor: '#10b981',
+    backgroundColor: Colors.success,
   },
   request_approved_confirmationBadge: {
-    backgroundColor: '#10b981',
+    backgroundColor: Colors.success,
   },
   user_joinedBadge: {
     backgroundColor: Colors.primary,
   },
   request_rejectedBadge: {
-    backgroundColor: '#ef4444',
+    backgroundColor: Colors.error,
   },
   infoBadge: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: Colors.blue500,
   },
   warningBadge: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: Colors.warning,
   },
   successBadge: {
-    backgroundColor: '#10B981',
+    backgroundColor: Colors.success,
   },
   bookingBadge: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: Colors.green50,
   },
   eventBadge: {
-    backgroundColor: '#DBEAFE',
+    backgroundColor: Colors.blue50,
   },
   updateBadge: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: Colors.amber50,
   },
   payoutBadge: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: Colors.green100,
   },
   analyticsBadge: {
-    backgroundColor: '#EDE9FE',
+    backgroundColor: Colors.purple50,
   },
 });
