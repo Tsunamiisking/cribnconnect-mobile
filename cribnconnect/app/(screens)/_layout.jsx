@@ -109,6 +109,10 @@ export default function ScreensLayout() {
         options={{ title: "Public Profile", headerShown: false }}
       />
       <Stack.Screen
+        name="paystack-checkout/[id]"
+        options={{ title: "Paystack Checkout", headerShown: false }}
+      />
+      <Stack.Screen
         name="public-profile/[id]"
         options={{ title: "Edit Profile", headerShown: false }}
       />

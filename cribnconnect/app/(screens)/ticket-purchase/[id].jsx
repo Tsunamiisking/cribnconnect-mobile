@@ -1,5 +1,5 @@
 import { getEventById } from "@/api/services/eventServices";
-import { purchaseTickets, verifyPayment } from "@/api/services/ticketServices";
+import { purchaseTickets } from "@/api/services/ticketServices";
 import BackHeader from "@/components/BackHeader";
 import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { usePaystack } from "react-native-paystack-webview";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TicketPurchaseScreen = () => {
@@ -28,8 +27,6 @@ const TicketPurchaseScreen = () => {
   const [quantity, setQuantity] = useState(1);
   const [purchasing, setPurchasing] = useState(false);
   const hasInitiatedPaymentRef = useRef(false);
-  const currentReferenceRef = useRef(null);
-  const { popup } = usePaystack();
 
   useEffect(() => {
     fetchEventDetails();
@@ -93,7 +90,7 @@ const TicketPurchaseScreen = () => {
       setPurchasing(true);
       hasInitiatedPaymentRef.current = true;
 
-      // Always create a NEW reservation (with new reference)
+      // Create reservation and get payment details
       const response = await purchaseTickets(
         event._id,
         selectedTicket.name,
@@ -102,66 +99,25 @@ const TicketPurchaseScreen = () => {
 
       console.log("✅ Purchase response:", response);
 
-      const reference = response.payment.reference;
-      currentReferenceRef.current = reference;
+      // Reset flag before navigation
+      hasInitiatedPaymentRef.current = false;
+      setPurchasing(false);
 
-      // Open payment modal directly
-      popup.newTransaction({
-        reference: reference,
-        amount: response.payment.amount,
-        email: user?.email,
-
-        onSuccess: async (successResponse) => {
-          console.log("✅ Payment successful:", successResponse);
-          hasInitiatedPaymentRef.current = false;
-          currentReferenceRef.current = null;
-          setPurchasing(false);
-
-          try {
-            await verifyPayment(successResponse.reference);
-            Alert.alert("Success 🎉", "Your ticket purchase was successful!", [
-              { text: "OK", onPress: () => router.back() },
-            ]);
-          } catch (error) {
-            console.error("Verification error:", error);
-            Alert.alert(
-              "Verification Failed",
-              "Payment successful but verification failed. Please contact support.",
-              [{ text: "OK" }]
-            );
-          }
-        },
-
-        onCancel: () => {
-          console.log("❌ Payment cancelled");
-          hasInitiatedPaymentRef.current = false;
-          currentReferenceRef.current = null;
-          setPurchasing(false);
-
-          Alert.alert(
-            "Payment Cancelled",
-            "Click 'Continue to Payment' to try again with a new reservation.",
-            [{ text: "OK" }]
-          );
-        },
-
-        onError: (error) => {
-          console.log("❌ Payment error:", error);
-          hasInitiatedPaymentRef.current = false;
-          currentReferenceRef.current = null;
-          setPurchasing(false);
-
-          Alert.alert(
-            "Payment Error",
-            error?.message || "An error occurred during payment. Please try again.",
-            [{ text: "OK" }]
-          );
+      // Navigate to WebView checkout with Paystack URL
+      router.push({
+        pathname: "/paystack-checkout/[id]",
+        params: {
+          id: response.reservation.id,
+          url: response.payment.authorization_url,
+          reference: response.payment.reference,
+          eventId: event._id,
         },
       });
     } catch (error) {
       console.error("❌ Purchase error:", error);
       hasInitiatedPaymentRef.current = false;
       setPurchasing(false);
+      
       Alert.alert(
         "Purchase Failed",
         error.message || "Failed to initiate payment. Please try again.",
