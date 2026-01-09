@@ -27,7 +27,8 @@ const TicketPurchaseScreen = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [purchasing, setPurchasing] = useState(false);
-  const lastReferenceRef = useRef(null); // Track last used reference
+  const hasInitiatedPaymentRef = useRef(false);
+  const currentReferenceRef = useRef(null);
   const { popup } = usePaystack();
 
   useEffect(() => {
@@ -81,52 +82,16 @@ const TicketPurchaseScreen = () => {
     return feePerTicket * quantity;
   };
 
-  const makePayment = (config) => {
-    // Prevent duplicate transactions
-    if (lastReferenceRef.current === config.reference) {
-      console.log("⚠️ Duplicate reference detected, skipping:", config.reference);
+  const handlePurchase = async () => {
+    // Prevent double-click
+    if (hasInitiatedPaymentRef.current) {
+      console.log("🚫 Payment already initiated, ignoring click");
       return;
     }
 
-    lastReferenceRef.current = config.reference;
-    console.log("✅ Starting payment with reference:", config.reference);
-
-    popup.newTransaction({
-      reference: config.reference,
-      amount: config.amount,
-      email: config.email,
-
-      onSuccess: handlePaymentSuccess,
-
-      onCancel: () => {
-        console.log("Payment cancelled");
-        setPurchasing(false);
-        lastReferenceRef.current = null; // Clear reference for retry
-        
-        Alert.alert(
-          "Payment Cancelled",
-          "Your reservation is still active for 10 minutes. Click 'Continue to Payment' to try again.",
-          [{ text: "OK" }]
-        );
-      },
-
-      onError: (error) => {
-        console.log("Payment error:", error);
-        setPurchasing(false);
-        lastReferenceRef.current = null; // Clear reference for retry
-        
-        Alert.alert(
-          "Payment Error",
-          error?.message || "An error occurred during payment. Please try again.",
-          [{ text: "OK" }]
-        );
-      },
-    });
-  };
-
-  const handlePurchase = async () => {
     try {
       setPurchasing(true);
+      hasInitiatedPaymentRef.current = true;
 
       // Always create a NEW reservation (with new reference)
       const response = await purchaseTickets(
@@ -135,43 +100,71 @@ const TicketPurchaseScreen = () => {
         quantity
       );
 
-      console.log("Purchase response:", response);
+      console.log("✅ Purchase response:", response);
 
-      const config = {
-        reference: response.payment.reference,
+      const reference = response.payment.reference;
+      currentReferenceRef.current = reference;
+
+      // Open payment modal directly
+      popup.newTransaction({
+        reference: reference,
         amount: response.payment.amount,
         email: user?.email,
-      };
 
-      makePayment(config);
+        onSuccess: async (successResponse) => {
+          console.log("✅ Payment successful:", successResponse);
+          hasInitiatedPaymentRef.current = false;
+          currentReferenceRef.current = null;
+          setPurchasing(false);
+
+          try {
+            await verifyPayment(successResponse.reference);
+            Alert.alert("Success 🎉", "Your ticket purchase was successful!", [
+              { text: "OK", onPress: () => router.back() },
+            ]);
+          } catch (error) {
+            console.error("Verification error:", error);
+            Alert.alert(
+              "Verification Failed",
+              "Payment successful but verification failed. Please contact support.",
+              [{ text: "OK" }]
+            );
+          }
+        },
+
+        onCancel: () => {
+          console.log("❌ Payment cancelled");
+          hasInitiatedPaymentRef.current = false;
+          currentReferenceRef.current = null;
+          setPurchasing(false);
+
+          Alert.alert(
+            "Payment Cancelled",
+            "Click 'Continue to Payment' to try again with a new reservation.",
+            [{ text: "OK" }]
+          );
+        },
+
+        onError: (error) => {
+          console.log("❌ Payment error:", error);
+          hasInitiatedPaymentRef.current = false;
+          currentReferenceRef.current = null;
+          setPurchasing(false);
+
+          Alert.alert(
+            "Payment Error",
+            error?.message || "An error occurred during payment. Please try again.",
+            [{ text: "OK" }]
+          );
+        },
+      });
     } catch (error) {
-      console.error("Purchase error:", error);
+      console.error("❌ Purchase error:", error);
+      hasInitiatedPaymentRef.current = false;
       setPurchasing(false);
       Alert.alert(
         "Purchase Failed",
         error.message || "Failed to initiate payment. Please try again.",
-        [{ text: "OK" }]
-      );
-    }
-  };
-
-  const handlePaymentSuccess = async (response) => {
-    console.log("Payment successful:", response);
-
-    lastReferenceRef.current = null; // Clear reference
-    setPurchasing(false);
-
-    try {
-      await verifyPayment(response.reference); 
-
-      Alert.alert("Success 🎉", `Your ticket purchase was successful!`, [
-        { text: "OK", onPress: () => router.back() },
-      ]);
-    } catch (error) {
-      console.error("Verification error:", error);
-      Alert.alert(
-        "Verification Failed",
-        "Payment successful but verification failed. Please contact support.",
         [{ text: "OK" }]
       );
     }
@@ -394,7 +387,7 @@ const TicketPurchaseScreen = () => {
           </View>
         </View>
 
-        <View style={{ height: 100 }} />
+        {/* <View style={{ height: 20 }} /> */}
       </ScrollView>
 
       {/* Bottom Bar */}
@@ -491,8 +484,8 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray100,
+    // borderBottomWidth: 1,
+    // borderBottomColor: Colors.gray100,
   },
   sectionTitle: {
     fontFamily: "Sora-Bold",
