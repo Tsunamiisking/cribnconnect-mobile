@@ -1,15 +1,14 @@
-import { getMyTickets } from '@/api/services/ticketServices';
+import { getTicketsByEvent } from '@/api/services/ticketServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
-import { AlertCircle, Calendar, CheckCircle, Clock, MapPin, Ticket, XCircle } from 'lucide-react-native';
+import { Calendar, MapPin, Ticket } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,26 +17,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MyTickets = () => {
-  const [tickets, setTickets] = useState([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('all'); // all, PAID, HOLD, EXPIRED
 
   useEffect(() => {
     fetchTickets();
-  }, [selectedStatus]);
+  }, []);
 
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const params = selectedStatus === 'all' ? {} : { status: selectedStatus };
-      const response = await getMyTickets(params);
+      const response = await getTicketsByEvent();
       
-      // Console log for debugging
-    //   console.log('📋 Tickets Data:', JSON.stringify(response, null, 2));
-    //   console.log('📊 Total Tickets:', response.tickets?.length || 0);
+      console.log('📋 Events with Tickets:', response);
+      console.log('� Total Events:', response.totalEvents || 0);
+      console.log('🎟️ Total Tickets:', response.totalTickets || 0);
       
-      setTickets(response.tickets || []);
+      setEvents(response.events || []);
     } catch (error) {
       console.error('❌ Error fetching tickets:', error);
     } finally {
@@ -51,109 +48,32 @@ const MyTickets = () => {
     setRefreshing(false);
   };
 
-  const getStatusConfig = (status) => {
-    switch (status) {
-      case 'PAID':
-        return {
-          label: 'Confirmed',
-          color: Colors.success,
-          bgColor: Colors.green50,
-          icon: CheckCircle,
-        };
-      case 'HOLD':
-        return {
-          label: 'Pending Payment',
-          color: Colors.warning,
-          bgColor: Colors.amber50,
-          icon: Clock,
-        };
-      case 'EXPIRED':
-        return {
-          label: 'Expired',
-          color: Colors.error,
-          bgColor: Colors.red50,
-          icon: AlertCircle,
-        };
-      case 'CANCELLED':
-        return {
-          label: 'Cancelled',
-          color: Colors.gray600,
-          bgColor: Colors.gray100,
-          icon: XCircle,
-        };
-      default:
-        return {
-          label: status,
-          color: Colors.gray600,
-          bgColor: Colors.gray100,
-          icon: AlertCircle,
-        };
-    }
-  };
-
-  const StatusFilterButton = ({ status, label }) => {
-    const isSelected = selectedStatus === status;
-    return (
-      <TouchableOpacity
-        style={[
-          styles.filterButton,
-          isSelected && styles.filterButtonActive,
-        ]}
-        onPress={() => setSelectedStatus(status)}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.filterButtonText,
-            isSelected && styles.filterButtonTextActive,
-          ]}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const TicketCard = ({ ticket }) => {
-    const statusConfig = getStatusConfig(ticket.status);
-    const StatusIcon = statusConfig.icon;
+  const EventTicketCard = ({ eventData }) => {
+    const { event, totalTickets, totalAmount, currency } = eventData;
 
     return (
       <TouchableOpacity
-        style={styles.ticketCard}
-        onPress={() => router.push(`/(screens)/my-tickets/${ticket._id}`)}
+        style={styles.eventCard}
+        onPress={() => router.push(`/(screens)/event-tickets/${event._id}`)}
         activeOpacity={0.7}
       >
         {/* Event Image */}
         <Image
           source={{
             uri:
-              ticket.event?.media?.[0]?.url ||
-              ticket.event?.media?.[0]?.thumbnail_url ||
+              event.media?.[0]?.url ||
+              event.media?.[0]?.thumbnail_url ||
               'https://via.placeholder.com/400x200',
           }}
-          style={styles.ticketImage}
+          style={styles.eventImage}
           resizeMode="cover"
         />
 
-        {/* Status Badge */}
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: statusConfig.bgColor },
-          ]}
-        >
-          <StatusIcon size={14} color={statusConfig.color} />
-          <Text style={[styles.statusBadgeText, { color: statusConfig.color }]}>
-            {statusConfig.label}
-          </Text>
-        </View>
-
-        {/* Ticket Content */}
-        <View style={styles.ticketContent}>
+        {/* Event Content */}
+        <View style={styles.eventContent}>
           {/* Event Title */}
           <Text style={styles.eventTitle} numberOfLines={2}>
-            {ticket.event?.title || 'Event Title'}
+            {event.title || 'Event Title'}
           </Text>
 
           {/* Event Details */}
@@ -161,8 +81,8 @@ const MyTickets = () => {
             <View style={styles.metaRow}>
               <Calendar size={14} color={Colors.gray600} />
               <Text style={styles.metaText}>
-                {ticket.event?.date
-                  ? new Date(ticket.event.date).toLocaleDateString('en-US', {
+                {event.date
+                  ? new Date(event.date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
@@ -174,50 +94,30 @@ const MyTickets = () => {
             <View style={styles.metaRow}>
               <MapPin size={14} color={Colors.gray600} />
               <Text style={styles.metaText} numberOfLines={1}>
-                {ticket.event?.location?.city ||
-                  ticket.event?.location?.venue ||
+                {event.location?.city ||
+                  event.location?.venue ||
                   'Location TBD'}
               </Text>
             </View>
           </View>
 
-          {/* Ticket Info */}
-          <View style={styles.ticketInfo}>
-            <View style={styles.ticketInfoItem}>
-              <Ticket size={16} color={Colors.primary} />
-              <Text style={styles.ticketInfoText}>
-                {ticket.quantity} × {ticket.ticketType}
+          {/* Ticket Count and Amount */}
+          <View style={styles.ticketSummary}>
+            <View style={styles.ticketCount}>
+              <Ticket size={18} color={Colors.primary} />
+              <Text style={styles.ticketCountText}>
+                {totalTickets} {totalTickets === 1 ? 'Ticket' : 'Tickets'}
               </Text>
             </View>
-            <Text style={styles.ticketPrice}>
-              ₦{ticket.totalAmount?.toLocaleString()}
+            <Text style={styles.totalAmount}>
+              {currency === 'NGN' ? '₦' : '$'}{totalAmount?.toLocaleString()}
             </Text>
           </View>
 
-          {/* Access Code for PAID tickets */}
-          {ticket.status === 'PAID' && ticket.accessCode && (
-            <View style={styles.accessCodeContainer}>
-              <Text style={styles.accessCodeLabel}>Access Code:</Text>
-              <Text style={styles.accessCode}>{ticket.accessCode}</Text>
-            </View>
-          )}
-
-          {/* Expiry Timer for HOLD status */}
-          {ticket.status === 'HOLD' && ticket.expiresAt && (
-            <View style={styles.expiryContainer}>
-              <Clock size={14} color={Colors.warning} />
-              <Text style={styles.expiryText}>
-                Expires in{' '}
-                {Math.max(
-                  0,
-                  Math.floor(
-                    (new Date(ticket.expiresAt) - new Date()) / 60000
-                  )
-                )}{' '}
-                minutes
-              </Text>
-            </View>
-          )}
+          {/* View Tickets Button */}
+          <View style={styles.viewButton}>
+            <Text style={styles.viewButtonText}>View All Tickets</Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -228,18 +128,14 @@ const MyTickets = () => {
       <Ticket size={64} color={Colors.gray400} />
       <Text style={styles.emptyStateTitle}>No Tickets Yet</Text>
       <Text style={styles.emptyStateText}>
-        {selectedStatus === 'all'
-          ? "You haven't purchased any tickets yet. Browse events to get started!"
-          : `You don't have any ${selectedStatus.toLowerCase()} tickets.`}
+        You haven't purchased any tickets yet. Browse events to get started!
       </Text>
-      {selectedStatus !== 'all' && (
-        <TouchableOpacity
-          style={styles.emptyStateButton}
-          onPress={() => setSelectedStatus('all')}
-        >
-          <Text style={styles.emptyStateButtonText}>View All Tickets</Text>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        style={styles.emptyStateButton}
+        onPress={() => router.push('/(tabs)/')}
+      >
+        <Text style={styles.emptyStateButtonText}>Browse Events</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -259,24 +155,11 @@ const MyTickets = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <BackHeader title="My Tickets" />
 
-      {/* Status Filters */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterContainer}
-        contentContainerStyle={styles.filterContent}
-      >
-        <StatusFilterButton status="all" label="All" />
-        <StatusFilterButton status="PAID" label="Confirmed" />
-        <StatusFilterButton status="HOLD" label="Pending" />
-        <StatusFilterButton status="EXPIRED" label="Expired" />
-      </ScrollView>
-
-      {/* Tickets List */}
+      {/* Events List */}
       <FlatList
-        data={tickets}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => <TicketCard ticket={item} />}
+        data={events}
+        keyExtractor={(item) => item.event._id}
+        renderItem={({ item }) => <EventTicketCard eventData={item} />}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={<EmptyState />}
         refreshControl={
@@ -309,39 +192,11 @@ const styles = StyleSheet.create({
     color: Colors.gray500,
     marginTop: 12,
   },
-  filterContainer: {
-    maxHeight: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray100,
-  },
-  filterContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  filterButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Colors.gray100,
-    marginRight: 8,
-  },
-  filterButtonActive: {
-    backgroundColor: Colors.primary,
-  },
-  filterButtonText: {
-    fontFamily: 'Sora-SemiBold',
-    fontSize: 14,
-    color: Colors.gray700,
-  },
-  filterButtonTextActive: {
-    color: Colors.white,
-  },
   listContent: {
     padding: 16,
     flexGrow: 1,
   },
-  ticketCard: {
+  eventCard: {
     backgroundColor: Colors.white,
     borderRadius: 16,
     marginBottom: 16,
@@ -354,38 +209,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.gray100,
   },
-  ticketImage: {
+  eventImage: {
     width: '100%',
-    height: 160,
+    height: 180,
     backgroundColor: Colors.gray200,
   },
-  statusBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  statusBadgeText: {
-    fontFamily: 'Sora-SemiBold',
-    fontSize: 12,
-  },
-  ticketContent: {
+  eventContent: {
     padding: 16,
   },
   eventTitle: {
     fontFamily: 'Sora-Bold',
     fontSize: 18,
     color: Colors.gray900,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   eventMeta: {
-    gap: 6,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 16,
   },
   metaRow: {
     flexDirection: 'row',
@@ -394,66 +234,46 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontFamily: 'Sora-Regular',
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.gray600,
     flex: 1,
   },
-  ticketInfo: {
+  ticketSummary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
+    paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: Colors.gray100,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray100,
+    marginBottom: 12,
   },
-  ticketInfoItem: {
+  ticketCount: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  ticketInfoText: {
+  ticketCountText: {
     fontFamily: 'Sora-SemiBold',
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.gray900,
   },
-  ticketPrice: {
+  totalAmount: {
     fontFamily: 'Sora-Bold',
-    fontSize: 18,
+    fontSize: 20,
     color: Colors.primary,
   },
-  accessCodeContainer: {
-    flexDirection: 'row',
+  viewButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
     alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: Colors.green50,
-    borderRadius: 8,
   },
-  accessCodeLabel: {
-    fontFamily: 'Sora-Regular',
-    fontSize: 13,
-    color: Colors.gray700,
-  },
-  accessCode: {
-    fontFamily: 'Sora-Bold',
-    fontSize: 16,
-    color: Colors.primary,
-    letterSpacing: 2,
-  },
-  expiryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: Colors.amber50,
-    borderRadius: 8,
-  },
-  expiryText: {
+  viewButtonText: {
     fontFamily: 'Sora-SemiBold',
-    fontSize: 13,
-    color: Colors.warning,
+    fontSize: 15,
+    color: Colors.white,
   },
   emptyState: {
     flex: 1,
@@ -475,9 +295,9 @@ const styles = StyleSheet.create({
     color: Colors.gray600,
     textAlign: 'center',
     lineHeight: 22,
+    marginBottom: 20,
   },
   emptyStateButton: {
-    marginTop: 20,
     paddingHorizontal: 24,
     paddingVertical: 12,
     backgroundColor: Colors.primary,

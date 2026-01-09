@@ -29,6 +29,18 @@ export const getMyTickets = async (params = {}) => {
   return res.data;
 };
 
+// Get tickets grouped by event (for main tickets screen)
+export const getTicketsByEvent = async () => {
+  const res = await api.get('/payments/tickets/by-event');
+  return res.data;
+};
+
+// Get all tickets for a specific event (for event tickets detail screen)
+export const getEventTickets = async (eventId) => {
+  const res = await api.get(`/payments/tickets/event/${eventId}`);
+  return res.data;
+};
+
 // Get single ticket details
 export const getTicketById = async (ticketId) => {
   const res = await api.get(`/payments/tickets/${ticketId}`);
