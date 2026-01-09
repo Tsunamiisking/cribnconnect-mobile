@@ -530,14 +530,14 @@ const styles = StyleSheet.create({
   usedBadge: {
     marginTop: 12,
     padding: 12,
-    backgroundColor: Colors.green50 || '#ECFDF5',
+    backgroundColor: Colors.green50,
     borderRadius: 8,
     alignItems: 'center',
   },
   usedBadgeText: {
     fontFamily: 'Sora-SemiBold',
     fontSize: 14,
-    color: Colors.success || '#10B981',
+    color: Colors.success,
   },
   usedDate: {
     fontFamily: 'Sora-Regular',
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   actionButtonDanger: {
-    borderColor: Colors.error || '#EF4444',
+    borderColor: Colors.error,
   },
   actionButtonDisabled: {
     opacity: 0.6,
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   actionButtonTextDanger: {
-    color: Colors.error || '#EF4444',
+    color: Colors.error,
   },
   helpCard: {
     backgroundColor: Colors.blue50,

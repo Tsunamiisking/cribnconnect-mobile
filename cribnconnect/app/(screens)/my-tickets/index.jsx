@@ -34,8 +34,8 @@ const MyTickets = () => {
       const response = await getMyTickets(params);
       
       // Console log for debugging
-      console.log('📋 Tickets Data:', JSON.stringify(response, null, 2));
-      console.log('📊 Total Tickets:', response.tickets?.length || 0);
+    //   console.log('📋 Tickets Data:', JSON.stringify(response, null, 2));
+    //   console.log('📊 Total Tickets:', response.tickets?.length || 0);
       
       setTickets(response.tickets || []);
     } catch (error) {
