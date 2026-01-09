@@ -130,22 +130,22 @@ const MyTicketDetailScreen = () => {
       case 'PAID':
         return {
           label: 'Confirmed',
-          color: Colors.success || '#10B981',
-          bgColor: '#ECFDF5',
+          color: Colors.success,
+          bgColor: Colors.green50,
           icon: CheckCircle
         };
       case 'HOLD':
         return {
           label: 'Payment Pending',
-          color: Colors.warning || '#F59E0B',
-          bgColor: '#FEF3C7',
+          color: Colors.warning,
+          bgColor: Colors.amber50,
           icon: Clock
         };
       case 'EXPIRED':
         return {
           label: 'Expired',
-          color: Colors.error || '#EF4444',
-          bgColor: '#FEE2E2',
+          color: Colors.error,
+          bgColor: Colors.red50,
           icon: AlertCircle
         };
       case 'CANCELLED':
@@ -336,10 +336,10 @@ const MyTicketDetailScreen = () => {
                 disabled={cancelling}
               >
                 {cancelling ? (
-                  <ActivityIndicator size="small" color={Colors.error || '#EF4444'} />
+                  <ActivityIndicator size="small" color={Colors.error} />
                 ) : (
                   <>
-                    <X size={20} color={Colors.error || '#EF4444'} />
+                    <X size={20} color={Colors.error} />
                     <Text style={[styles.actionButtonText, styles.actionButtonTextDanger]}>
                       Cancel Reservation
                     </Text>
