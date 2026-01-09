@@ -12,6 +12,8 @@ const PaystackCheckout = () => {
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const hasVerifiedRef = useRef(false);
+  const errorCountRef = useRef(0);
+  const webViewRef = useRef(null);
 
   const handleNavigationStateChange = async (navState) => {
     const { url: currentUrl } = navState;
@@ -39,14 +41,16 @@ const PaystackCheckout = () => {
 
         Alert.alert(
           "Success 🎉",
-          "Your ticket purchase was successful!",
+          "Your ticket purchase was successful! Welcome to the event chat.",
           [
             {
-              text: "OK",
+              text: "Go to Chat",
               onPress: () => {
-                // Navigate back to event details or tickets screen
-                router.back();
-                router.back(); // Go back twice to skip the purchase screen
+                // Navigate to event chat screen
+                router.replace({
+                  pathname: "/(screens)/chat/[id]",
+                  params: { id: eventId }
+                });
               },
             },
           ],
@@ -94,6 +98,21 @@ const PaystackCheckout = () => {
   const handleError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
     console.error("❌ WebView error:", nativeEvent);
+    
+    errorCountRef.current += 1;
+
+    // Only show error alert after 2nd failed attempt
+    // First error often resolves automatically with WebView retry
+    if (errorCountRef.current < 2) {
+      console.log("🔄 First load error, WebView will retry automatically...");
+      // Automatically retry after a short delay
+      setTimeout(() => {
+        if (webViewRef.current) {
+          webViewRef.current.reload();
+        }
+      }, 1000);
+      return;
+    }
 
     Alert.alert(
       "Payment Error",
@@ -102,8 +121,10 @@ const PaystackCheckout = () => {
         {
           text: "Retry",
           onPress: () => {
-            // Reload WebView
-            setLoading(true);
+            errorCountRef.current = 0;
+            if (webViewRef.current) {
+              webViewRef.current.reload();
+            }
           },
         },
         {
@@ -145,9 +166,16 @@ const PaystackCheckout = () => {
       )}
 
       <WebView
+        ref={webViewRef}
         source={{ uri: url }}
-        onLoadStart={() => setLoading(true)}
-        onLoadEnd={() => setLoading(false)}
+        onLoadStart={() => {
+          setLoading(true);
+          console.log("🔄 WebView started loading...");
+        }}
+        onLoadEnd={() => {
+          setLoading(false);
+          console.log("✅ WebView finished loading");
+        }}
         onNavigationStateChange={handleNavigationStateChange}
         onError={handleError}
         startInLoadingState={true}
