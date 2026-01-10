@@ -8,6 +8,7 @@ import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     FlatList,
     Platform,
     RefreshControl,
@@ -498,6 +499,9 @@ export default function EventsScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No events found</Text>
@@ -694,5 +698,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray200,
     borderRadius: 18,
     marginRight: 12,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerLoaderText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray600,
+    marginTop: 8,
   },
 });
