@@ -2,8 +2,16 @@ import { auth } from "@/config/firebase";
 import { createEventGroupChat } from "@/services/eventChatService";
 import api from "../api";
 
-export const getEvents = async () => {
-  const res = await api.get("/events");
+export const getEvents = async (params = {}) => {
+  const { page = 1, limit = 20, category, search } = params;
+  
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page);
+  queryParams.append('limit', limit);
+  if (category && category !== 'All') queryParams.append('category', category);
+  if (search) queryParams.append('search', search);
+  
+  const res = await api.get(`/events?${queryParams.toString()}`);
   return res.data;
 };
 

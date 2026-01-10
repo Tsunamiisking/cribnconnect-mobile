@@ -40,33 +40,79 @@ export default function EventsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showHotEventsModal, setShowHotEventsModal] = useState(false);
   const [showTodaysEventsModal, setShowTodaysEventsModal] = useState(false);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fetch events from API
   useEffect(() => {
     fetchEvents();
   }, []);
 
-  const fetchEvents = async (skipLoading = false) => {
+  // Reset and fetch when category or search changes
+  useEffect(() => {
+    setEvents([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchEvents(false, 1);
+  }, [selectedCategory, searchQuery]);
+
+  const fetchEvents = async (skipLoading = false, page = currentPage) => {
     try {
-      if (!skipLoading) {
+      // Don't fetch if already loading or no more data
+      if (loadingMore || (!hasMore && page > 1)) return;
+      
+      if (page === 1 && !skipLoading) {
         setLoading(true);
+      } else if (page > 1) {
+        setLoadingMore(true);
       }
       
-      // Fetch all events
-      const eventsData = await getEvents();
-      // console.log("All Events from backend:", eventsD ata);
-      setEvents(eventsData.events || []);
+      // Fetch events with pagination
+      const eventsData = await getEvents({
+        page,
+        limit: 20,
+        category: selectedCategory !== 'All' ? selectedCategory : undefined,
+        search: searchQuery || undefined,
+      });
       
-      // Fetch hot events (trending)
-      const hotEventsData = await getHotEvents({ limit: 10 });
-      // console.log("Hot Events from backend:", hotEventsData);
-      setHotEvents(hotEventsData.events || []);
+      console.log(`📄 Page ${page} Events:`, eventsData.events?.length || 0);
+      console.log(`📊 Total Events Available:`, eventsData.pagination?.totalEvents || 0);
+      
+      const newEvents = eventsData.events || [];
+      
+      // Append new events or replace if page 1
+      if (page === 1) {
+        setEvents(newEvents);
+      } else {
+        setEvents(prev => [...prev, ...newEvents]);
+      }
+      
+      // Check if there are more pages
+      const pagination = eventsData.pagination;
+      if (pagination) {
+        setHasMore(pagination.currentPage < pagination.totalPages);
+        setCurrentPage(pagination.currentPage);
+      } else {
+        setHasMore(false);
+      }
+      
+      // Fetch hot events only on initial load (page 1)
+      if (page === 1) {
+        const hotEventsData = await getHotEvents({ limit: 10 });
+        setHotEvents(hotEventsData.events || []);
+      }
       
     } catch (error) {
       console.error("Error fetching events:", error);
+      setHasMore(false);
     } finally {
-      if (!skipLoading) {
+      if (page === 1 && !skipLoading) {
         setLoading(false);
+      } else if (page > 1) {
+        setLoadingMore(false);
       }
     }
   };
@@ -88,8 +134,10 @@ export default function EventsScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setCurrentPage(1);
+    setHasMore(true);
     try {
-      await fetchEvents(true); // Skip loading indicator during refresh
+      await fetchEvents(true, 1); // Skip loading indicator during refresh
     } catch (error) {
       console.error("Error refreshing events:", error);
     } finally {
@@ -97,21 +145,19 @@ export default function EventsScreen() {
     }
   };
 
+  // Load more events when reaching end
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      console.log(`📥 Loading page ${currentPage + 1}...`);
+      fetchEvents(false, currentPage + 1);
+    }
+  };
+
   // Filter events based on selected category and search query
   const filteredEvents = events.filter(event => {
-    // Category filter
-    const matchesCategory = selectedCategory === "All" || 
-      event.category?.toLowerCase() === selectedCategory.toLowerCase();
-    
-    // Search filter (searches in title, location, category, description)
-    const matchesSearch = searchQuery === "" ||
-      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.location?.venue?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesCategory && matchesSearch;
+    // Since we're now filtering on backend, just return all events
+    // The filtering happens in the API call based on selectedCategory and searchQuery
+    return true;
   });
 
   const renderCategoryChip = ({ item: category }) => (
@@ -122,7 +168,7 @@ export default function EventsScreen() {
       ]}
       onPress={() => {
         setSelectedCategory(category);
-        // Clear search when category is selected to show category results
+        // Clear search when category is selected
         if (searchQuery) {
           setSearchQuery("");
         }
@@ -268,6 +314,18 @@ export default function EventsScreen() {
     setShowTodaysEventsModal(false);
     // Navigate to event details
     router.push(`/(screens)/event-details/${eventId}`);
+  };
+
+  // Footer component for loading more
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color={Colors.primary} />
+        <Text style={styles.footerLoaderText}>Loading more events...</Text>
+      </View>
+    );
   };
 
   return (
