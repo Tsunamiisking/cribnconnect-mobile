@@ -171,7 +171,8 @@ export default function EventsScreen() {
 
   // Load more events when reaching end
   const handleLoadMore = () => {
-    if (!loadingMore && hasMore) {
+    // Don't load more if searching or if already loading
+    if (!loadingMore && hasMore && !searchingEvents) {
       console.log(`📥 Loading page ${currentPage + 1}...`);
       fetchEvents(false, currentPage + 1);
     }
@@ -218,6 +219,7 @@ export default function EventsScreen() {
   const clearSearch = () => {
     setSearchQuery("");
     setDebouncedSearchQuery("");
+    // Don't set searchingEvents here - let the useEffect handle it
   };
 
   // Render carousel event card (horizontal)
@@ -527,7 +529,7 @@ export default function EventsScreen() {
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
           ListEmptyComponent={
-            searchingEvents ? (
+            searchingEvents && filteredEvents.length === 0 ? (
               <View style={styles.searchingContainer}>
                 <ActivityIndicator size="large" color={Colors.primary} />
                 <Text style={styles.searchingText}>Searching events...</Text>
