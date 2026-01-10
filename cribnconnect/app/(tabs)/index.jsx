@@ -8,14 +8,14 @@ import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Platform,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
