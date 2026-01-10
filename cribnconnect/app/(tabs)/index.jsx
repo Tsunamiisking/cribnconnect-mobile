@@ -39,8 +39,10 @@ export default function EventsScreen() {
   const [hotEvents, setHotEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [showHotEventsModal, setShowHotEventsModal] = useState(false);
   const [showTodaysEventsModal, setShowTodaysEventsModal] = useState(false);
+  const [searchingEvents, setSearchingEvents] = useState(false); // New state for search loading
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,23 +54,42 @@ export default function EventsScreen() {
     fetchEvents();
   }, []);
 
-  // Reset and fetch when category or search changes
+  // Debounce search query - only update after user stops typing for 500ms
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset and fetch when category or debounced search changes
+  useEffect(() => {
+    // Skip initial mount (loading is handled by the first useEffect)
+    if (loading && currentPage === 1 && !debouncedSearchQuery && selectedCategory === "All") {
+      return;
+    }
+    
+    // Reset pagination and fetch
     setEvents([]);
     setCurrentPage(1);
     setHasMore(true);
-    fetchEvents(false, 1);
-  }, [selectedCategory, searchQuery]);
+    setSearchingEvents(true); // Show search loading only for events grid
+    fetchEvents(true, 1); // Skip skeleton loading
+  }, [selectedCategory, debouncedSearchQuery]);
 
   const fetchEvents = async (skipLoading = false, page = currentPage) => {
     try {
       // Don't fetch if already loading or no more data
       if (loadingMore || (!hasMore && page > 1)) return;
       
-      if (page === 1 && !skipLoading) {
+      // Only show skeleton loading on initial page load
+      if (page === 1 && !skipLoading && loading) {
         setLoading(true);
       } else if (page > 1) {
         setLoadingMore(true);
+      } else if (page === 1 && skipLoading) {
+        setSearchingEvents(true);
       }
       
       // Fetch events with pagination
@@ -76,7 +97,7 @@ export default function EventsScreen() {
         page,
         limit: 20,
         category: selectedCategory !== 'All' ? selectedCategory : undefined,
-        search: searchQuery || undefined,
+        search: debouncedSearchQuery || undefined,
       });
       
       console.log(`📄 Page ${page} Events:`, eventsData.events?.length || 0);
@@ -100,8 +121,8 @@ export default function EventsScreen() {
         setHasMore(false);
       }
       
-      // Fetch hot events only on initial load (page 1)
-      if (page === 1) {
+      // Fetch hot events ONLY on very first load, never on search/category change
+      if (page === 1 && !skipLoading && loading) {
         const hotEventsData = await getHotEvents({ limit: 10 });
         setHotEvents(hotEventsData.events || []);
       }
@@ -110,10 +131,12 @@ export default function EventsScreen() {
       console.error("Error fetching events:", error);
       setHasMore(false);
     } finally {
-      if (page === 1 && !skipLoading) {
+      if (page === 1 && !skipLoading && loading) {
         setLoading(false);
       } else if (page > 1) {
         setLoadingMore(false);
+      } else if (page === 1 && skipLoading) {
+        setSearchingEvents(false);
       }
     }
   };
@@ -194,6 +217,7 @@ export default function EventsScreen() {
 
   const clearSearch = () => {
     setSearchQuery("");
+    setDebouncedSearchQuery("");
   };
 
   // Render carousel event card (horizontal)
@@ -467,16 +491,16 @@ export default function EventsScreen() {
               <View style={styles.categoriesContainer}>
                 <View style={styles.categoriesHeader}>
                   <Text style={styles.categoriesTitle}>
-                    {searchQuery ? `Search results for "${searchQuery}"` : 'All Events'}
+                    {debouncedSearchQuery ? `Search results for "${debouncedSearchQuery}"` : selectedCategory !== "All" ? selectedCategory : 'All Events'}
                   </Text>
-                  {searchQuery && (
+                  {debouncedSearchQuery && (
                     <Text style={styles.resultsCount}>
                       {filteredEvents.length} {filteredEvents.length === 1 ? 'result' : 'results'}
                     </Text>
                   )}
                 </View>
                 
-                {!searchQuery && (
+                {!debouncedSearchQuery && (
                   <FlatList
                     data={EVENT_CATEGORIES}
                     renderItem={renderCategoryChip}
@@ -503,16 +527,23 @@ export default function EventsScreen() {
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No events found</Text>
-              <Text style={styles.emptySubtext}>
-                {searchQuery 
-                  ? `No results for "${searchQuery}"` 
-                  : selectedCategory === "All" 
-                    ? "Check back later for new events" 
-                    : `No events in ${selectedCategory}`}
-              </Text>
-            </View>
+            searchingEvents ? (
+              <View style={styles.searchingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.searchingText}>Searching events...</Text>
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No events found</Text>
+                <Text style={styles.emptySubtext}>
+                  {debouncedSearchQuery 
+                    ? `No results for "${debouncedSearchQuery}"` 
+                    : selectedCategory === "All" 
+                      ? "Check back later for new events" 
+                      : `No events in ${selectedCategory}`}
+                </Text>
+              </View>
+            )
           }
         />
       )}
@@ -662,6 +693,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.gray500,
     textAlign: 'center',
+  },
+  searchingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  searchingText: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 16,
+    color: Colors.gray600,
+    marginTop: 16,
   },
   // Skeleton Styles
   skeletonTitle: {

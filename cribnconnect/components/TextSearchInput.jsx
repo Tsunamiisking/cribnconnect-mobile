@@ -12,19 +12,24 @@ export default function TextSearchInput({
   placeholder, 
   value, 
   onChangeText, 
-  onClear 
+  onClear,
+  editable = true
 }) {
   return (
     <View style={styles.searchContainer}>
-      <View style={styles.searchInputContainer}>
-        <Search size={20} color={Colors.gray500} />
+      <View style={[
+        styles.searchInputContainer,
+        !editable && styles.searchInputDisabled
+      ]}>
+        <Search size={20} color={editable ? Colors.gray500 : Colors.gray300} />
         <TextInput
           style={styles.searchInput}
           placeholder={placeholder}
-          placeholderTextColor={Colors.gray500}
+          placeholderTextColor={editable ? Colors.gray500 : Colors.gray300}
           value={value}
           onChangeText={onChangeText}
           returnKeyType="search"
+          editable={editable}
         />
         {value.length > 0 && (
           <TouchableOpacity onPress={onClear}>
