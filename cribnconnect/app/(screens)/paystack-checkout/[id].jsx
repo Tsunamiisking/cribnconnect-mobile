@@ -15,20 +15,20 @@ const PaystackCheckout = () => {
   const errorCountRef = useRef(0);
   const webViewRef = useRef(null);
 
-  const handleNavigationStateChange = async (navState) => {
-    const { url: currentUrl } = navState;
-    console.log("📍 Navigation URL:", currentUrl);
+  const handleShouldStartLoadWithRequest = (request) => {
+    const currentUrl = request.url;
+    console.log("📍 Request URL:", currentUrl);
 
     // Check if payment was successful (Paystack redirects with reference in URL)
     if (
       currentUrl.includes("reference=") ||
       currentUrl.includes("trxref=") ||
-      currentUrl.includes("callback") ||
+      currentUrl.includes("payment-callback") ||
       currentUrl.includes("success")
     ) {
       if (hasVerifiedRef.current || verifying) {
-        console.log("⚠️ Already verifying, skipping duplicate verification");
-        return false; // Prevent further navigation
+        console.log("⚠️ Already verifying, blocking duplicate navigation");
+        return false; // Block navigation
       }
 
       hasVerifiedRef.current = true;
@@ -37,9 +37,8 @@ const PaystackCheckout = () => {
 
       console.log("✅ Payment completed, verifying with backend...");
 
-      // Prevent WebView from trying to load the callback URL
-      // This stops the DNS error immediately
-      setTimeout(async () => {
+      // Run verification asynchronously
+      (async () => {
         try {
           const verificationResult = await verifyPayment(reference);
           console.log("✅ Verification successful:", verificationResult);
@@ -79,9 +78,9 @@ const PaystackCheckout = () => {
             { cancelable: false }
           );
         }
-      }, 0);
+      })();
 
-      // CRITICAL: Return false immediately to stop WebView navigation
+      // 🔒 Block navigation to callback URL - prevents DNS error
       return false;
     }
 
@@ -102,16 +101,12 @@ const PaystackCheckout = () => {
 
       return false;
     }
+
+    // Allow all other URLs (Paystack checkout, OTP, bank verification, etc.)
+    return true;
   };
 
   const handleError = (syntheticEvent) => {
-    // If already verifying payment, ignore DNS/network errors silently
-    // This happens when WebView tries to load callback URL but we've already stopped it
-    if (verifying || hasVerifiedRef.current) {
-      console.log("⚠️ Ignoring error - payment already being verified");
-      return;
-    }
-
     const { nativeEvent } = syntheticEvent;
     console.error("❌ WebView error:", nativeEvent);
 
@@ -192,17 +187,12 @@ const PaystackCheckout = () => {
           setLoading(false);
           console.log("✅ WebView finished loading");
         }}
-        onNavigationStateChange={handleNavigationStateChange}
+        onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
         onError={handleError}
         startInLoadingState={true}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         style={styles.webview}
-        // Allow Paystack to open external links (for OTP, bank verification)
-        onShouldStartLoadWithRequest={(request) => {
-          // Allow all Paystack URLs
-          return true;
-        }}
       />
     </SafeAreaView>
   );
