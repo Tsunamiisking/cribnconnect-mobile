@@ -48,7 +48,7 @@ export default function BackHeader({
           <MoveLeft size={26} color={Colors.primary} />
         </Pressable>
 
-        <Text style={styles.text}>{truncateLongHeader(title, 14)}</Text>
+        <Text style={styles.text}>{truncateLongHeader(title, 25)}</Text>
 
         {showUser && (
           <Pressable onPress={handleProfilePress}>
