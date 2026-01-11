@@ -28,60 +28,67 @@ const PaystackCheckout = () => {
     ) {
       if (hasVerifiedRef.current || verifying) {
         console.log("⚠️ Already verifying, skipping duplicate verification");
-        return;
+        return false; // Prevent further navigation
       }
 
       hasVerifiedRef.current = true;
       setVerifying(true);
+      setLoading(false); // Hide loading overlay
 
       console.log("✅ Payment completed, verifying with backend...");
 
-      try {
-        await verifyPayment(reference);
+      // Prevent WebView from trying to load the callback URL
+      // This stops the DNS error immediately
+      setTimeout(async () => {
+        try {
+          const verificationResult = await verifyPayment(reference);
+          console.log("✅ Verification successful:", verificationResult);
 
-        Alert.alert(
-          "Success 🎉",
-          "Your ticket purchase was successful! Welcome to the event chat.",
-          [
-            {
-              text: "Go to Chat",
-              onPress: () => {
-                // Navigate to event chat screen
-                router.replace({
-                  pathname: "/(screens)/chat/[id]",
-                  params: { id: eventId }
-                });
+          setVerifying(false);
+
+          Alert.alert(
+            "Success 🎉",
+            "Your ticket purchase was successful! Welcome to the event chat.",
+            [
+              {
+                text: "Go to Chat",
+                onPress: () => {
+                  // Navigate to event chat screen
+                  router.replace(`/(screens)/chat/${eventId}?type=event`);
+                },
               },
-            },
-          ],
-          { cancelable: false }
-        );
-      } catch (error) {
-        console.error("❌ Verification error:", error);
-        
-        Alert.alert(
-          "Verification Failed",
-          "Payment completed but verification failed. Your ticket will be processed. Please check your tickets.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                router.back();
-                router.back();
+            ],
+            { cancelable: false }
+          );
+        } catch (error) {
+          console.error("❌ Verification error:", error);
+          setVerifying(false);
+
+          Alert.alert(
+            "Verification Failed",
+            "Payment completed but verification failed. Your ticket will be processed. Please check your tickets.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  router.back();
+                  router.back();
+                },
               },
-            },
-          ],
-          { cancelable: false }
-        );
-      } finally {
-        setVerifying(false);
-      }
+            ],
+            { cancelable: false }
+          );
+        }
+      }, 0);
+
+      // CRITICAL: Return false immediately to stop WebView navigation
+      return false;
     }
 
     // Check if payment was cancelled
     if (currentUrl.includes("cancel") || currentUrl.includes("close")) {
       console.log("❌ Payment cancelled by user");
-      
+
       Alert.alert(
         "Payment Cancelled",
         "You cancelled the payment. Your reservation will expire in 10 minutes.",
@@ -92,13 +99,22 @@ const PaystackCheckout = () => {
           },
         ]
       );
+
+      return false;
     }
   };
 
   const handleError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
     console.error("❌ WebView error:", nativeEvent);
-    
+
+    // If already verifying payment, ignore DNS/network errors
+    // This happens when WebView tries to load callback URL but we've already stopped it
+    if (verifying || hasVerifiedRef.current) {
+      console.log("⚠️ Ignoring error - payment already being verified");
+      return;
+    }
+
     errorCountRef.current += 1;
 
     // Only show error alert after 2nd failed attempt
