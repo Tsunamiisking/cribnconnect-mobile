@@ -39,6 +39,8 @@ const APARTMENT_CONVERSATIONS = [
       timestamp: '2 min ago',
       unread: true,
     },
+    // Numeric timestamp used for sorting (mock: 2 minutes ago)
+    lastTimestamp: Date.now() - 2 * 60 * 1000,
     context: 'Apartment Chat',
   },
   {
@@ -54,6 +56,8 @@ const APARTMENT_CONVERSATIONS = [
       timestamp: '2 min ago',
       unread: true,
     },
+    // Numeric timestamp used for sorting (mock: 2 minutes ago)
+    lastTimestamp: Date.now() - 2 * 60 * 1000,
     context: 'Apartment Chat',
   },
 ];
@@ -184,7 +188,9 @@ export default function MessagesScreen() {
     if (!timestamp) return '';
     
     const now = Date.now();
-    const diff = now - timestamp;
+    // Normalize possible Firestore Timestamp or ISO/string to millis
+    const tsMillis = normalizeToMillis(timestamp);
+    const diff = now - tsMillis;
     
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
@@ -197,11 +203,39 @@ export default function MessagesScreen() {
     return 'Just now';
   };
 
+  // Robustly normalize different timestamp shapes to milliseconds
+  const normalizeToMillis = (ts) => {
+    try {
+      if (!ts) return 0;
+      if (typeof ts === 'number') return ts;
+      if (typeof ts === 'string') {
+        const parsed = Date.parse(ts);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+      // Firestore Timestamp has toDate()
+      if (typeof ts?.toDate === 'function') {
+        return ts.toDate().getTime();
+      }
+      // Or seconds/nanoseconds
+      if (typeof ts?.seconds === 'number') {
+        return ts.seconds * 1000;
+      }
+      return 0;
+    } catch {
+      return 0;
+    }
+  };
+
   // Format linkup chats to match the conversation card format
   const formatLinkupChats = () => {
     const currentUserId = auth?.currentUser?.uid;
     
-    return linkupChats.map(chat => ({
+    return linkupChats.map(chat => {
+      const lastTs = normalizeToMillis(chat?.lastMessage?.timestamp) 
+        || normalizeToMillis(chat?.updatedAt) 
+        || normalizeToMillis(chat?.createdAt);
+
+      return ({
       id: chat.id, // This is the linkup ID
       type: 'group',
       chatType: 'linkup',
@@ -219,15 +253,23 @@ export default function MessagesScreen() {
         timestamp: '',
         unread: false,
       },
+      // Raw numeric timestamp used for sorting
+      lastTimestamp: lastTs,
       context: 'Linkup Group',
-    }));
+    });
+    });
   };
 
   // Format event chats to match the conversation card format
   const formatEventChats = () => {
     const currentUserId = auth?.currentUser?.uid;
     
-    return eventChats.map(chat => ({
+    return eventChats.map(chat => {
+      const lastTs = normalizeToMillis(chat?.lastMessage?.timestamp)
+        || normalizeToMillis(chat?.updatedAt)
+        || normalizeToMillis(chat?.createdAt);
+
+      return ({
       id: chat.id, // This is the event ID
       type: 'group',
       chatType: 'event',
@@ -245,15 +287,22 @@ export default function MessagesScreen() {
         timestamp: '',
         unread: false,
       },
+      // Raw numeric timestamp used for sorting
+      lastTimestamp: lastTs,
       context: 'Event Group',
-    }));
+    });
+    });
   };
 
   // Format private chats to match the conversation card format
   const formatPrivateChats = () => {
     const currentUserId = auth?.currentUser?.uid;
     
-    return privateChats.map(chat => ({
+    return privateChats.map(chat => {
+      const lastTs = normalizeToMillis(chat?.lastMessage?.timestamp) 
+        || normalizeToMillis(chat?.createdAt);
+
+      return ({
       id: chat.conversationId,
       type: 'direct',
       chatType: 'private',
@@ -267,6 +316,8 @@ export default function MessagesScreen() {
         timestamp: formatTimestamp(chat.lastMessage?.timestamp || chat.createdAt),
         unread: chat.hasUnread,
       },
+      // Raw numeric timestamp used for sorting
+      lastTimestamp: lastTs,
       context: chat.status === 'pending' 
         ? (chat.isRecipient ? '📬 New Request' : '⏳ Pending') 
         : chat.status === 'ignored'
@@ -274,7 +325,8 @@ export default function MessagesScreen() {
         : 'Direct Message',
       status: chat.status,
       canSendMessages: chat.canSendMessages,
-    }));
+    });
+    });
   };
 
   const getStatusColor = (status) => {
@@ -294,10 +346,10 @@ export default function MessagesScreen() {
           ...formatPrivateChats(),
           ...APARTMENT_CONVERSATIONS
         ].sort((a, b) => {
-          // Sort by timestamp, most recent first
-          const timeA = a.lastMessage?.timestamp || '';
-          const timeB = b.lastMessage?.timestamp || '';
-          return timeB.localeCompare(timeA);
+          // Sort by numeric lastTimestamp (millis), most recent first
+          const timeA = typeof a.lastTimestamp === 'number' ? a.lastTimestamp : 0;
+          const timeB = typeof b.lastTimestamp === 'number' ? b.lastTimestamp : 0;
+          return timeB - timeA;
         });
       case 'groups':
         // Only events and linkups (group conversations)
@@ -305,10 +357,10 @@ export default function MessagesScreen() {
           ...formatEventChats(),
           ...formatLinkupChats(),
         ].sort((a, b) => {
-          // Sort by timestamp, most recent first
-          const timeA = a.lastMessage?.timestamp || '';
-          const timeB = b.lastMessage?.timestamp || '';
-          return timeB.localeCompare(timeA);
+          // Sort by numeric lastTimestamp (millis), most recent first
+          const timeA = typeof a.lastTimestamp === 'number' ? a.lastTimestamp : 0;
+          const timeB = typeof b.lastTimestamp === 'number' ? b.lastTimestamp : 0;
+          return timeB - timeA;
         });
       default:
         return [];
