@@ -5,16 +5,16 @@ import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import ProfilePopup from "./ProfilePopup";
 
-export default function BackHeader({ 
-  title = "Title", 
-  onBack, 
+export default function BackHeader({
+  title = "Title",
+  onBack,
   showUser,
-  fallbackPath = "/(tabs)" // Default fallback path
+  fallbackPath = "/(tabs)", // Default fallback path
 }) {
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const navigation = useNavigation();
   const currentPath = usePathname();
-  
+
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -30,16 +30,25 @@ export default function BackHeader({
     setShowProfilePopup(true);
   };
 
+  const truncateLongHeader = (text, maxLength) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+
+    const truncated = text.slice(0, maxLength);
+    return truncated.slice(0, truncated.lastIndexOf(" ")) + "…";
+  };
+
   return (
     <>
-      <View style={styles.container} className="flex-row items-center justify-between px-4 py-3">
+      <View
+        style={styles.container}
+        className="flex-row items-center justify-between px-4 py-3"
+      >
         <Pressable onPress={handleBack} style={styles.backButton}>
           <MoveLeft size={26} color={Colors.primary} />
         </Pressable>
 
-        <Text style={styles.text}>
-          {title}
-        </Text>
+        <Text style={styles.text}>{truncateLongHeader(title, 14)}</Text>
 
         {showUser && (
           <Pressable onPress={handleProfilePress}>
@@ -53,7 +62,7 @@ export default function BackHeader({
         )}
       </View>
 
-      <ProfilePopup 
+      <ProfilePopup
         visible={showProfilePopup}
         onClose={() => setShowProfilePopup(false)}
       />
@@ -80,12 +89,12 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     flex: 1,
   },
-    profileButton: {
+  profileButton: {
     backgroundColor: Colors.primary,
   },
   profileText: {
-    color: 'white',
-    fontFamily: 'Sora-SemiBold',
+    color: "white",
+    fontFamily: "Sora-SemiBold",
     fontSize: 18,
-  }
+  },
 });
