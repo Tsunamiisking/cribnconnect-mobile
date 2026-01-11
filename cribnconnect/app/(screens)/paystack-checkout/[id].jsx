@@ -105,15 +105,15 @@ const PaystackCheckout = () => {
   };
 
   const handleError = (syntheticEvent) => {
-    const { nativeEvent } = syntheticEvent;
-    console.error("❌ WebView error:", nativeEvent);
-
-    // If already verifying payment, ignore DNS/network errors
+    // If already verifying payment, ignore DNS/network errors silently
     // This happens when WebView tries to load callback URL but we've already stopped it
     if (verifying || hasVerifiedRef.current) {
       console.log("⚠️ Ignoring error - payment already being verified");
       return;
     }
+
+    const { nativeEvent } = syntheticEvent;
+    console.error("❌ WebView error:", nativeEvent);
 
     errorCountRef.current += 1;
 
