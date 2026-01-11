@@ -41,7 +41,7 @@ const PaystackCheckout = () => {
       (async () => {
         try {
           const verificationResult = await verifyPayment(reference);
-          console.log("✅ Verification successful:", verificationResult);
+          // console.log("✅ Verification successful:", verificationResult);
 
           setVerifying(false);
 
