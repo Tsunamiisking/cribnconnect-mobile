@@ -4,8 +4,17 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function WelcomeScreen() {
+  // const { user } = useAuth();
+
+  // if (user) {
+  //   // If user is already logged in, redirect to (tabs)
+  //   router.replace("(tabs)/");
+  //   return null; // or a loading indicator
+  // }
+
   return (
     <SafeAreaView className="flex-1 bg-white" style={styles.screen}>
       {/* Centered hero copy */}

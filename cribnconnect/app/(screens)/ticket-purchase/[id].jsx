@@ -23,10 +23,11 @@ const TicketPurchaseScreen = () => {
   const { publicProfile, user } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [quantity, setQuantity] = useState(1);
+  const [selectedTickets, setSelectedTickets] = useState({}); // { ticketName: quantity }
   const [purchasing, setPurchasing] = useState(false);
   const hasInitiatedPaymentRef = useRef(false);
+  
+  const MAX_TOTAL_TICKETS = 5;
 
   useEffect(() => {
     fetchEventDetails();
@@ -37,16 +38,6 @@ const TicketPurchaseScreen = () => {
       setLoading(true);
       const eventData = await getEventById(id);
       setEvent(eventData);
-
-      // Auto-select first available ticket type
-      if (eventData.ticketTypes?.length > 0) {
-        const availableTicket = eventData.ticketTypes.find(
-          (t) => t.isActive && t.quantity - t.sold > 0
-        );
-        if (availableTicket) {
-          setSelectedTicket(availableTicket);
-        }
-      }
     } catch (error) {
       console.error("Error fetching event:", error);
       Alert.alert("Error", "Failed to load event details");
@@ -59,24 +50,57 @@ const TicketPurchaseScreen = () => {
     return ticket.quantity - ticket.sold;
   };
 
-  const handleQuantityChange = (change) => {
-    const newQuantity = quantity + change;
-    const available = getAvailableTickets(selectedTicket);
+  const getTotalSelectedTickets = () => {
+    return Object.values(selectedTickets).reduce((sum, qty) => sum + qty, 0);
+  };
 
-    if (newQuantity >= 1 && newQuantity <= Math.min(10, available)) {
-      setQuantity(newQuantity);
+  const handleQuantityChange = (ticketName, change) => {
+    const currentQty = selectedTickets[ticketName] || 0;
+    const newQty = currentQty + change;
+    const totalSelected = getTotalSelectedTickets();
+    const remainingSlots = MAX_TOTAL_TICKETS - totalSelected;
+
+    // Don't allow if it would exceed max total
+    if (change > 0 && remainingSlots <= 0) {
+      Alert.alert(
+        "Maximum Reached",
+        `You can only select up to ${MAX_TOTAL_TICKETS} tickets in total.`
+      );
+      return;
+    }
+
+    // Update quantity
+    if (newQty <= 0) {
+      // Remove ticket type if quantity is 0
+      const updated = { ...selectedTickets };
+      delete updated[ticketName];
+      setSelectedTickets(updated);
+    } else {
+      setSelectedTickets({
+        ...selectedTickets,
+        [ticketName]: newQty,
+      });
     }
   };
 
   const calculateTotal = () => {
-    if (!selectedTicket) return 0;
-    return selectedTicket.price * quantity;
+    if (!event?.ticketTypes) return 0;
+    
+    return Object.entries(selectedTickets).reduce((total, [ticketName, qty]) => {
+      const ticket = event.ticketTypes.find(t => t.name === ticketName);
+      return total + (ticket ? ticket.price * qty : 0);
+    }, 0);
   };
 
   const calculatePlatformFee = () => {
-    if (!selectedTicket) return 0;
-    const feePerTicket = selectedTicket.price * 0.06 + 100; // 6% + ₦100
-    return feePerTicket * quantity;
+    if (!event?.ticketTypes) return 0;
+    
+    return Object.entries(selectedTickets).reduce((total, [ticketName, qty]) => {
+      const ticket = event.ticketTypes.find(t => t.name === ticketName);
+      if (!ticket) return total;
+      const feePerTicket = ticket.price * 0.06 + 100; // 6% + ₦100
+      return total + (feePerTicket * qty);
+    }, 0);
   };
 
   const handlePurchase = async () => {
@@ -86,15 +110,27 @@ const TicketPurchaseScreen = () => {
       return;
     }
 
+    // Validate at least one ticket is selected
+    const totalSelected = getTotalSelectedTickets();
+    if (totalSelected === 0) {
+      Alert.alert("No Tickets Selected", "Please select at least one ticket.");
+      return;
+    }
+
     try {
       setPurchasing(true);
       hasInitiatedPaymentRef.current = true;
 
+      // For now, purchase the first selected ticket type
+      // TODO: Update backend API to support multiple ticket types in one purchase
+      const firstTicketType = Object.keys(selectedTickets)[0];
+      const firstQuantity = selectedTickets[firstTicketType];
+
       // Create reservation and get payment details
       const response = await purchaseTickets(
         event._id,
-        selectedTicket.name,
-        quantity
+        firstTicketType,
+        firstQuantity
       );
 
       console.log("✅ Purchase response:", response);
@@ -185,23 +221,29 @@ const TicketPurchaseScreen = () => {
 
         {/* Ticket Types */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Ticket Type</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Select Tickets</Text>
+            <Text style={styles.ticketCounter}>
+              {getTotalSelectedTickets()} / {MAX_TOTAL_TICKETS} selected
+            </Text>
+          </View>
 
           {event.ticketTypes?.map((ticket, index) => {
             const available = getAvailableTickets(ticket);
             const isSoldOut = available === 0;
-            const isSelected = selectedTicket?.name === ticket.name;
+            const currentQty = selectedTickets[ticket.name] || 0;
+            const isSelected = currentQty > 0;
+            const totalSelected = getTotalSelectedTickets();
+            const canIncrease = totalSelected < MAX_TOTAL_TICKETS && currentQty < available;
 
             return (
-              <TouchableOpacity
+              <View
                 key={index}
                 style={[
                   styles.ticketCard,
                   isSelected && styles.ticketCardSelected,
                   isSoldOut && styles.ticketCardDisabled,
                 ]}
-                onPress={() => !isSoldOut && setSelectedTicket(ticket)}
-                disabled={isSoldOut}
               >
                 <View style={styles.ticketCardLeft}>
                   <View style={styles.ticketIconContainer}>
@@ -210,7 +252,7 @@ const TicketPurchaseScreen = () => {
                       color={isSelected ? Colors.primary : Colors.gray500}
                     />
                   </View>
-                  <View>
+                  <View style={styles.ticketInfo}>
                     <Text
                       style={[
                         styles.ticketName,
@@ -219,108 +261,97 @@ const TicketPurchaseScreen = () => {
                     >
                       {ticket.name}
                     </Text>
+                    <Text style={styles.ticketPrice}>
+                      ₦{ticket.price.toLocaleString()}
+                    </Text>
                     <Text style={styles.ticketAvailable}>
                       {isSoldOut ? "Sold Out" : `${available} available`}
                     </Text>
                   </View>
                 </View>
-                <Text
-                  style={[
-                    styles.ticketPrice,
-                    isSoldOut && styles.ticketPriceDisabled,
-                  ]}
-                >
-                  ₦{ticket.price.toLocaleString()}
-                </Text>
-                {isSelected && (
-                  <View style={styles.selectedBadge}>
-                    <View style={styles.selectedDot} />
+
+                {!isSoldOut && (
+                  <View style={styles.ticketQuantityControls}>
+                    <TouchableOpacity
+                      style={[
+                        styles.ticketQuantityButton,
+                        currentQty === 0 && styles.quantityButtonDisabled,
+                      ]}
+                      onPress={() => handleQuantityChange(ticket.name, -1)}
+                      disabled={currentQty === 0}
+                    >
+                      <Minus
+                        size={16}
+                        color={currentQty === 0 ? Colors.gray400 : Colors.white}
+                      />
+                    </TouchableOpacity>
+
+                    <Text style={styles.ticketQuantityText}>{currentQty}</Text>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.ticketQuantityButton,
+                        !canIncrease && styles.quantityButtonDisabled,
+                      ]}
+                      onPress={() => handleQuantityChange(ticket.name, 1)}
+                      disabled={!canIncrease}
+                    >
+                      <Plus
+                        size={16}
+                        color={!canIncrease ? Colors.gray400 : Colors.white}
+                      />
+                    </TouchableOpacity>
                   </View>
                 )}
-              </TouchableOpacity>
+              </View>
             );
           })}
+
+          <Text style={styles.quantityNote}>
+            Maximum {MAX_TOTAL_TICKETS} tickets total per purchase
+          </Text>
         </View>
 
-        {/* Quantity Selector */}
-        {selectedTicket && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select Quantity</Text>
-            <View style={styles.quantityContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.quantityButton,
-                  quantity === 1 && styles.quantityButtonDisabled,
-                ]}
-                onPress={() => handleQuantityChange(-1)}
-                disabled={quantity === 1}
-              >
-                <Minus
-                  size={20}
-                  color={quantity === 1 ? Colors.gray400 : Colors.white}
-                />
-              </TouchableOpacity>
-
-              <View style={styles.quantityDisplay}>
-                <Text style={styles.quantityText}>{quantity}</Text>
-                <Text style={styles.quantityLabel}>
-                  Ticket{quantity > 1 ? "s" : ""}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.quantityButton,
-                  quantity >=
-                    Math.min(10, getAvailableTickets(selectedTicket)) &&
-                    styles.quantityButtonDisabled,
-                ]}
-                onPress={() => handleQuantityChange(1)}
-                disabled={
-                  quantity >= Math.min(10, getAvailableTickets(selectedTicket))
-                }
-              >
-                <Plus
-                  size={20}
-                  color={
-                    quantity >=
-                    Math.min(10, getAvailableTickets(selectedTicket))
-                      ? Colors.gray400
-                      : Colors.white
-                  }
-                />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.quantityNote}>
-              Maximum 10 tickets per purchase •{" "}
-              {getAvailableTickets(selectedTicket)} available
-            </Text>
-          </View>
-        )}
-
         {/* Price Breakdown */}
-        {selectedTicket && (
+        {getTotalSelectedTickets() > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Price Breakdown</Text>
             <View style={styles.priceBreakdown}>
+              {Object.entries(selectedTickets).map(([ticketName, qty]) => {
+                const ticket = event.ticketTypes.find(t => t.name === ticketName);
+                if (!ticket) return null;
+                
+                return (
+                  <View key={ticketName} style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>
+                      {ticketName} × {qty}
+                    </Text>
+                    <Text style={styles.priceValue}>
+                      ₦{(ticket.price * qty).toLocaleString()}
+                    </Text>
+                  </View>
+                );
+              })}
+
               <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>
-                  {selectedTicket.name} × {quantity}
+                <Text style={styles.priceLabel}>Service Charge</Text>
+                <Text style={styles.priceValue}>
+                  ₦{platformFee.toLocaleString()}
                 </Text>
-                <Text style={styles.priceValue}>₦{total.toLocaleString()}</Text>
               </View>
 
               <View style={styles.priceDivider} />
 
               <View style={styles.priceRow}>
                 <Text style={styles.totalLabel}>Total</Text>
-                <Text style={styles.totalValue}>₦{total.toLocaleString()}</Text>
+                <Text style={styles.totalValue}>
+                  ₦{(total + platformFee).toLocaleString()}
+                </Text>
               </View>
 
               <View style={styles.feeNote}>
                 <Text style={styles.feeNoteText}>
-                  Platform fee (₦{platformFee.toLocaleString()}) is deducted
-                  from host's payment
+                  Service charge covers payment processing and platform fees
                 </Text>
               </View>
             </View>
@@ -347,13 +378,15 @@ const TicketPurchaseScreen = () => {
       </ScrollView>
 
       {/* Bottom Bar */}
-      {selectedTicket && (
+      {getTotalSelectedTickets() > 0 && (
         <View style={styles.bottomBar}>
           <View style={styles.bottomBarContent}>
             <View>
-              <Text style={styles.bottomBarLabel}>Total Amount</Text>
+              <Text style={styles.bottomBarLabel}>
+                {getTotalSelectedTickets()} Ticket{getTotalSelectedTickets() > 1 ? 's' : ''}
+              </Text>
               <Text style={styles.bottomBarPrice}>
-                ₦{total.toLocaleString()}
+                ₦{(total + platformFee).toLocaleString()}
               </Text>
             </View>
             <TouchableOpacity
@@ -443,11 +476,21 @@ const styles = StyleSheet.create({
     // borderBottomWidth: 1,
     // borderBottomColor: Colors.gray100,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontFamily: "Sora-Bold",
     fontSize: 18,
     color: Colors.gray900,
-    marginBottom: 16,
+  },
+  ticketCounter: {
+    fontFamily: "Sora-SemiBold",
+    fontSize: 14,
+    color: Colors.primary,
   },
   ticketCard: {
     flexDirection: "row",
@@ -481,6 +524,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
+  ticketInfo: {
+    flex: 1,
+  },
   ticketName: {
     fontFamily: "Sora-SemiBold",
     fontSize: 16,
@@ -490,18 +536,36 @@ const styles = StyleSheet.create({
   ticketNameDisabled: {
     color: Colors.gray500,
   },
+  ticketPrice: {
+    fontFamily: "Sora-Bold",
+    fontSize: 15,
+    color: Colors.gray900,
+    marginBottom: 4,
+  },
   ticketAvailable: {
     fontFamily: "Sora-Regular",
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.gray600,
   },
-  ticketPrice: {
+  ticketQuantityControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  ticketQuantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  ticketQuantityText: {
     fontFamily: "Sora-Bold",
     fontSize: 18,
     color: Colors.gray900,
-  },
-  ticketPriceDisabled: {
-    color: Colors.gray500,
+    minWidth: 24,
+    textAlign: "center",
   },
   selectedBadge: {
     position: "absolute",
