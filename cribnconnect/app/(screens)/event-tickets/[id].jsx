@@ -5,15 +5,15 @@ import { useLocalSearchParams } from 'expo-router';
 import { Calendar, CheckCircle, Clock, MapPin, XCircle } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    ScrollView,
-    Share,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,7 +30,7 @@ const EventTicketsScreen = () => {
     try {
       setLoading(true);
       const response = await getEventTickets(id);
-    //   console.log('🎟️ Event Tickets Data:', response);
+      // console.log('🎟️ Event Tickets Data:', response);
       setEventData(response);
     } catch (error) {
       console.error('❌ Error fetching event tickets:', error);
@@ -151,7 +151,7 @@ const EventTicketsScreen = () => {
               {/* Ticket Header */}
               <View style={styles.ticketHeader}>
                 <View>
-                  <Text style={styles.ticketNumber}>Ticket #{index + 1}</Text>
+                  <Text style={styles.ticketNumber}>Ticket #{ticket.ticketNumber || index + 1}</Text>
                   <Text style={styles.ticketType}>{ticket.ticketType}</Text>
                 </View>
                 {ticket.used ? (
