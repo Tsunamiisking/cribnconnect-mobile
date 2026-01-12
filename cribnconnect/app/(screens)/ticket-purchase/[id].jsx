@@ -155,11 +155,31 @@ const TicketPurchaseScreen = () => {
       hasInitiatedPaymentRef.current = false;
       setPurchasing(false);
       
-      Alert.alert(
-        "Purchase Failed",
-        error.message || "Failed to initiate payment. Please try again.",
-        [{ text: "OK" }]
-      );
+      // Extract error message from response
+      const errorMessage = error.response?.data?.message || error.message || "Failed to initiate payment. Please try again.";
+      
+      // Check if it's a ticket availability error (404 with specific message)
+      if (error.response?.status === 404 && errorMessage.includes("not found or inactive")) {
+        // Extract ticket type name from error message
+        const ticketTypeMatch = errorMessage.match(/Ticket type ["'](.+?)["']/);
+        const ticketType = ticketTypeMatch ? ticketTypeMatch[1] : "Selected ticket";
+        
+        Alert.alert(
+          "Ticket Unavailable",
+          `${ticketType} tickets are no longer available (sold out or expired). Please select a different ticket type.`,
+          [{ text: "OK" }]
+        );
+      } else if (error.response?.status === 400) {
+        // Handle validation errors (max tickets, insufficient tickets, etc.)
+        Alert.alert("Purchase Failed", errorMessage, [{ text: "OK" }]);
+      } else {
+        // Generic error
+        Alert.alert(
+          "Purchase Failed",
+          errorMessage,
+          [{ text: "OK" }]
+        );
+      }
     }
   };
 
@@ -232,10 +252,12 @@ const TicketPurchaseScreen = () => {
           {event.ticketTypes?.map((ticket, index) => {
             const available = getAvailableTickets(ticket);
             const isSoldOut = available === 0;
+            const isInactive = !ticket.isActive; // Check if ticket type is inactive/expired
+            const isDisabled = isSoldOut || isInactive;
             const currentQty = selectedTickets[ticket.name] || 0;
             const isSelected = currentQty > 0;
             const totalSelected = getTotalSelectedTickets();
-            const canIncrease = totalSelected < MAX_TOTAL_TICKETS && currentQty < available;
+            const canIncrease = totalSelected < MAX_TOTAL_TICKETS && currentQty < available && !isInactive;
 
             return (
               <View
@@ -243,7 +265,7 @@ const TicketPurchaseScreen = () => {
                 style={[
                   styles.ticketCard,
                   isSelected && styles.ticketCardSelected,
-                  isSoldOut && styles.ticketCardDisabled,
+                  isDisabled && styles.ticketCardDisabled,
                 ]}
               >
                 <View style={styles.ticketCardLeft}>
@@ -257,7 +279,7 @@ const TicketPurchaseScreen = () => {
                     <Text
                       style={[
                         styles.ticketName,
-                        isSoldOut && styles.ticketNameDisabled,
+                        isDisabled && styles.ticketNameDisabled,
                       ]}
                     >
                       {ticket.name}
@@ -266,12 +288,16 @@ const TicketPurchaseScreen = () => {
                       ₦{ticket.price.toLocaleString()}
                     </Text>
                     <Text style={styles.ticketAvailable}>
-                      {isSoldOut ? "Sold Out" : `${available} available`}
+                      {isInactive 
+                        ? "Expired" 
+                        : isSoldOut 
+                        ? "Sold Out" 
+                        : `${available} available`}
                     </Text>
                   </View>
                 </View>
 
-                {!isSoldOut && (
+                {!isDisabled && (
                   <View style={styles.ticketQuantityControls}>
                     <TouchableOpacity
                       style={[
