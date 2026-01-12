@@ -2,7 +2,7 @@ import { getTicketsByEvent } from '@/api/services/ticketServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
-import { Calendar, MapPin, Ticket } from 'lucide-react-native';
+import { Calendar, MapPin, Ticket, Search } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,6 +11,7 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -18,20 +19,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MyTickets = () => {
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchTickets();
   }, []);
+
+  useEffect(() => {
+    filterAndSortEvents();
+  }, [events, searchQuery]);
 
   const fetchTickets = async () => {
     try {
       setLoading(true);
       const response = await getTicketsByEvent();
       
-      console.log('📋 Events with Tickets:', response);
-      console.log('� Total Events:', response.totalEvents || 0);
+      // console.log('📋 Events with Tickets:', response);
+      console.log('📊 Total Events:', response.totalEvents || 0);
       console.log('🎟️ Total Tickets:', response.totalTickets || 0);
       
       setEvents(response.events || []);
@@ -40,6 +47,32 @@ const MyTickets = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterAndSortEvents = () => {
+    let filtered = [...events];
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((eventData) =>
+        eventData.event.title?.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort by purchase time (most recent first)
+    // Using the first reservation's paidAt timestamp as purchase time
+    filtered.sort((a, b) => {
+      const dateA = a.reservations?.[0]?.paidAt
+        ? new Date(a.reservations[0].paidAt).getTime()
+        : 0;
+      const dateB = b.reservations?.[0]?.paidAt
+        ? new Date(b.reservations[0].paidAt).getTime()
+        : 0;
+      return dateB - dateA; // Descending order (most recent first)
+    });
+
+    setFilteredEvents(filtered);
   };
 
   const onRefresh = async () => {
@@ -155,9 +188,33 @@ const MyTickets = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <BackHeader title="My Tickets" />
 
+    {/* <View>
+      <Text style={styles.searchTitle}> Search </Text>
+    </View> */}
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Search size={20} color={Colors.gray500} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search events..."
+          placeholderTextColor={Colors.gray400}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            style={styles.clearButton}
+          >
+            <Text style={styles.clearButtonText}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* Events List */}
       <FlatList
-        data={events}
+        data={filteredEvents}
         keyExtractor={(item) => item.event._id}
         renderItem={({ item }) => <EventTicketCard eventData={item} />}
         contentContainerStyle={styles.listContent}
@@ -180,6 +237,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  // searchTitle: {
+  //   fontFamily: 'Sora-Bold',
+  //   fontSize: 18,
+  //   color: Colors.gray900,
+  //   marginHorizontal: 16,
+  //   marginTop: 16,
+  //   marginBottom: 8,
+  // },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray100,
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: 'Sora-Regular',
+    fontSize: 15,
+    color: Colors.gray900,
+    padding: 0,
+  },
+  clearButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  clearButtonText: {
+    fontSize: 18,
+    color: Colors.gray500,
   },
   loadingContainer: {
     flex: 1,
