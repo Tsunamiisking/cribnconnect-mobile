@@ -121,17 +121,18 @@ const TicketPurchaseScreen = () => {
       setPurchasing(true);
       hasInitiatedPaymentRef.current = true;
 
-      // For now, purchase the first selected ticket type
-      // TODO: Update backend API to support multiple ticket types in one purchase
-      const firstTicketType = Object.keys(selectedTickets)[0];
-      const firstQuantity = selectedTickets[firstTicketType];
+      // Convert selectedTickets object to array format for backend
+      const ticketsArray = Object.entries(selectedTickets)
+        .filter(([_, quantity]) => quantity > 0)
+        .map(([ticketType, quantity]) => ({
+          ticketType,
+          quantity
+        }));
+
+      console.log("🎫 Purchasing tickets:", ticketsArray);
 
       // Create reservation and get payment details
-      const response = await purchaseTickets(
-        event._id,
-        firstTicketType,
-        firstQuantity
-      );
+      const response = await purchaseTickets(event._id, ticketsArray);
 
       console.log("✅ Purchase response:", response);
 

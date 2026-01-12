@@ -1,12 +1,24 @@
 import api from "../api";
 
-// Initialize ticket purchase
-export const purchaseTickets = async (eventId, ticketType, quantity) => {
-  const res = await api.post("/payments/tickets/purchase", {
+// Initialize ticket purchase - Supports both old and new formats
+export const purchaseTickets = async (eventId, ticketsOrType, quantity = null) => {
+  // New format: ticketsOrType is an array of { ticketType, quantity }
+  // Old format: ticketsOrType is a string (ticketType), quantity is a number
+  
+  const requestBody = {
     eventId,
-    ticketType,
-    quantity,
-  });
+  };
+  
+  if (Array.isArray(ticketsOrType)) {
+    // New format: Multiple tickets
+    requestBody.tickets = ticketsOrType;
+  } else {
+    // Old format: Single ticket (backward compatibility)
+    requestBody.ticketType = ticketsOrType;
+    requestBody.quantity = quantity;
+  }
+  
+  const res = await api.post("/payments/tickets/purchase", requestBody);
   return res.data;
 };
 
