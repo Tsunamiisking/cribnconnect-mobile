@@ -64,3 +64,49 @@ export const cancelReservation = async (reservationId) => {
   const res = await api.put(`/payments/tickets/${reservationId}/cancel`);
   return res.data;
 };
+
+// ===== QR SCANNING ENDPOINTS =====
+
+// Scan ticket (in-app)
+export const scanTicket = async (ticketCode, scanData = {}) => {
+  const res = await api.post(`/tickets/scan/${ticketCode}`, {
+    scanMethod: scanData.scanMethod || 'in-app',
+    scanLocation: scanData.scanLocation || null,
+  });
+  return res.data;
+};
+
+// Get scan statistics for an event
+export const getScanStats = async (eventId) => {
+  const res = await api.get(`/tickets/events/${eventId}/scan-stats`);
+  return res.data;
+};
+
+// ===== STAFF MANAGEMENT ENDPOINTS =====
+
+// Get authorized staff for an event
+export const getEventStaff = async (eventId) => {
+  const res = await api.get(`/tickets/events/${eventId}/staff`);
+  return res.data;
+};
+
+// Add staff member
+export const addEventStaff = async (eventId, userId, role) => {
+  const res = await api.post(`/tickets/events/${eventId}/staff`, {
+    userId,
+    role, // 'validator' or 'manager'
+  });
+  return res.data;
+};
+
+// Remove staff member
+export const removeEventStaff = async (eventId, staffUserId) => {
+  const res = await api.delete(`/tickets/events/${eventId}/staff/${staffUserId}`);
+  return res.data;
+};
+
+// Revoke all staff access (Host only)
+export const revokeAllStaff = async (eventId) => {
+  const res = await api.delete(`/tickets/events/${eventId}/staff`);
+  return res.data;
+};
