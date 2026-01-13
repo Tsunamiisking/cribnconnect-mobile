@@ -7,13 +7,13 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -226,7 +226,19 @@ const StaffManagementScreen = () => {
     <SafeAreaView style={styles.container}>
       <BackHeader title={`Staff - ${eventTitle || 'Event'}`} />
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         {/* Info Banner */}
         <View style={styles.infoBanner}>
           <AlertCircle size={20} color={Colors.primary} />
@@ -311,7 +323,27 @@ const StaffManagementScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Emergency Revoke All (Host Only) */}
+        {/* Current Staff List */}
+        <View style={styles.staffListSection}>
+          <View style={styles.staffListHeader}>
+            <Users size={20} color={Colors.primary} />
+            <Text style={styles.sectionTitle}>Current Staff ({staff.length})</Text>
+          </View>
+
+          {staff.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
+              {staff.map((item) => (
+                <View key={item.userId}>
+                  {renderStaffItem({ item })}
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+
+        {/* Emergency Revoke All (Host Only) - At Bottom */}
         {isHost === 'true' && staff.length > 0 && (
           <View style={styles.emergencySection}>
             <View style={styles.emergencySectionHeader}>
@@ -333,29 +365,8 @@ const StaffManagementScreen = () => {
           </View>
         )}
 
-        {/* Staff List */}
-        <View style={styles.listSection}>
-          <Text style={styles.sectionTitle}>
-            Current Staff ({staff.length})
-          </Text>
-          <FlatList
-            data={staff}
-            keyExtractor={(item) => item.userId}
-            renderItem={renderStaffItem}
-            ListEmptyComponent={<EmptyState />}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={[Colors.primary]}
-                tintColor={Colors.primary}
-              />
-            }
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      </View>
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -376,8 +387,10 @@ const styles = StyleSheet.create({
     color: Colors.gray600,
     marginTop: 12,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 16,
   },
   infoBanner: {
@@ -487,6 +500,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.red50,
     padding: 16,
     borderRadius: 12,
+    marginTop: 8,
     marginBottom: 16,
     borderWidth: 2,
     borderColor: Colors.error,
@@ -523,12 +537,13 @@ const styles = StyleSheet.create({
     color: Colors.error,
     textAlign: 'center',
   },
-  listSection: {
-    flex: 1,
+  staffListSection: {
+    marginBottom: 16,
   },
-  listContent: {
-    paddingTop: 12,
-    flexGrow: 1,
+  staffListHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   staffCard: {
     flexDirection: 'row',
@@ -606,11 +621,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyState: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 40,
     paddingHorizontal: 40,
+    backgroundColor: Colors.gray50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    marginBottom: 16,
   },
   emptyStateTitle: {
     fontFamily: 'Sora-Bold',
