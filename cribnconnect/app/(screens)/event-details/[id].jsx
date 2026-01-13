@@ -5,6 +5,7 @@ import { getAuth } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { QrCode, BarChart3 } from 'lucide-react-native';
 import MediaCarousel from '../apartment-details/components/MediaCarousel';
 import EventAdditionalSections from './components/EventAdditionalSections';
 import EventBottomBar from './components/EventBottomBar';
@@ -153,6 +154,40 @@ const EventDetailsScreen = () => {
         {/* Status badges for hosts (below media, above title) */}
         {isHost && <EventStatusBadges event={event} />}
 
+        {/* Host Quick Actions - QR Scanner and Statistics */}
+        {isHost && (
+          <View style={styles.hostActionsContainer}>
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={() => router.push({
+                pathname: '/(screens)/qr-scan',
+                params: {
+                  eventId: event._id,
+                  eventTitle: event.title,
+                  isHost: 'true'
+                }
+              })}
+            >
+              <QrCode size={24} color={Colors.white} />
+              <Text style={styles.scanButtonText}>Scan Tickets</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.statsButton}
+              onPress={() => router.push({
+                pathname: '/(screens)/scan-statistics/[eventId]',
+                params: {
+                  eventId: event._id,
+                  eventTitle: event.title
+                }
+              })}
+            >
+              <BarChart3 size={22} color={Colors.primary} />
+              <Text style={styles.statsButtonText}>View Stats</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Event Details Content */}
         <EventDetailsContent
           event={event}
@@ -227,6 +262,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Sora-SemiBold',
     color: Colors.white,
+  },
+  hostActionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: Colors.gray50,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  scanButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  scanButtonText: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 15,
+    color: Colors.white,
+  },
+  statsButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.white,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  statsButtonText: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 15,
+    color: Colors.primary,
   },
 });
 

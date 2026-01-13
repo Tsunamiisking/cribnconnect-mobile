@@ -42,7 +42,7 @@ const options = [
   },
   {
     name: "Scan Event QR Code",
-    route: "/(support)/index",
+    route: "/(screens)/qr-scan",
     description: "Scan to join or check-in to events",
   },
 ];

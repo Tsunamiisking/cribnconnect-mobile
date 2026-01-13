@@ -1,13 +1,16 @@
 import { scanTicket } from '@/api/services/ticketServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { useLocalSearchParams } from 'expo-router';
-import { AlertCircle, Camera as CameraIcon, CheckCircle, Ticket, User, XCircle } from 'lucide-react-native';
+import * as Network from 'expo-network';
+import { router, useLocalSearchParams } from 'expo-router';
+import { AlertCircle, BarChart3, Camera as CameraIcon, CheckCircle, Ticket, User, Users, WifiOff, XCircle, Zap } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     Animated,
     Dimensions,
     ScrollView,
@@ -22,12 +25,16 @@ const { width, height } = Dimensions.get('window');
 const SCAN_AREA_SIZE = width * 0.7;
 
 const QrScanner = () => {
-  const { eventId, eventTitle } = useLocalSearchParams();
+  const { eventId, eventTitle, isHost } = useLocalSearchParams();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [torch, setTorch] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [bulkScanMode, setBulkScanMode] = useState(false);
+  const [bulkScanCount, setBulkScanCount] = useState(0);
+  const [offlineQueueCount, setOfflineQueueCount] = useState(0);
   
   // Animation values
   const scanLineAnim = useRef(new Animated.Value(0)).current;
@@ -49,7 +56,122 @@ const QrScanner = () => {
         }),
       ])
     ).start();
+
+    // Check network status
+    checkNetworkStatus();
+    
+    // Load offline queue count
+    loadOfflineQueueCount();
+
+    // Set up network listener
+    const networkListener = Network.addNetworkStateListener(handleNetworkChange);
+    
+    return () => {
+      networkListener?.remove();
+    };
   }, []);
+
+  const checkNetworkStatus = async () => {
+    try {
+      const networkState = await Network.getNetworkStateAsync();
+      setIsOffline(!networkState.isConnected);
+    } catch (error) {
+      console.error('Error checking network:', error);
+    }
+  };
+
+  const handleNetworkChange = (networkState) => {
+    const wasOffline = isOffline;
+    const nowOffline = !networkState.isConnected;
+    
+    setIsOffline(nowOffline);
+    
+    // If we just came back online, sync queued scans
+    if (wasOffline && !nowOffline) {
+      syncOfflineScans();
+    }
+  };
+
+  const loadOfflineQueueCount = async () => {
+    try {
+      const queue = await AsyncStorage.getItem(`offline_scans_${eventId}`);
+      if (queue) {
+        const scans = JSON.parse(queue);
+        setOfflineQueueCount(scans.length);
+      }
+    } catch (error) {
+      console.error('Error loading offline queue count:', error);
+    }
+  };
+
+  const queueOfflineScan = async (ticketCode) => {
+    try {
+      const scanData = {
+        ticketCode,
+        timestamp: new Date().toISOString(),
+        eventId,
+      };
+
+      // Get existing queue
+      const queueStr = await AsyncStorage.getItem(`offline_scans_${eventId}`);
+      const queue = queueStr ? JSON.parse(queueStr) : [];
+      
+      // Add to queue
+      queue.push(scanData);
+      
+      // Save queue
+      await AsyncStorage.setItem(`offline_scans_${eventId}`, JSON.stringify(queue));
+      
+      setOfflineQueueCount(queue.length);
+      
+      return true;
+    } catch (error) {
+      console.error('Error queueing offline scan:', error);
+      return false;
+    }
+  };
+
+  const syncOfflineScans = async () => {
+    try {
+      const queueStr = await AsyncStorage.getItem(`offline_scans_${eventId}`);
+      if (!queueStr) return;
+
+      const queue = JSON.parse(queueStr);
+      if (queue.length === 0) return;
+
+      console.log(`📤 Syncing ${queue.length} offline scans...`);
+
+      let successCount = 0;
+      let failedScans = [];
+
+      for (const scan of queue) {
+        try {
+          await scanTicket(scan.ticketCode, {
+            scanMethod: 'in-app-offline-sync',
+            scanLocation: 'Mobile App Scanner (Offline Sync)',
+          });
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to sync scan ${scan.ticketCode}:`, error);
+          failedScans.push(scan);
+        }
+      }
+
+      // Update queue with failed scans only
+      await AsyncStorage.setItem(`offline_scans_${eventId}`, JSON.stringify(failedScans));
+      setOfflineQueueCount(failedScans.length);
+
+      if (successCount > 0) {
+        Alert.alert(
+          'Sync Complete',
+          `Successfully synced ${successCount} offline scan${successCount !== 1 ? 's' : ''}!` +
+          (failedScans.length > 0 ? `\n\n${failedScans.length} scan${failedScans.length !== 1 ? 's' : ''} failed and will retry later.` : '')
+        );
+      }
+    } catch (error) {
+      console.error('Error syncing offline scans:', error);
+    }
+  };
 
   const handleBarCodeScanned = async ({ data }) => {
     if (scanned || scanning) return;
@@ -72,6 +194,27 @@ const QrScanner = () => {
 
       console.log('🎫 Scanning ticket:', ticketCode);
 
+      // Check if offline
+      if (isOffline) {
+        // Queue the scan for later
+        const queued = await queueOfflineScan(ticketCode);
+        if (queued) {
+          showOfflineQueuedResult(ticketCode);
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          
+          // In bulk scan mode, auto-reset after 2 seconds
+          if (bulkScanMode) {
+            setBulkScanCount(prev => prev + 1);
+            setTimeout(() => {
+              resetScanner();
+            }, 2000);
+          }
+        } else {
+          throw new Error('Failed to queue offline scan');
+        }
+        return;
+      }
+
       // Call API to scan ticket
       const response = await scanTicket(ticketCode, {
         scanMethod: 'in-app',
@@ -84,6 +227,14 @@ const QrScanner = () => {
       showSuccessResult(response);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
+      // In bulk scan mode, auto-reset after 2 seconds
+      if (bulkScanMode) {
+        setBulkScanCount(prev => prev + 1);
+        setTimeout(() => {
+          resetScanner();
+        }, 2000);
+      }
+
     } catch (error) {
       console.error('❌ Scan error:', error);
 
@@ -91,6 +242,13 @@ const QrScanner = () => {
         // Ticket already scanned
         showAlreadyScannedResult(error.response.data);
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        
+        // In bulk scan mode, auto-reset after 1.5 seconds for already scanned
+        if (bulkScanMode) {
+          setTimeout(() => {
+            resetScanner();
+          }, 1500);
+        }
       } else {
         // Other error
         const errorMessage = error.response?.data?.message || 'Failed to validate ticket';
@@ -100,6 +258,14 @@ const QrScanner = () => {
     } finally {
       setScanning(false);
     }
+  };
+
+  const showOfflineQueuedResult = (ticketCode) => {
+    setScanResult({
+      type: 'offline-queued',
+      ticketCode: ticketCode,
+    });
+    animateResult();
   };
 
   const showSuccessResult = (data) => {
@@ -193,6 +359,58 @@ const QrScanner = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <BackHeader title={eventTitle || "QR Scanner"} />
 
+      {/* Control Bar */}
+      <View style={styles.controlBar}>
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={() => router.push({
+            pathname: '/(screens)/staff-management/[id]',
+            params: { eventId, eventTitle, isHost }
+          })}
+        >
+          <Users size={20} color={Colors.primary} />
+          <Text style={styles.controlButtonText}>Staff</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={() => router.push({
+            pathname: '/(screens)/scan-statistics/[id]',
+            params: { eventId, eventTitle }
+          })}
+        >
+          <BarChart3 size={20} color={Colors.primary} />
+          <Text style={styles.controlButtonText}>Stats</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.controlButton, bulkScanMode && styles.controlButtonActive]}
+          onPress={() => {
+            setBulkScanMode(!bulkScanMode);
+            if (!bulkScanMode) {
+              setBulkScanCount(0);
+            }
+          }}
+        >
+          <Zap size={20} color={bulkScanMode ? Colors.white : Colors.primary} />
+          <Text style={[styles.controlButtonText, bulkScanMode && styles.controlButtonTextActive]}>
+            {bulkScanMode ? `Bulk (${bulkScanCount})` : 'Bulk'}
+          </Text>
+        </TouchableOpacity>
+
+        {isOffline && (
+          <View style={styles.offlineIndicator}>
+            <WifiOff size={16} color={Colors.white} />
+            <Text style={styles.offlineText}>Offline</Text>
+            {offlineQueueCount > 0 && (
+              <View style={styles.offlineQueueBadge}>
+                <Text style={styles.offlineQueueText}>{offlineQueueCount}</Text>
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+
       <View style={styles.cameraContainer}>
         <CameraView
           style={styles.camera}
@@ -275,6 +493,9 @@ const QrScanner = () => {
               )}
               {scanResult.type === 'error' && (
                 <ErrorResult message={scanResult.message} onReset={resetScanner} />
+              )}
+              {scanResult.type === 'offline-queued' && (
+                <OfflineQueuedResult ticketCode={scanResult.ticketCode} onReset={resetScanner} />
               )}
             </View>
           </Animated.View>
@@ -456,10 +677,42 @@ const ErrorResult = ({ message, onReset }) => {
   );
 };
 
+// Offline Queued Result Component
+const OfflineQueuedResult = ({ ticketCode, onReset }) => {
+  return (
+    <View style={styles.resultContent}>
+      <View style={styles.resultHeader}>
+        <View style={[styles.resultIcon, styles.infoIcon]}>
+          <WifiOff size={48} color={Colors.white} />
+        </View>
+        <Text style={styles.resultTitle}>Queued for Sync 📥</Text>
+        <Text style={styles.resultSubtitle}>Scan saved - will sync when online</Text>
+      </View>
+
+      <View style={[styles.resultCard, styles.infoCard]}>
+        <Text style={styles.offlineQueueMessage}>
+          You're currently offline. This ticket scan has been saved locally and will be automatically synced when you reconnect to the internet.
+        </Text>
+        <View style={styles.ticketCodeContainer}>
+          <Text style={styles.ticketCodeLabel}>Ticket Code:</Text>
+          <Text style={styles.ticketCodeValue}>{ticketCode}</Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.resetButton, styles.infoButton]}
+        onPress={onReset}
+      >
+        <Text style={styles.resetButtonText}>Scan Next Ticket</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.white,
   },
   centerContent: {
     flex: 1,
@@ -467,6 +720,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     backgroundColor: Colors.white,
+  },
+  controlBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+    gap: 8,
+  },
+  controlButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: Colors.gray50,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+  },
+  controlButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  controlButtonText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 13,
+    color: Colors.primary,
+  },
+  controlButtonTextActive: {
+    color: Colors.white,
+  },
+  offlineIndicator: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: Colors.error,
+    borderRadius: 8,
+    marginLeft: 'auto',
+  },
+  offlineText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 13,
+    color: Colors.white,
+  },
+  offlineQueueBadge: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 4,
+  },
+  offlineQueueText: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 11,
+    color: Colors.error,
   },
   loadingText: {
     fontFamily: 'Sora-Regular',
@@ -750,10 +1065,46 @@ const styles = StyleSheet.create({
   errorButton: {
     backgroundColor: Colors.error,
   },
+  infoButton: {
+    backgroundColor: Colors.blue500,
+  },
   resetButtonText: {
     fontFamily: 'Sora-Bold',
     fontSize: 16,
     color: Colors.white,
+  },
+  infoIcon: {
+    backgroundColor: Colors.blue500,
+  },
+  infoCard: {
+    backgroundColor: Colors.blue50,
+    borderColor: Colors.blue500,
+  },
+  offlineQueueMessage: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 14,
+    color: Colors.gray800,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  ticketCodeContainer: {
+    backgroundColor: Colors.white,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.gray300,
+  },
+  ticketCodeLabel: {
+    fontFamily: 'Sora-Regular',
+    fontSize: 12,
+    color: Colors.gray600,
+    marginBottom: 4,
+  },
+  ticketCodeValue: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 14,
+    color: Colors.gray900,
   },
 });
 

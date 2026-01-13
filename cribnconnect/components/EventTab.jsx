@@ -10,6 +10,7 @@ import {
   Plus,
   TrendingUp,
   Users,
+  QrCode,
 } from "lucide-react-native";
 import React from "react";
 import {
@@ -80,6 +81,18 @@ const EventCard = ({ event }) => {
 
   const handleCardPress = () => {
     router.push(`/(screens)/event-details/${event.id}`);
+  };
+
+  const handleScanPress = (e) => {
+    e.stopPropagation(); // Prevent card press
+    router.push({
+      pathname: '/(screens)/qr-scan',
+      params: {
+        eventId: event.id,
+        eventTitle: event.title,
+        isHost: 'true'
+      }
+    });
   };
 
   // const handleEditPress = () => {
@@ -182,6 +195,14 @@ const EventCard = ({ event }) => {
               {event.category} • {event.eventType}
             </Text>
           </View>
+
+          {/* Quick Scan Button - Only for upcoming events */}
+          {eventStatus.text === 'Upcoming' && (
+            <TouchableOpacity style={styles.scanQuickButton} onPress={handleScanPress}>
+              <QrCode size={18} color={Colors.white} />
+              <Text style={styles.scanQuickButtonText}>Scan</Text>
+            </TouchableOpacity>
+          )}
 
           {/* <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
             <Text style={styles.editButtonText}>Edit</Text>
@@ -549,6 +570,20 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: 14,
+    fontFamily: "Sora-SemiBold",
+    color: Colors.white,
+  },
+  scanQuickButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  scanQuickButtonText: {
+    fontSize: 13,
     fontFamily: "Sora-SemiBold",
     color: Colors.white,
   },
