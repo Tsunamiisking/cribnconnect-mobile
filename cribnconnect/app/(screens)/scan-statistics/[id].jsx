@@ -18,16 +18,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const { width } = Dimensions.get('window');
 
 const ScanStatisticsScreen = () => {
-  const { eventId, eventTitle } = useLocalSearchParams();
+  const { id, eventTitle } = useLocalSearchParams();
+  const eventId = id; // Use id from route params
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadStatistics();
-  }, []);
+    if (eventId) {
+      loadStatistics();
+    }
+  }, [eventId]);
 
   const loadStatistics = async () => {
+    if (!eventId) {
+      return;
+    }
+    
     try {
       setLoading(true);
       const response = await getScanStats(eventId);

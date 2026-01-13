@@ -1,7 +1,7 @@
 import { addEventStaff, getEventStaff, removeEventStaff, revokeAllStaff } from '@/api/services/ticketServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { AlertCircle, Shield, ShieldCheck, Trash2, User, UserPlus, Users } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -18,7 +18,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const StaffManagementScreen = () => {
-  const { eventId, eventTitle, isHost } = useLocalSearchParams();
+  const { id, eventTitle, isHost } = useLocalSearchParams();
+  const eventId = id; // Use id from route params
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -27,10 +28,17 @@ const StaffManagementScreen = () => {
   const [addingStaff, setAddingStaff] = useState(false);
 
   useEffect(() => {
-    loadStaff();
-  }, []);
+    if (eventId) {
+      loadStaff();
+    }
+  }, [eventId]);
 
   const loadStaff = async () => {
+    if (!eventId) {
+      Alert.alert('Error', 'Event ID is missing');
+      return;
+    }
+    
     try {
       setLoading(true);
       const response = await getEventStaff(eventId);

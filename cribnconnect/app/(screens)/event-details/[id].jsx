@@ -175,9 +175,9 @@ const EventDetailsScreen = () => {
             <TouchableOpacity
               style={styles.statsButton}
               onPress={() => router.push({
-                pathname: '/(screens)/scan-statistics/[eventId]',
+                pathname: '/(screens)/scan-statistics/[id]',
                 params: {
-                  eventId: event._id,
+                  id: event._id,
                   eventTitle: event.title
                 }
               })}
