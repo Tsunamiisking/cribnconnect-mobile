@@ -1,6 +1,7 @@
 import api from "@/api/api";
 import { publishEvent, updateEvent, updateEventPerks } from "@/api/services/eventServices";
 import { Colors } from "@/constants/Colors";
+import { router } from "expo-router";
 import {
   AlertTriangle,
   Badge,
@@ -50,7 +51,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { router } from "expo-router";
 
 const EventHostManagement = ({
   event,
