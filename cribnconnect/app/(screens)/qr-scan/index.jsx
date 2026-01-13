@@ -55,13 +55,16 @@ const EventScanScreen = () => {
         order: 'desc',
       });
 
+      // Backend can return either 'events' or 'data' array
+      const allEvents = response.events || response.data || [];
+
       // Filter for upcoming events only
-      const upcomingEvents = response.data?.filter(event => {
+      const upcomingEvents = allEvents.filter(event => {
         const eventDate = new Date(event.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return eventDate >= today && event.status !== 'cancelled';
-      }) || [];
+      });
 
       setMyEvents(upcomingEvents);
     } catch (error) {
@@ -72,14 +75,34 @@ const EventScanScreen = () => {
   const loadPendingInvitations = async () => {
     try {
       const response = await getMyScanRequests();
+    //   console.log("🔵 Pending scan requests response:", response);
+      
+      // Backend returns 'requests' array, need to map to expected format
+      const invitations = response.requests || [];
+      
+      // Map backend format to frontend format
+      const mappedInvitations = invitations.map(request => ({
+        _id: request.eventId,
+        title: request.eventTitle,
+        date: request.eventDate,
+        time: request.eventTime,
+        capacity: request.capacity,
+        attendees: Array(request.attendeeCount).fill({}), // Create array with attendeeCount length
+        status: 'published', // Assume published if it's in requests
+        invitationRole: request.invitation?.role || 'validator',
+        host: request.host,
+        venue: request.location,
+      }));
+      
+    //   console.log("🔵 Mapped invitations:", mappedInvitations);
       
       // Filter for upcoming events only
-      const upcomingInvitations = response.data?.filter(event => {
+      const upcomingInvitations = mappedInvitations.filter(event => {
         const eventDate = new Date(event.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return eventDate >= today && event.status !== 'cancelled';
-      }) || [];
+      });
 
       setPendingInvitations(upcomingInvitations);
     } catch (error) {
@@ -104,13 +127,40 @@ const EventScanScreen = () => {
 
       console.log("🔵 Accepted staff events response:", response);
 
+      // Check if response has 'events' array (backend format) or 'data' array (expected format)
+      const events = response.events || response.data || [];
+      
+      // Map backend format to frontend format if needed
+      const mappedEvents = events.map(event => {
+        // If event already has _id, title, date - it's in correct format
+        if (event._id && event.title && event.date) {
+          return event;
+        }
+        
+        // Otherwise map from backend format
+        return {
+          _id: event.eventId || event._id,
+          title: event.eventTitle || event.title,
+          date: event.eventDate || event.date,
+          time: event.eventTime || event.time,
+          capacity: event.capacity,
+          attendees: event.attendees || Array(event.attendeeCount || 0).fill({}),
+          status: event.status || 'published',
+          staffRole: event.staffRole || event.role || 'validator',
+          host: event.host,
+          venue: event.location || event.venue,
+        };
+      });
+      
+      console.log("🔵 Mapped staff events:", mappedEvents);
+
       // Filter for upcoming events only
-      const upcomingEvents = response.data?.filter(event => {
+      const upcomingEvents = mappedEvents.filter(event => {
         const eventDate = new Date(event.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return eventDate >= today && event.status !== 'cancelled';
-      }) || [];
+      });
 
       setAcceptedStaffEvents(upcomingEvents);
     } catch (error) {
