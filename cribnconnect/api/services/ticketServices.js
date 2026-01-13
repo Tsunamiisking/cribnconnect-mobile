@@ -151,3 +151,17 @@ export const respondToInvitation = async (eventId, response) => {
   });
   return res.data;
 };
+
+// Get unread tickets count (for badge)
+// TODO: Backend needs to implement this endpoint
+export const getUnreadTicketsCount = async () => {
+  try {
+    // This endpoint doesn't exist yet, will return 0 for now
+    // const res = await api.get('/tickets/unread-count');
+    // return res.data;
+    return { count: 0 };
+  } catch (error) {
+    console.error('Error fetching unread tickets count:', error);
+    return { count: 0 };
+  }
+};

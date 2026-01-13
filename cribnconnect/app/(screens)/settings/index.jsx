@@ -23,12 +23,14 @@ const options = [
     route: "/(screens)/notification",
     description: "Manage your notification preferences",
     showBadge: true,
+    badgeType: "notifications",
   },
-    {
+  {
     name: "My Tickets",
     route: "/(screens)/my-tickets",
     description: "Manage your tickets",
     showBadge: true,
+    badgeType: "tickets",
   },
   {
     name: "Verification",
@@ -76,6 +78,7 @@ const SettingsScreen = () => {
                     size="small" 
                     style={styles.notificationBadge}
                     refresh={badgeRefresh}
+                    type={option.badgeType || 'notifications'}
                   />
                 )}
               </View>

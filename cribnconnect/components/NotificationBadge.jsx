@@ -1,5 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { getUnreadCount } from '@/api/services/notificationServices';
+import { getUnreadTicketsCount } from '@/api/services/ticketServices';
+import { useAuth } from '@/contexts/AuthContext';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -8,18 +10,28 @@ import { StyleSheet, Text, View } from 'react-native';
  * @param {boolean} show - Whether to show the badge
  * @param {number} count - Custom count (optional, will fetch if not provided)
  * @param {string} size - Badge size: 'small', 'medium', 'large'
+ * @param {string} type - Badge type: 'notifications' or 'tickets' (default: 'notifications')
  */
 export default function NotificationBadge({ 
   show = true, 
   count = null,
   size = 'medium',
   style,
-  refresh = false
+  refresh = false,
+  type = 'notifications'
 }) {
+  const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(count);
   const [loading, setLoading] = useState(count === null);
 
   useEffect(() => {
+    // Don't fetch if user is not authenticated
+    if (!user) {
+      setUnreadCount(0);
+      setLoading(false);
+      return;
+    }
+
     // If count is provided as prop, use it
     if (count !== null) {
       setUnreadCount(count);
@@ -31,21 +43,35 @@ export default function NotificationBadge({
     if (show) {
       fetchUnreadCount();
     }
-  }, [show, count, refresh]);
+  }, [show, count, refresh, user]);
 
   const fetchUnreadCount = async () => {
+    // Double check user is authenticated before API call
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await getUnreadCount();
-      console.log('NotificationBadge - Unread count response:', response);
       
-      // Handle different response structures
-      const count = response?.count ?? response?.unreadCount ?? response ?? 0;
-      console.log('NotificationBadge - Parsed count:', count);
+      // Use different endpoint based on type
+      if (type === 'tickets') {
+        const response = await getUnreadTicketsCount();
+        const count = response?.count ?? 0;
+        setUnreadCount(count);
+      } else {
+        const response = await getUnreadCount();
+        const count = response?.count ?? response?.unreadCount ?? response ?? 0;
+        setUnreadCount(count);
+      }
       
-      setUnreadCount(count);
+      console.log(`NotificationBadge (${type}) - Count:`, unreadCount);
     } catch (error) {
-      console.error('Error fetching unread count:', error);
+      // Only log error if it's not a 401 (which happens during logout)
+      if (error.response?.status !== 401) {
+        console.error(`Error fetching ${type} unread count:`, error);
+      }
       setUnreadCount(0);
     } finally {
       setLoading(false);
