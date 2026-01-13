@@ -8,9 +8,9 @@ import {
   Eye,
   MapPin,
   Plus,
+  QrCode,
   TrendingUp,
   Users,
-  QrCode,
 } from "lucide-react-native";
 import React from "react";
 import {
