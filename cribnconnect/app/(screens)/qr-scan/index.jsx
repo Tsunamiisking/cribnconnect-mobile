@@ -4,7 +4,7 @@ import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
 import { getAuth } from 'firebase/auth';
-import { Calendar, Check, ChevronRight, QrCode, Shield, ShieldCheck, Ticket, X } from 'lucide-react-native';
+import { Calendar, Check, ChevronRight, Clock, QrCode, Shield, ShieldCheck, Ticket, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -306,55 +306,69 @@ const EventScanScreen = () => {
 
     return (
       <View style={styles.invitationCard}>
-        <View style={styles.invitationHeader}>
-          <View style={styles.eventIconContainer}>
-            <QrCode size={32} color={Colors.primary} />
+        {/* Header with Role Badge */}
+        <View style={styles.invitationTopBadge}>
+          {event.invitationRole === 'manager' ? (
+            <>
+              <ShieldCheck size={16} color={Colors.white} />
+              <Text style={styles.topBadgeText}>MANAGER INVITATION</Text>
+            </>
+          ) : (
+            <>
+              <Shield size={16} color={Colors.white} />
+              <Text style={styles.topBadgeText}>VALIDATOR INVITATION</Text>
+            </>
+          )}
+        </View>
+
+        {/* Event Details */}
+        <View style={styles.invitationContent}>
+          <View style={styles.invitationIconContainer}>
+            <QrCode size={40} color={Colors.primary} />
           </View>
 
-          <View style={styles.invitationInfo}>
-            <Text style={styles.eventTitle} numberOfLines={2}>
+          <View style={styles.invitationMainInfo}>
+            <Text style={styles.invitationEventTitle} numberOfLines={2}>
               {event.title}
             </Text>
             
-            <View style={styles.eventMetaRow}>
-              <Calendar size={14} color={Colors.gray600} />
-              <Text style={styles.eventMeta}>
-                {formattedDate} {formattedTime && `• ${formattedTime}`}
-              </Text>
-            </View>
-
-            <View style={styles.eventMetaRow}>
-              <Ticket size={14} color={Colors.gray600} />
-              <Text style={styles.eventMeta}>
-                {event.attendees?.length || 0} / {event.capacity} attendees
-              </Text>
-            </View>
-
-            {event.invitationRole && (
-              <View style={styles.roleBadgeContainer}>
-                {event.invitationRole === 'manager' ? (
-                  <>
-                    <ShieldCheck size={14} color={Colors.success} />
-                    <Text style={[styles.roleBadgeText, { color: Colors.success }]}>
-                      Manager Role
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Shield size={14} color={Colors.primary} />
-                    <Text style={[styles.roleBadgeText, { color: Colors.primary }]}>
-                      Validator Role
-                    </Text>
-                  </>
-                )}
+            <View style={styles.invitationMetaContainer}>
+              <View style={styles.invitationMetaRow}>
+                <View style={styles.metaIconWrapper}>
+                  <Calendar size={16} color={Colors.primary} />
+                </View>
+                <Text style={styles.invitationMetaText}>
+                  {formattedDate}
+                </Text>
               </View>
-            )}
+
+              {formattedTime && (
+                <View style={styles.invitationMetaRow}>
+                  <View style={styles.metaIconWrapper}>
+                    <Clock size={16} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.invitationMetaText}>
+                    {formattedTime}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.invitationMetaRow}>
+                <View style={styles.metaIconWrapper}>
+                  <Ticket size={16} color={Colors.primary} />
+                </View>
+                <Text style={styles.invitationMetaText}>
+                  {event.attendees?.length || 0} / {event.capacity}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
+        {/* Action Buttons */}
         <View style={styles.invitationActions}>
           <TouchableOpacity
-            style={[styles.invitationButton, styles.declineButton, isResponding && styles.buttonDisabled]}
+            style={[styles.invitationActionButton, styles.declineButton, isResponding && styles.buttonDisabled]}
             onPress={() => handleInvitationResponse(event._id, 'decline')}
             disabled={isResponding}
           >
@@ -362,14 +376,14 @@ const EventScanScreen = () => {
               <ActivityIndicator size="small" color={Colors.error} />
             ) : (
               <>
-                <X size={18} color={Colors.error} />
+                <X size={20} color={Colors.error} strokeWidth={2.5} />
                 <Text style={styles.declineButtonText}>Decline</Text>
               </>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.invitationButton, styles.acceptButton, isResponding && styles.buttonDisabled]}
+            style={[styles.invitationActionButton, styles.acceptButton, isResponding && styles.buttonDisabled]}
             onPress={() => handleInvitationResponse(event._id, 'accept')}
             disabled={isResponding}
           >
@@ -377,7 +391,7 @@ const EventScanScreen = () => {
               <ActivityIndicator size="small" color={Colors.white} />
             ) : (
               <>
-                <Check size={18} color={Colors.white} />
+                <Check size={20} color={Colors.white} strokeWidth={2.5} />
                 <Text style={styles.acceptButtonText}>Accept</Text>
               </>
             )}
@@ -661,45 +675,98 @@ const styles = StyleSheet.create({
   },
   invitationCard: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: Colors.warning,
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
     shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  invitationHeader: {
+  invitationTopBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray200,
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    backgroundColor: Colors.primary,
   },
-  invitationInfo: {
+  topBadgeText: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 12,
+    color: Colors.white,
+    letterSpacing: 1,
+  },
+  invitationContent: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 16,
+  },
+  invitationIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: Colors.blue50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  invitationMainInfo: {
     flex: 1,
+  },
+  invitationEventTitle: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 18,
+    color: Colors.gray900,
+    marginBottom: 12,
+    lineHeight: 24,
+  },
+  invitationMetaContainer: {
+    gap: 8,
+  },
+  invitationMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  metaIconWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: Colors.blue50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  invitationMetaText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 14,
+    color: Colors.gray700,
   },
   invitationActions: {
     flexDirection: 'row',
-    padding: 12,
+    padding: 16,
+    paddingTop: 0,
     gap: 12,
   },
-  invitationButton: {
+  invitationActionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 12,
   },
   acceptButton: {
     backgroundColor: Colors.success,
+    shadowColor: Colors.success,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   acceptButtonText: {
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: 'Sora-Bold',
     fontSize: 15,
     color: Colors.white,
   },
@@ -709,7 +776,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   declineButtonText: {
-    fontFamily: 'Sora-SemiBold',
+    fontFamily: 'Sora-Bold',
     fontSize: 15,
     color: Colors.error,
   },
