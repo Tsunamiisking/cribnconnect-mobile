@@ -3,19 +3,18 @@ import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { router, useLocalSearchParams } from 'expo-router';
-import { CheckCircle, Ticket, User, XCircle, Camera as CameraIcon, AlertCircle } from 'lucide-react-native';
-import React, { useState, useRef, useEffect } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import { AlertCircle, Camera as CameraIcon, CheckCircle, Ticket, User, XCircle } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ScrollView,
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
