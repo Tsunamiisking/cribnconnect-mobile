@@ -6,7 +6,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import * as Network from 'expo-network';
 import { router, useLocalSearchParams } from 'expo-router';
-import { AlertCircle, BarChart3, Camera as CameraIcon, CheckCircle, Ticket, User, Users, WifiOff, XCircle, Zap } from 'lucide-react-native';
+import { AlertCircle, BarChart3, Camera as CameraIcon, CheckCircle, Ticket, User, Users, WifiOff, XCircle } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -33,8 +33,9 @@ const QrScanner = () => {
   const [scanResult, setScanResult] = useState(null);
   const [torch, setTorch] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [bulkScanMode, setBulkScanMode] = useState(false);
-  const [bulkScanCount, setBulkScanCount] = useState(0);
+  // TODO: Bulk Scan Mode - Feature for v2
+  // const [bulkScanMode, setBulkScanMode] = useState(false);
+  // const [bulkScanCount, setBulkScanCount] = useState(0);
   const [offlineQueueCount, setOfflineQueueCount] = useState(0);
   
   // Animation values
@@ -203,13 +204,13 @@ const QrScanner = () => {
           showOfflineQueuedResult(ticketCode);
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           
-          // In bulk scan mode, auto-reset after 2 seconds
-          if (bulkScanMode) {
-            setBulkScanCount(prev => prev + 1);
-            setTimeout(() => {
-              resetScanner();
-            }, 2000);
-          }
+          // TODO: Bulk Scan Mode - Auto-reset for v2
+          // if (bulkScanMode) {
+          //   setBulkScanCount(prev => prev + 1);
+          //   setTimeout(() => {
+          //     resetScanner();
+          //   }, 2000);
+          // }
         } else {
           throw new Error('Failed to queue offline scan');
         }
@@ -228,13 +229,13 @@ const QrScanner = () => {
       showSuccessResult(response);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      // In bulk scan mode, auto-reset after 2 seconds
-      if (bulkScanMode) {
-        setBulkScanCount(prev => prev + 1);
-        setTimeout(() => {
-          resetScanner();
-        }, 2000);
-      }
+      // TODO: Bulk Scan Mode - Auto-reset for v2
+      // if (bulkScanMode) {
+      //   setBulkScanCount(prev => prev + 1);
+      //   setTimeout(() => {
+      //     resetScanner();
+      //   }, 2000);
+      // }
 
     } catch (error) {
       console.error('❌ Scan error:', error);
@@ -244,12 +245,12 @@ const QrScanner = () => {
         showAlreadyScannedResult(error.response.data);
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         
-        // In bulk scan mode, auto-reset after 1.5 seconds for already scanned
-        if (bulkScanMode) {
-          setTimeout(() => {
-            resetScanner();
-          }, 1500);
-        }
+        // TODO: Bulk Scan Mode - Auto-reset for v2
+        // if (bulkScanMode) {
+        //   setTimeout(() => {
+        //     resetScanner();
+        //   }, 1500);
+        // }
       } else {
         // Other error
         const errorMessage = error.response?.data?.message || 'Failed to validate ticket';
@@ -360,7 +361,7 @@ const QrScanner = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <BackHeader title={eventTitle || "QR Scanner"} />
 
-      {/* Control Bar */}
+      {/* Control Bar - Quick Access to Staff & Stats */}
       <View style={styles.controlBar}>
         <TouchableOpacity
           style={styles.controlButton}
@@ -369,7 +370,9 @@ const QrScanner = () => {
             params: { id: eventId, eventTitle, isHost }
           })}
         >
-          <Users size={20} color={Colors.primary} />
+          <View style={styles.iconContainer}>
+            <Users size={20} color={Colors.primary} />
+          </View>
           <Text style={styles.controlButtonText}>Staff</Text>
         </TouchableOpacity>
 
@@ -380,10 +383,13 @@ const QrScanner = () => {
             params: { id: eventId, eventTitle }
           })}
         >
-          <BarChart3 size={20} color={Colors.primary} />
-          <Text style={styles.controlButtonText}>Stats</Text>
+          <View style={styles.iconContainer}>
+            <BarChart3 size={20} color={Colors.primary} />
+          </View>
+          <Text style={styles.controlButtonText}>Statistics</Text>
         </TouchableOpacity>
 
+        {/* TODO: Bulk Scan Mode - Feature for v2
         <TouchableOpacity
           style={[styles.controlButton, bulkScanMode && styles.controlButtonActive]}
           onPress={() => {
@@ -398,6 +404,7 @@ const QrScanner = () => {
             {bulkScanMode ? `Bulk (${bulkScanCount})` : 'Bulk'}
           </Text>
         </TouchableOpacity>
+        */}
 
         {isOffline && (
           <View style={styles.offlineIndicator}>
@@ -725,14 +732,44 @@ const styles = StyleSheet.create({
   controlBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
     paddingVertical: 12,
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.gray200,
-    gap: 8,
+    gap: 16,
   },
+  controlButton: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: Colors.gray50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    minWidth: 100,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+  },
+  controlButtonText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 12,
+    color: Colors.gray700,
+  },
+  // Commented out for v2 - Bulk Scan Feature
+  /*
   controlButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -756,16 +793,23 @@ const styles = StyleSheet.create({
   controlButtonTextActive: {
     color: Colors.white,
   },
+  */
   offlineIndicator: {
-    flex: 1,
+    position: 'absolute',
+    top: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: Colors.error,
-    borderRadius: 8,
-    marginLeft: 'auto',
+    borderRadius: 20,
+    shadowColor: Colors.error,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   offlineText: {
     fontFamily: 'Sora-SemiBold',
