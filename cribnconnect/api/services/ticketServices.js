@@ -122,3 +122,32 @@ export const revokeAllStaff = async (eventId) => {
   const res = await api.delete(`/tickets/events/${eventId}/staff`);
   return res.data;
 };
+
+// ===== STAFF INVITATION ENDPOINTS =====
+
+// Get pending scan invitations for current user
+export const getMyScanRequests = async () => {
+  const res = await api.get('/tickets/my-scan-requests');
+  return res.data;
+};
+
+// Get events where current user is accepted staff
+export const getMyStaffEvents = async (params = {}) => {
+  const { sortBy = 'date', order = 'asc', status } = params;
+  
+  const queryParams = new URLSearchParams();
+  queryParams.append('sortBy', sortBy);
+  queryParams.append('order', order);
+  if (status) queryParams.append('status', status);
+  
+  const res = await api.get(`/tickets/my-staff-events?${queryParams.toString()}`);
+  return res.data;
+};
+
+// Accept or decline staff invitation
+export const respondToInvitation = async (eventId, response) => {
+  const res = await api.post(`/tickets/events/${eventId}/respond`, {
+    response, // 'accept' or 'decline'
+  });
+  return res.data;
+};

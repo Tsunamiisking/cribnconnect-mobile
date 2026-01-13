@@ -1,15 +1,17 @@
 import { getMyEvents } from '@/api/services/eventServices';
+import { getMyScanRequests, getMyStaffEvents, respondToInvitation } from '@/api/services/ticketServices';
 import BackHeader from '@/components/BackHeader';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
 import { getAuth } from 'firebase/auth';
-import { Calendar, ChevronRight, QrCode, Shield, ShieldCheck, Ticket } from 'lucide-react-native';
+import { Calendar, Check, ChevronRight, QrCode, Shield, ShieldCheck, Ticket, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
     FlatList,
     RefreshControl,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -20,9 +22,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const EventScanScreen = () => {
   const [activeTab, setActiveTab] = useState('my-events');
   const [myEvents, setMyEvents] = useState([]);
-  const [scanRequests, setScanRequests] = useState([]);
+  const [pendingInvitations, setPendingInvitations] = useState([]);
+  const [acceptedStaffEvents, setAcceptedStaffEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [respondingTo, setRespondingTo] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
@@ -35,7 +39,7 @@ const EventScanScreen = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      await Promise.all([loadMyEvents(), loadScanRequests()]);
+      await Promise.all([loadMyEvents(), loadPendingInvitations(), loadAcceptedStaffEvents()]);
     } catch (error) {
       console.error('Error loading data:', error);
       Alert.alert('Error', 'Failed to load events');
@@ -65,14 +69,84 @@ const EventScanScreen = () => {
     }
   };
 
-  const loadScanRequests = async () => {
+  const loadPendingInvitations = async () => {
     try {
-      // This would be a new API endpoint that returns events where current user is staff
-      // For now, we'll leave it empty and implement when backend is ready
-      // const response = await getMyStaffEvents();
-      setScanRequests([]);
+      const response = await getMyScanRequests();
+      
+      // Filter for upcoming events only
+      const upcomingInvitations = response.data?.filter(event => {
+        const eventDate = new Date(event.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return eventDate >= today && event.status !== 'cancelled';
+      }) || [];
+
+      setPendingInvitations(upcomingInvitations);
     } catch (error) {
-      console.error('Error loading scan requests:', error);
+      console.error('Error loading pending invitations:', error);
+      
+      // Check if it's a 520 error (server down/starting up)
+      if (error.response?.status === 520) {
+        console.log('⚠️ Server is starting up or down. Will retry automatically on refresh.');
+      }
+      
+      // Don't show alert - this is not critical, just set empty array
+      setPendingInvitations([]);
+    }
+  };
+
+  const loadAcceptedStaffEvents = async () => {
+    try {
+      const response = await getMyStaffEvents({
+        sortBy: 'date',
+        order: 'asc',
+      });
+
+      // Filter for upcoming events only
+      const upcomingEvents = response.data?.filter(event => {
+        const eventDate = new Date(event.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return eventDate >= today && event.status !== 'cancelled';
+      }) || [];
+
+      setAcceptedStaffEvents(upcomingEvents);
+    } catch (error) {
+      console.error('Error loading accepted staff events:', error);
+      
+      // Check if it's a 520 error (server down/starting up)
+      if (error.response?.status === 520) {
+        console.log('⚠️ Server is starting up or down. Will retry automatically on refresh.');
+      }
+      
+      // Don't show alert - this is not critical
+      setAcceptedStaffEvents([]);
+    }
+  };
+
+  const handleInvitationResponse = async (eventId, response) => {
+    setRespondingTo(eventId);
+    try {
+      await respondToInvitation(eventId, response);
+      
+      // Show success message
+      Alert.alert(
+        'Success',
+        response === 'accept' 
+          ? 'Invitation accepted! You can now scan tickets for this event.'
+          : 'Invitation declined.'
+      );
+
+      // Reload both lists
+      await Promise.all([loadPendingInvitations(), loadAcceptedStaffEvents()]);
+    } catch (error) {
+      console.error('Error responding to invitation:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to respond to invitation. Please try again.'
+      );
+    } finally {
+      setRespondingTo(null);
     }
   };
 
@@ -162,6 +236,105 @@ const EventScanScreen = () => {
     );
   };
 
+  const renderInvitationCard = ({ item: event }) => {
+    const eventDate = new Date(event.date);
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    const formattedTime = event.time ? new Date(`2000-01-01T${event.time}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }) : '';
+
+    const isResponding = respondingTo === event._id;
+
+    return (
+      <View style={styles.invitationCard}>
+        <View style={styles.invitationHeader}>
+          <View style={styles.eventIconContainer}>
+            <QrCode size={32} color={Colors.primary} />
+          </View>
+
+          <View style={styles.invitationInfo}>
+            <Text style={styles.eventTitle} numberOfLines={2}>
+              {event.title}
+            </Text>
+            
+            <View style={styles.eventMetaRow}>
+              <Calendar size={14} color={Colors.gray600} />
+              <Text style={styles.eventMeta}>
+                {formattedDate} {formattedTime && `• ${formattedTime}`}
+              </Text>
+            </View>
+
+            <View style={styles.eventMetaRow}>
+              <Ticket size={14} color={Colors.gray600} />
+              <Text style={styles.eventMeta}>
+                {event.attendees?.length || 0} / {event.capacity} attendees
+              </Text>
+            </View>
+
+            {event.invitationRole && (
+              <View style={styles.roleBadgeContainer}>
+                {event.invitationRole === 'manager' ? (
+                  <>
+                    <ShieldCheck size={14} color={Colors.success} />
+                    <Text style={[styles.roleBadgeText, { color: Colors.success }]}>
+                      Manager Role
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Shield size={14} color={Colors.primary} />
+                    <Text style={[styles.roleBadgeText, { color: Colors.primary }]}>
+                      Validator Role
+                    </Text>
+                  </>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.invitationActions}>
+          <TouchableOpacity
+            style={[styles.invitationButton, styles.declineButton, isResponding && styles.buttonDisabled]}
+            onPress={() => handleInvitationResponse(event._id, 'decline')}
+            disabled={isResponding}
+          >
+            {isResponding ? (
+              <ActivityIndicator size="small" color={Colors.error} />
+            ) : (
+              <>
+                <X size={18} color={Colors.error} />
+                <Text style={styles.declineButtonText}>Decline</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.invitationButton, styles.acceptButton, isResponding && styles.buttonDisabled]}
+            onPress={() => handleInvitationResponse(event._id, 'accept')}
+            disabled={isResponding}
+          >
+            {isResponding ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <>
+                <Check size={18} color={Colors.white} />
+                <Text style={styles.acceptButtonText}>Accept</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   const EmptyState = ({ message, description }) => (
     <View style={styles.emptyState}>
       <QrCode size={64} color={Colors.gray400} />
@@ -232,16 +405,9 @@ const EventScanScreen = () => {
             showsVerticalScrollIndicator={false}
           />
         ) : (
-          <FlatList
-            data={scanRequests}
-            keyExtractor={(item) => item._id}
-            renderItem={(props) => renderEventCard({ ...props, isHost: false })}
-            ListEmptyComponent={
-              <EmptyState
-                message="No Scan Requests"
-                description="You haven't been invited to scan tickets for any events yet. Event hosts can add you as a validator or manager."
-              />
-            }
+          <ScrollView
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -250,9 +416,49 @@ const EventScanScreen = () => {
                 tintColor={Colors.primary}
               />
             }
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
+          >
+            {/* Pending Invitations Section */}
+            {pendingInvitations.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Shield size={20} color={Colors.warning} />
+                  <Text style={styles.sectionTitle}>
+                    Pending Invitations ({pendingInvitations.length})
+                  </Text>
+                </View>
+                {pendingInvitations.map((event) => (
+                  <View key={event._id}>
+                    {renderInvitationCard({ item: event })}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Accepted Staff Events Section */}
+            {acceptedStaffEvents.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <ShieldCheck size={20} color={Colors.success} />
+                  <Text style={styles.sectionTitle}>
+                    My Staff Events ({acceptedStaffEvents.length})
+                  </Text>
+                </View>
+                {acceptedStaffEvents.map((event) => (
+                  <View key={event._id}>
+                    {renderEventCard({ item: event, isHost: false })}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Empty State */}
+            {pendingInvitations.length === 0 && acceptedStaffEvents.length === 0 && (
+              <EmptyState
+                message="No Scan Requests"
+                description="You haven't been invited to scan tickets for any events yet. Event hosts can add you as a validator or manager."
+              />
+            )}
+          </ScrollView>
         )}
       </View>
     </SafeAreaView>
@@ -385,6 +591,78 @@ const styles = StyleSheet.create({
     color: Colors.gray600,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  sectionTitle: {
+    fontFamily: 'Sora-Bold',
+    fontSize: 16,
+    color: Colors.gray900,
+    marginLeft: 8,
+  },
+  invitationCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: Colors.warning,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  invitationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray200,
+  },
+  invitationInfo: {
+    flex: 1,
+  },
+  invitationActions: {
+    flexDirection: 'row',
+    padding: 12,
+    gap: 12,
+  },
+  invitationButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  acceptButton: {
+    backgroundColor: Colors.success,
+  },
+  acceptButtonText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 15,
+    color: Colors.white,
+  },
+  declineButton: {
+    backgroundColor: Colors.white,
+    borderWidth: 2,
+    borderColor: Colors.error,
+  },
+  declineButtonText: {
+    fontFamily: 'Sora-SemiBold',
+    fontSize: 15,
+    color: Colors.error,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
 
