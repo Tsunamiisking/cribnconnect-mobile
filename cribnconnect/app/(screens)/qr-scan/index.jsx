@@ -102,6 +102,8 @@ const EventScanScreen = () => {
         order: 'asc',
       });
 
+      console.log("🔵 Accepted staff events response:", response);
+
       // Filter for upcoming events only
       const upcomingEvents = response.data?.filter(event => {
         const eventDate = new Date(event.date);
