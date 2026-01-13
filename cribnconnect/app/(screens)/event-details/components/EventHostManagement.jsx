@@ -4,6 +4,7 @@ import { Colors } from "@/constants/Colors";
 import {
   AlertTriangle,
   Badge,
+  BarChart3,
   Beer,
   Bus,
   Calendar,
@@ -21,6 +22,7 @@ import {
   MoreVertical,
   Music,
   Plus,
+  QrCode,
   Share,
   Shield,
   Sofa,
@@ -48,6 +50,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { router } from "expo-router";
 
 const EventHostManagement = ({
   event,
@@ -614,6 +617,41 @@ const EventHostManagement = ({
               <Text style={styles.hostMenuItemText}>
                 Edit Safety Guidelines
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.hostMenuItem}
+              onPress={() => {
+                setShowHostMenu(false);
+                router.push({
+                  pathname: '/(screens)/qr-scan/[id]',
+                  params: { 
+                    id: event._id, 
+                    eventTitle: event.title,
+                    isHost: 'true'
+                  }
+                });
+              }}
+            >
+              <QrCode size={20} color={Colors.primary} />
+              <Text style={styles.hostMenuItemText}>Scan Tickets</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.hostMenuItem}
+              onPress={() => {
+                setShowHostMenu(false);
+                router.push({
+                  pathname: '/(screens)/scan-statistics/[id]',
+                  params: { 
+                    id: event._id, 
+                    eventTitle: event.title
+                  }
+                });
+              }}
+            >
+              <BarChart3 size={20} color={Colors.primary} />
+              <Text style={styles.hostMenuItemText}>View Statistics</Text>
             </TouchableOpacity>
 
             {/* Toggle Availability - Only for free events or paid events without tickets */}

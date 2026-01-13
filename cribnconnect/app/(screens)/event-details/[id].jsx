@@ -2,7 +2,6 @@ import { getEventById } from '@/api/services/eventServices';
 import { Colors } from '@/constants/Colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
-import { BarChart3, QrCode } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -153,40 +152,6 @@ const EventDetailsScreen = () => {
 
         {/* Status badges for hosts (below media, above title) */}
         {isHost && <EventStatusBadges event={event} />}
-
-        {/* Host Quick Actions - QR Scanner and Statistics */}
-        {isHost && (
-          <View style={styles.hostActionsContainer}>
-            <TouchableOpacity
-              style={styles.scanButton}
-              onPress={() => router.push({
-                pathname: '/(screens)/qr-scan/[id]',
-                params: {
-                  id: event._id,
-                  eventTitle: event.title,
-                  isHost: 'true'
-                }
-              })}
-            >
-              <QrCode size={24} color={Colors.white} />
-              <Text style={styles.scanButtonText}>Scan Tickets</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.statsButton}
-              onPress={() => router.push({
-                pathname: '/(screens)/scan-statistics/[id]',
-                params: {
-                  id: event._id,
-                  eventTitle: event.title
-                }
-              })}
-            >
-              <BarChart3 size={22} color={Colors.primary} />
-              <Text style={styles.statsButtonText}>View Stats</Text>
-            </TouchableOpacity>
-          </View>
-        )}
 
         {/* Event Details Content */}
         <EventDetailsContent
