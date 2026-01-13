@@ -90,12 +90,24 @@ export const getEventStaff = async (eventId) => {
   return res.data;
 };
 
-// Add staff member
-export const addEventStaff = async (eventId, userId, role) => {
-  const res = await api.post(`/tickets/events/${eventId}/staff`, {
-    userId,
+// Add staff member (accepts email or userId)
+export const addEventStaff = async (eventId, userEmailOrId, role) => {
+  const requestData = {
+    email: userEmailOrId.toLowerCase().trim(), // Send as lowercase trimmed email
     role, // 'validator' or 'manager'
+  };
+  
+  console.log('🔵 Adding staff - Request:', {
+    eventId,
+    email: requestData.email,
+    role: requestData.role,
+    url: `/tickets/events/${eventId}/staff`
   });
+  
+  const res = await api.post(`/tickets/events/${eventId}/staff`, requestData);
+  
+  console.log('✅ Staff added - Response:', res.data);
+  
   return res.data;
 };
 

@@ -59,7 +59,7 @@ const StaffManagementScreen = () => {
 
   const handleAddStaff = async () => {
     if (!searchEmail.trim()) {
-      Alert.alert('Error', 'Please enter a user email or ID');
+      Alert.alert('Error', 'Please enter a user email');
       return;
     }
 
@@ -72,33 +72,31 @@ const StaffManagementScreen = () => {
 
     setAddingStaff(true);
     try {
-      // For now, we'll need to search for user by email first
-      // This should be handled by backend or a separate search endpoint
-      // For demo purposes, we'll pass the email as userId
+      const response = await addEventStaff(eventId, searchEmail.trim(), selectedRole);
       
-      Alert.alert(
-        'Add Staff Member',
-        `Add ${searchEmail} as ${selectedRole}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Add',
-            onPress: async () => {
-              try {
-                await addEventStaff(eventId, searchEmail, selectedRole);
-                Alert.alert('Success', 'Staff member added successfully');
-                setSearchEmail('');
-                loadStaff();
-              } catch (error) {
-                const errorMessage = error.response?.data?.message || 'Failed to add staff member';
-                Alert.alert('Error', errorMessage);
-              }
-            },
-          },
-        ]
-      );
+      // Show success with user's actual name if available
+      const staffName = response.staff?.name || searchEmail;
+      Alert.alert('Success', `${staffName} has been added as a ${selectedRole}`);
+      setSearchEmail('');
+      loadStaff();
     } catch (error) {
       console.error('Error adding staff:', error);
+      
+      // Handle specific error codes from backend
+      if (error.response?.status === 404) {
+        Alert.alert(
+          'User Not Found',
+          `No user found with email: ${searchEmail.trim()}\n\nThey must sign up in the app first.`
+        );
+      } else if (error.response?.status === 400) {
+        const message = error.response?.data?.message || 'User is already authorized for this event';
+        Alert.alert('Already Authorized', message);
+      } else if (error.response?.status === 403) {
+        Alert.alert('Unauthorized', 'Only the host or managers can add staff members');
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to add staff member';
+        Alert.alert('Error', errorMessage);
+      }
     } finally {
       setAddingStaff(false);
     }
