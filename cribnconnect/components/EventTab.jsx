@@ -86,9 +86,9 @@ const EventCard = ({ event }) => {
   const handleScanPress = (e) => {
     e.stopPropagation(); // Prevent card press
     router.push({
-      pathname: '/(screens)/qr-scan',
+      pathname: '/(screens)/qr-scan/[id]',
       params: {
-        eventId: event.id,
+        id: event.id,
         eventTitle: event.title,
         isHost: 'true'
       }

@@ -160,9 +160,9 @@ const EventDetailsScreen = () => {
             <TouchableOpacity
               style={styles.scanButton}
               onPress={() => router.push({
-                pathname: '/(screens)/qr-scan',
+                pathname: '/(screens)/qr-scan/[id]',
                 params: {
-                  eventId: event._id,
+                  id: event._id,
                   eventTitle: event.title,
                   isHost: 'true'
                 }
