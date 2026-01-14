@@ -1,21 +1,21 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  FlatList,
-  Platform,
-  ScrollView,
-} from "react-native";
-import { useState } from "react";
-import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import NormalHeader from "@/components/NormalHeader";
 import ApartmentCard from "@/components/ApartmentCard";
 import EventCard from "@/components/EventCard";
+import NormalHeader from "@/components/NormalHeader";
 import { Colors } from "@/constants/Colors";
-import { Heart, Building, Calendar } from "lucide-react-native";
+import { router } from "expo-router";
+import { Building, Calendar, Heart } from "lucide-react-native";
+import { useState } from "react";
+import {
+  FlatList,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Mock data - TODO: Replace with API integration for saved items
 const SAVED_APARTMENTS = [

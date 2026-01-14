@@ -1,15 +1,15 @@
-import { Tabs } from "expo-router";
-import { Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HapticTab } from "@/components/HapticTab";
 import { Colors } from "@/constants/Colors";
+import { Tabs } from "expo-router";
 import {
-  Home,
-  Tickets,
-  HeartHandshake,
-  MessageCircle,
   Heart,
+  HeartHandshake,
+  Home,
+  MessageCircle,
+  Tickets,
 } from "lucide-react-native";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
