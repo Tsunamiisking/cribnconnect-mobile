@@ -63,7 +63,7 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors.white }}>
       <SafeAreaProvider>
         <PaystackProvider
           debug
@@ -78,19 +78,30 @@ export default function RootLayout() {
           ]}
         >
           <AuthProvider>
-            <Stack>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: Colors.white },
+                animation: "fade_from_bottom",
+              }}
+            >
               {/* Auth Flow - Welcome, Login, Register */}
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
 
               {/* Main App - Tab Navigator */}
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen 
+                name="(tabs)" 
+                options={{ 
+                  animation: "none",
+                }} 
+              />
 
               {/* Detail Screens */}
-              <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+              <Stack.Screen name="(screens)" />
 
               {/* Hosting Flows */}
-              <Stack.Screen name="(hosting)" options={{ headerShown: false }} />
+              <Stack.Screen name="(hosting)" />
 
               {/* 404 Screen */}
               <Stack.Screen name="+not-found" />

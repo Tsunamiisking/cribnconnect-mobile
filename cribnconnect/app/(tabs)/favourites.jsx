@@ -203,10 +203,12 @@ export default function Bookmarkscreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container}>
       <NormalHeader title="Bookmarks" />
 
       <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -274,6 +276,18 @@ export default function Bookmarkscreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: Colors.white,
+  },
   tabsContainer: {
     paddingVertical: 16,
     backgroundColor: Colors.white,
