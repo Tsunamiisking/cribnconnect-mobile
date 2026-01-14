@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import {
   Calendar,
+  Eye,
   MapPin,
   Ticket,
   Users
@@ -106,6 +107,22 @@ const EventDetailsContent = ({
             </Text>
           </View>
         </View>
+
+        {/* Views Count */}
+        {event.views !== undefined && (
+          <View style={styles.detailRow}>
+            <Eye size={20} color={Colors.gray600} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Views</Text>
+              <Text style={styles.detailValue}>
+                {event.views?.toLocaleString() || 0} views
+              </Text>
+              <Text style={styles.detailSubtext}>
+                People who viewed this event
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Description */}
