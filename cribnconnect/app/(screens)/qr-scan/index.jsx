@@ -125,7 +125,7 @@ const EventScanScreen = () => {
         order: 'asc',
       });
 
-      console.log("🔵 Accepted staff events response:", response);
+    //   console.log("🔵 Accepted staff events response:", response);
 
       // Check if response has 'events' array (backend format) or 'data' array (expected format)
       const events = response.events || response.data || [];
@@ -152,7 +152,7 @@ const EventScanScreen = () => {
         };
       });
       
-      console.log("🔵 Mapped staff events:", mappedEvents);
+    //   console.log("🔵 Mapped staff events:", mappedEvents);
 
       // Filter for upcoming events only
       const upcomingEvents = mappedEvents.filter(event => {
