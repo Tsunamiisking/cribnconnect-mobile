@@ -5,7 +5,7 @@ import { Colors } from '@/constants/Colors';
 import { scanResultStyles as styles } from './scanResultStyles';
 
 const AlreadyScannedResult = ({ data, onReset }) => {
-  const { attendeeInfo, scannedAt, scannedBy } = data;
+  const { attendeeInfo, scannedAt, scannedBy, isOffline } = data;
 
   return (
     <ScrollView 
@@ -18,32 +18,40 @@ const AlreadyScannedResult = ({ data, onReset }) => {
           <AlertCircle size={48} color={Colors.white} />
         </View>
         <Text style={styles.resultTitle}>Already Scanned ⚠️</Text>
-        <Text style={styles.resultSubtitle}>This ticket was already used</Text>
+        <Text style={styles.resultSubtitle}>
+          {isOffline 
+            ? 'This ticket was already scanned (offline mode)' 
+            : 'This ticket was already used'}
+        </Text>
       </View>
 
-      <View style={styles.resultCard}>
-        <View style={styles.cardHeader}>
-          <User size={20} color={Colors.warning} />
-          <Text style={styles.cardTitle}>Attendee Information</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Name:</Text>
-          <Text style={styles.infoValue}>{attendeeInfo.name}</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Email:</Text>
-          <Text style={styles.infoValueSmall}>{attendeeInfo.email}</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Ticket Type:</Text>
-          <View style={[styles.ticketTypeBadge, styles.warningBadge]}>
-            <Text style={styles.ticketTypeText}>{attendeeInfo.ticketType}</Text>
+      {attendeeInfo && attendeeInfo.name !== 'Unknown' && (
+        <View style={styles.resultCard}>
+          <View style={styles.cardHeader}>
+            <User size={20} color={Colors.warning} />
+            <Text style={styles.cardTitle}>Attendee Information</Text>
           </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Name:</Text>
+            <Text style={styles.infoValue}>{attendeeInfo.name}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Email:</Text>
+            <Text style={styles.infoValueSmall}>{attendeeInfo.email}</Text>
+          </View>
+
+          {attendeeInfo.ticketType && attendeeInfo.ticketType !== 'Unknown' && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Ticket Type:</Text>
+              <View style={[styles.ticketTypeBadge, styles.warningBadge]}>
+                <Text style={styles.ticketTypeText}>{attendeeInfo.ticketType}</Text>
+              </View>
+            </View>
+          )}
         </View>
-      </View>
+      )}
 
       <View style={[styles.resultCard, styles.warningCard]}>
         <View style={styles.cardHeader}>
@@ -62,6 +70,14 @@ const AlreadyScannedResult = ({ data, onReset }) => {
             {new Date(scannedAt).toLocaleString()}
           </Text>
         </View>
+
+        {isOffline && (
+          <View style={styles.offlineWarningContainer}>
+            <Text style={styles.offlineWarningText}>
+              ℹ️ Limited information available in offline mode
+            </Text>
+          </View>
+        )}
       </View>
 
       <TouchableOpacity

@@ -180,4 +180,16 @@ export const scanResultStyles = StyleSheet.create({
     fontSize: 14,
     color: Colors.gray900,
   },
+  offlineWarningContainer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.warning,
+  },
+  offlineWarningText: {
+    fontFamily: 'Sora-Medium',
+    fontSize: 12,
+    color: Colors.warning,
+    textAlign: 'center',
+  },
 });

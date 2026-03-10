@@ -27,6 +27,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const { width, height } = Dimensions.get('window');
 const SCAN_AREA_SIZE = width * 0.7;
 
+// Cache configuration
+const CACHE_CONFIG = {
+  MAX_TICKETS: 5000,           // Maximum cached tickets per event
+  EXPIRY_HOURS: 48,            // Auto-expire cache after 48 hours
+  CLEANUP_ON_START: true,      // Clean expired caches on component mount
+};
+
 const QrScanner = () => {
   const { id, eventTitle, isHost } = useLocalSearchParams();
   const eventId = id; // Use id from route params
@@ -109,6 +116,73 @@ const QrScanner = () => {
     }
   };
 
+  // Cache scanned tickets locally for offline duplicate detection
+  const cacheScannedTicket = async (ticketCode, scannedBy = 'Current User') => {
+    try {
+      const cacheKey = `scanned_tickets_${eventId}`;
+      const cache = await AsyncStorage.getItem(cacheKey);
+      const scannedTickets = cache ? JSON.parse(cache) : [];
+      
+      scannedTickets.push({
+        ticketCode,
+        timestamp: new Date().toISOString(),
+        scannedBy,
+      });
+      
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(scannedTickets));
+    } catch (error) {
+      console.error('Error caching scanned ticket:', error);
+    }
+  };
+
+  // Check if ticket was already scanned (locally cached or in offline queue)
+  const isTicketAlreadyScanned = async (ticketCode) => {
+    try {
+      // Check in scanned tickets cache
+      const cacheKey = `scanned_tickets_${eventId}`;
+      const cache = await AsyncStorage.getItem(cacheKey);
+      const scannedTickets = cache ? JSON.parse(cache) : [];
+      const cachedScan = scannedTickets.find(t => t.ticketCode === ticketCode);
+      
+      if (cachedScan) {
+        return {
+          alreadyScanned: true,
+          scannedAt: cachedScan.timestamp,
+          scannedBy: cachedScan.scannedBy,
+        };
+      }
+
+      // Check in offline queue
+      const queueStr = await AsyncStorage.getItem(`offline_scans_${eventId}`);
+      const queue = queueStr ? JSON.parse(queueStr) : [];
+      const queuedScan = queue.find(scan => scan.ticketCode === ticketCode);
+      
+      if (queuedScan) {
+        return {
+          alreadyScanned: true,
+          scannedAt: queuedScan.timestamp,
+          scannedBy: 'Current User (Queued)',
+          isQueued: true,
+        };
+      }
+
+      return { alreadyScanned: false };
+    } catch (error) {
+      console.error('Error checking scanned tickets:', error);
+      return { alreadyScanned: false };
+    }
+  };
+
+  // Clear local cache (useful for testing or when event ends)
+  const clearScannedTicketsCache = async () => {
+    try {
+      await AsyncStorage.removeItem(`scanned_tickets_${eventId}`);
+      console.log('✅ Scanned tickets cache cleared');
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+    }
+  };
+
   const queueOfflineScan = async (ticketCode) => {
     try {
       const scanData = {
@@ -128,6 +202,9 @@ const QrScanner = () => {
       await AsyncStorage.setItem(`offline_scans_${eventId}`, JSON.stringify(queue));
       
       setOfflineQueueCount(queue.length);
+      
+      // Cache the ticket to prevent re-scanning
+      await cacheScannedTicket(ticketCode, 'Current User (Offline)');
       
       return true;
     } catch (error) {
@@ -201,6 +278,25 @@ const QrScanner = () => {
 
       // Check if offline
       if (isOffline) {
+        // Check if already scanned (local cache or queue)
+        const scanCheck = await isTicketAlreadyScanned(ticketCode);
+        
+        if (scanCheck.alreadyScanned) {
+          // Show already scanned result
+          showAlreadyScannedResult({
+            attendeeInfo: {
+              name: 'Unknown',
+              email: 'Scanned while offline',
+              ticketType: 'Unknown',
+            },
+            scannedAt: scanCheck.scannedAt,
+            scannedBy: scanCheck.scannedBy,
+            isOffline: true,
+          });
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          return;
+        }
+
         // Queue the scan for later
         const queued = await queueOfflineScan(ticketCode);
         if (queued) {
@@ -228,6 +324,9 @@ const QrScanner = () => {
 
       console.log('✅ Scan successful:', response);
 
+      // Cache the scanned ticket
+      await cacheScannedTicket(ticketCode, response.scanInfo?.scannedBy || 'Current User');
+
       // Show success result
       showSuccessResult(response);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -244,8 +343,14 @@ const QrScanner = () => {
       console.error('❌ Scan error:', error);
 
       if (error.response?.data?.alreadyUsed) {
-        // Ticket already scanned
-        showAlreadyScannedResult(error.response.data);
+        // Ticket already scanned - cache it
+        const errorData = error.response.data;
+        await cacheScannedTicket(
+          ticketCode, 
+          errorData.scannedBy || 'Unknown User'
+        );
+        
+        showAlreadyScannedResult(errorData);
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         
         // TODO: Bulk Scan Mode - Auto-reset for v2
