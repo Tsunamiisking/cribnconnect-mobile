@@ -65,24 +65,31 @@ const NotificationScreen = () => {
   };
 
   const handleNotificationPress = async (notification) => {
-    // Mark as read if unread
+    // Optimistically update UI immediately for instant feedback
     if (!notification.isRead) {
-      try {
-        await markAsRead(notification._id);
-        // Update local state
+      // Update local state first
+      setNotifications(prevNotifications =>
+        prevNotifications.map(n =>
+          n._id === notification._id ? { ...n, isRead: true } : n
+        )
+      );
+      // Decrement unread count
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      
+      // Mark as read in background (don't await)
+      markAsRead(notification._id).catch(error => {
+        console.error('Error marking notification as read:', error);
+        // Revert optimistic update on error
         setNotifications(prevNotifications =>
           prevNotifications.map(n =>
-            n._id === notification._id ? { ...n, isRead: true } : n
+            n._id === notification._id ? { ...n, isRead: false } : n
           )
         );
-        // Decrement unread count
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
-      }
+        setUnreadCount(prev => prev + 1);
+      });
     }
 
-    // Navigate to notification details
+    // Navigate immediately without waiting
     router.push({
       pathname: `/notification/${notification._id}`,
       params: { notification: JSON.stringify(notification) }
