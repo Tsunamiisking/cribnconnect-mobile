@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     // paddingHorizontal: 10, 
     paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Match tab bar height
+    paddingBottom: 85, // Match tab bar height
   },
   carouselSection: {
     marginVertical: 4,
