@@ -518,7 +518,11 @@ const SuccessResult = ({ data, onReset }) => {
   const { attendeeInfo, scanInfo, eventInfo } = data;
 
   return (
-    <ScrollView style={styles.resultContent} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.resultContent} 
+      contentContainerStyle={styles.resultScrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.resultHeader}>
         <View style={[styles.resultIcon, styles.successIcon]}>
           <CheckCircle size={48} color={Colors.white} />
@@ -594,7 +598,11 @@ const AlreadyScannedResult = ({ data, onReset }) => {
   const { attendeeInfo, scannedAt, scannedBy } = data;
 
   return (
-    <ScrollView style={styles.resultContent} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.resultContent} 
+      contentContainerStyle={styles.resultScrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.resultHeader}>
         <View style={[styles.resultIcon, styles.warningIcon]}>
           <AlertCircle size={48} color={Colors.white} />
@@ -972,22 +980,25 @@ const styles = StyleSheet.create({
   },
   resultContainer: {
     width: width - 40,
-    maxHeight: height - 200,
+    maxHeight: height - 180,
     backgroundColor: Colors.white,
     borderRadius: 20,
     overflow: 'hidden',
   },
   resultContent: {
-    padding: 24,
+    padding: 16,
+  },
+  resultScrollContent: {
+    paddingBottom: 24,
   },
   resultHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   resultIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
