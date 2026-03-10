@@ -82,7 +82,7 @@ export default function RootLayout() {
               screenOptions={{
                 headerShown: false,
                 contentStyle: { backgroundColor: Colors.white },
-                animation: "fade_from_bottom",
+                // animation: "fade_from_bottom",
               }}
             >
               {/* Auth Flow - Welcome, Login, Register */}
@@ -93,7 +93,7 @@ export default function RootLayout() {
               <Stack.Screen 
                 name="(tabs)" 
                 options={{ 
-                  animation: "none",
+                  animation: "fade",
                 }} 
               />
 

@@ -36,7 +36,7 @@ export default function TabLayout() {
         // Set background color for the screen container to prevent white flash
         sceneStyle: { backgroundColor: Colors.white },
         // Use fade animation for smoother transitions
-        animation: "fade",
+        // animation: "fade",
         // Lazy load screens for better performance
         lazy: true,
       }}
