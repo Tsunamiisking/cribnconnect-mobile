@@ -52,6 +52,27 @@ const QrScanner = () => {
   const scanLineAnim = useRef(new Animated.Value(0)).current;
   const resultOpacity = useRef(new Animated.Value(0)).current;
 
+  // Track last event ID to detect event changes
+  useEffect(() => {
+    const checkEventChange = async () => {
+      try {
+        const lastEventId = await AsyncStorage.getItem('last_scanned_event_id');
+        
+        if (lastEventId && lastEventId !== eventId) {
+          console.log(`🔄 Event changed from ${lastEventId} to ${eventId}`);
+          // Optional: Clean up old event cache
+          // await AsyncStorage.removeItem(`scanned_tickets_${lastEventId}`);
+        }
+        
+        await AsyncStorage.setItem('last_scanned_event_id', eventId);
+      } catch (error) {
+        console.error('Error checking event change:', error);
+      }
+    };
+
+    checkEventChange();
+  }, [eventId]);
+
   useEffect(() => {
     // Animate scan line
     Animated.loop(
@@ -74,6 +95,23 @@ const QrScanner = () => {
     
     // Load offline queue count
     loadOfflineQueueCount();
+
+    // Clean up expired caches on mount
+    if (CACHE_CONFIG.CLEANUP_ON_START) {
+      cleanupExpiredCaches();
+    }
+
+    // Log cache stats for debugging (optional)
+    getCacheStats().then(stats => {
+      if (stats) {
+        console.log('📊 Cache Stats:', {
+          tickets: `${stats.count}/${stats.maxCapacity}`,
+          utilization: `${stats.utilization}%`,
+          age: `${stats.ageHours}h`,
+          expiresIn: `${stats.expiresInHours}h`,
+        });
+      }
+    });
 
     // Set up network listener
     const networkListener = Network.addNetworkStateListener(handleNetworkChange);
@@ -116,39 +154,140 @@ const QrScanner = () => {
     }
   };
 
-  // Cache scanned tickets locally for offline duplicate detection
+  // Cleanup expired caches across all events
+  const cleanupExpiredCaches = async () => {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const cacheKeys = allKeys.filter(key => key.startsWith('scanned_tickets_'));
+      const now = new Date().getTime();
+      const expiryMs = CACHE_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000;
+
+      let cleanedCount = 0;
+
+      for (const key of cacheKeys) {
+        const cacheData = await AsyncStorage.getItem(key);
+        if (cacheData) {
+          const cache = JSON.parse(cacheData);
+          
+          // Check if cache has expired
+          if (cache.createdAt) {
+            const cacheAge = now - new Date(cache.createdAt).getTime();
+            if (cacheAge > expiryMs) {
+              await AsyncStorage.removeItem(key);
+              cleanedCount++;
+              console.log(`🧹 Cleaned expired cache: ${key}`);
+            }
+          }
+        }
+      }
+
+      if (cleanedCount > 0) {
+        console.log(`✅ Cleaned ${cleanedCount} expired cache(s)`);
+      }
+    } catch (error) {
+      console.error('Error cleaning up expired caches:', error);
+    }
+  };
+
+  // Get cache with metadata
+  const getTicketCache = async () => {
+    try {
+      const cacheKey = `scanned_tickets_${eventId}`;
+      const cacheData = await AsyncStorage.getItem(cacheKey);
+      
+      if (!cacheData) {
+        return {
+          tickets: [],
+          ticketSet: new Set(),
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      const cache = JSON.parse(cacheData);
+      
+      // Check if expired
+      const now = new Date().getTime();
+      const cacheAge = now - new Date(cache.createdAt).getTime();
+      const expiryMs = CACHE_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000;
+      
+      if (cacheAge > expiryMs) {
+        console.log('⏰ Cache expired, resetting...');
+        return {
+          tickets: [],
+          ticketSet: new Set(),
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      // Build Set for O(1) lookups
+      const ticketSet = new Set(cache.tickets.map(t => t.ticketCode));
+      
+      return {
+        tickets: cache.tickets,
+        ticketSet,
+        createdAt: cache.createdAt,
+      };
+    } catch (error) {
+      console.error('Error getting ticket cache:', error);
+      return {
+        tickets: [],
+        ticketSet: new Set(),
+        createdAt: new Date().toISOString(),
+      };
+    }
+  };
+
+  // Cache scanned tickets locally with size limit and expiry
   const cacheScannedTicket = async (ticketCode, scannedBy = 'Current User') => {
     try {
       const cacheKey = `scanned_tickets_${eventId}`;
-      const cache = await AsyncStorage.getItem(cacheKey);
-      const scannedTickets = cache ? JSON.parse(cache) : [];
+      const cache = await getTicketCache();
       
-      scannedTickets.push({
+      // Check if already cached (avoid duplicates)
+      if (cache.ticketSet.has(ticketCode)) {
+        return; // Already cached, skip
+      }
+
+      // Add new ticket
+      cache.tickets.push({
         ticketCode,
         timestamp: new Date().toISOString(),
         scannedBy,
       });
-      
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(scannedTickets));
+
+      // Apply size limit (FIFO - keep most recent)
+      if (cache.tickets.length > CACHE_CONFIG.MAX_TICKETS) {
+        const excess = cache.tickets.length - CACHE_CONFIG.MAX_TICKETS;
+        cache.tickets = cache.tickets.slice(excess);
+        console.log(`📊 Cache limit reached, removed ${excess} oldest entries`);
+      }
+
+      // Save with metadata
+      await AsyncStorage.setItem(cacheKey, JSON.stringify({
+        tickets: cache.tickets,
+        createdAt: cache.createdAt,
+        lastUpdated: new Date().toISOString(),
+      }));
+
+      console.log(`💾 Cached ticket (${cache.tickets.length}/${CACHE_CONFIG.MAX_TICKETS})`);
     } catch (error) {
       console.error('Error caching scanned ticket:', error);
     }
   };
 
-  // Check if ticket was already scanned (locally cached or in offline queue)
+  // Fast O(1) duplicate check using Set
   const isTicketAlreadyScanned = async (ticketCode) => {
     try {
-      // Check in scanned tickets cache
-      const cacheKey = `scanned_tickets_${eventId}`;
-      const cache = await AsyncStorage.getItem(cacheKey);
-      const scannedTickets = cache ? JSON.parse(cache) : [];
-      const cachedScan = scannedTickets.find(t => t.ticketCode === ticketCode);
+      // Get cache with Set for fast lookup
+      const cache = await getTicketCache();
       
-      if (cachedScan) {
+      // O(1) Set lookup
+      if (cache.ticketSet.has(ticketCode)) {
+        const ticket = cache.tickets.find(t => t.ticketCode === ticketCode);
         return {
           alreadyScanned: true,
-          scannedAt: cachedScan.timestamp,
-          scannedBy: cachedScan.scannedBy,
+          scannedAt: ticket.timestamp,
+          scannedBy: ticket.scannedBy,
         };
       }
 
@@ -173,13 +312,35 @@ const QrScanner = () => {
     }
   };
 
-  // Clear local cache (useful for testing or when event ends)
+  // Clear local cache for current event
   const clearScannedTicketsCache = async () => {
     try {
       await AsyncStorage.removeItem(`scanned_tickets_${eventId}`);
-      console.log('✅ Scanned tickets cache cleared');
+      console.log('✅ Scanned tickets cache cleared for current event');
     } catch (error) {
       console.error('Error clearing cache:', error);
+    }
+  };
+
+  // Get cache statistics (useful for debugging/monitoring)
+  const getCacheStats = async () => {
+    try {
+      const cache = await getTicketCache();
+      const now = new Date().getTime();
+      const cacheAge = now - new Date(cache.createdAt).getTime();
+      const ageHours = Math.floor(cacheAge / (60 * 60 * 1000));
+      
+      return {
+        count: cache.tickets.length,
+        maxCapacity: CACHE_CONFIG.MAX_TICKETS,
+        utilization: ((cache.tickets.length / CACHE_CONFIG.MAX_TICKETS) * 100).toFixed(1),
+        ageHours,
+        expiresInHours: Math.max(0, CACHE_CONFIG.EXPIRY_HOURS - ageHours),
+        createdAt: cache.createdAt,
+      };
+    } catch (error) {
+      console.error('Error getting cache stats:', error);
+      return null;
     }
   };
 
