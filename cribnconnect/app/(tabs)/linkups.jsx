@@ -9,7 +9,7 @@ import { calculateDistance } from "@/utils/distanceCalculator";
 import { getUserLocation } from "@/utils/userLocation";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Platform} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const LINKUP_CATEGORIES = [
@@ -352,6 +352,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+    paddingBottom: Platform.OS === "ios" ? 50 : 26,  
   },
   tabContentContainer: {
     flex: 1,
