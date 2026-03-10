@@ -356,7 +356,7 @@ export default function EventsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <NormalHeader title="Events" />
       
       {/* Loading State with Skeleton */}
@@ -572,6 +572,10 @@ export default function EventsScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
   mainContainer: {
     // paddingHorizontal: 10, 
     paddingTop: 10,

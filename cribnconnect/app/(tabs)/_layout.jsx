@@ -35,12 +35,10 @@ export default function TabLayout() {
         },
         // Set background color for the screen container to prevent white flash
         sceneStyle: { backgroundColor: Colors.white },
-        // Use shift animation instead of fade - prevents white flash
-        animation: "shift",
-        // Lazy load screens (default true in expo-router v3+)
+        // Use fade animation for smoother transitions
+        animation: "fade",
+        // Lazy load screens for better performance
         lazy: true,
-        // Freeze inactive screens to prevent unnecessary re-renders
-        freezeOnBlur: true,
       }}
       // Ensure initial route is set
       initialRouteName="index"
@@ -80,8 +78,6 @@ export default function TabLayout() {
         options={{
           title: "Favourites",
           tabBarIcon: ({ color }) => <Heart size={24} color={color} />,
-          // Pre-load this screen to prevent white flash
-          lazy: false,
         }}
       />
     </Tabs>

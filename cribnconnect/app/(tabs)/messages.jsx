@@ -470,7 +470,7 @@ export default function MessagesScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <NormalHeader title="Messages" />
       
       {!isAuthenticated ? (
@@ -568,6 +568,10 @@ export default function MessagesScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
   tabsContainer: {
     paddingVertical: 16,
     backgroundColor: Colors.white,

@@ -304,7 +304,7 @@ export default function LinkupsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <NormalHeader title="Linkups" />
 
       <TabSelector activeTab={activeTab} onTabChange={handleTabChange} />

@@ -350,7 +350,7 @@ export default function ApartmentsScreen() {
 
   if (initialLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <NormalHeader title="Apartments" />
         
         <ScrollView 
@@ -489,7 +489,7 @@ export default function ApartmentsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <NormalHeader title="Apartments" />
       
       <ScrollView
@@ -535,6 +535,10 @@ export default function ApartmentsScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: Platform.OS === 'ios' ? 85 : 60,
