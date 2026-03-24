@@ -1,4 +1,4 @@
-import NetInfo from '@react-native-community/netinfo';
+import * as Network from 'expo-network';
 
 /**
  * Check if device is connected to internet
@@ -6,8 +6,8 @@ import NetInfo from '@react-native-community/netinfo';
  */
 export const isConnected = async () => {
   try {
-    const state = await NetInfo.fetch();
-    return state.isConnected && state.isInternetReachable;
+    const networkState = await Network.getNetworkStateAsync();
+    return networkState.isConnected;
   } catch (error) {
     console.error('Error checking network status:', error);
     return false;
@@ -20,9 +20,14 @@ export const isConnected = async () => {
  * @returns {Function} Unsubscribe function
  */
 export const subscribeToNetworkChanges = (callback) => {
-  return NetInfo.addEventListener(state => {
-    callback(state.isConnected && state.isInternetReachable);
+  const subscription = Network.addNetworkStateListener((networkState) => {
+    callback(networkState.isConnected);
   });
+  
+  // Return cleanup function
+  return () => {
+    subscription?.remove();
+  };
 };
 
 export default {
